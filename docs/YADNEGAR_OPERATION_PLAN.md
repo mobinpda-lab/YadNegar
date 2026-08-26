@@ -1,7 +1,7 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 2.0 — Product Expansion + Retrieval + Release Automation
+## نسخه 2.1 — Retrieval Integrated + Next Capture Slice
 
-**تاریخ مبنا:** 2026-08-26  
+**تاریخ مبنا:** 2026-08-27  
 **وضعیت:** Current execution plan  
 **مرجع حقیقت:** GitHub Repository State  
 **مرجع قواعد:** `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`  
@@ -9,337 +9,257 @@
 **Handoff:** `docs/AI_HANDOFF_CURRENT_FA.md`
 
 ## 1. هدف اجرایی
-YadNegar دیگر Repository اولیه یا Foundation آزمایشی نیست. هدف فعلی، توسعه سریع محصول قابل‌استفاده روی Core یکپارچه‌شده است:
+YadNegar یک Flutter MVP واقعی با Timeline یکپارچه، Persistence واقعی، Retrieval قابل‌استفاده و Android Build واقعی است.
 
-`Product Slice → Fast CI → Android Build → Evidence → Merge → Main Validation → Docs Sync`
+چرخه تحویل:
+`Gap واقعی → Reuse existing contract → Small branch/PR → Test → exact-head CI/Android → safe merge → main proof → docs sync → next slice`
 
-اصل دائمی:
-
-`کار موازی هماهنگ + Reuse + Automation + Test/Build واقعی + Documentation همزمان + Merge با Evidence`
-
-هدف سرعت، تحویل نرم‌افزار معتبر در ساعت‌ها به‌جای چند روز است؛ نه افزایش تعداد PR یا حذف Gate.
+سرعت از موازی‌سازی Laneهای مستقل و جلوگیری از دوباره‌کاری می‌آید؛ نه از حذف Gate.
 
 ## 2. وضعیت Verify‌شده فعلی
 ### main
-Current integrated product head در این موج:
-`866a61b8ba8d26666d4d0436d36f402478af25b3`
+Current integrated product head:
+`453a77a9e662f705bed8f899a769b425927bebb4`
 
-این main شامل موارد زیر است:
+Main شامل:
 - Flutter/Dart + Persian RTL foundation
 - Timeline Domain واحد
 - `TimelineRepository`
-- JSON persistence واقعی و versioned MVP
-- Quick Capture / Load Timeline / Edit Timeline application logic
+- JSON persistence واقعی و schema-versioned MVP
+- crash-recoverable staged JSON replacement/recovery
+- Quick Capture / Load / Edit application logic
+- typed Quick Capture برای Note/Event/Call/Idea/Activity
 - Timeline UI واقعی
-- Quick Capture → Persist → Reload → Render
-- production-safe application-support persistence
-- View/Edit واقعی
-- انتخاب نوع Timeline در Quick Capture
-- Android project foundation واقعی و committed
+- `SearchTimeline` + text/type UI
+- `FilterTimelineByDateRange` + date-range UI
+- Date + Text + Type composition
+- Vazirmatn + optional private licensed IRANSansX
 - Fast CI
-- Android APK Build Gate دائمی
-- Canonical documentation baseline
+- Android debug APK Build Gate
+- deduplicated feature PR/main quality triggers
 
-### Build/CI
-Fast Gate:
-`flutter pub get → flutter analyze → flutter test`
+No duplicate Model/Repository/Storage/AppShell exists.
 
-Android Gate:
-`flutter pub get → flutter build apk --debug → verify APK → upload artifact`
+### Current post-merge validation
+On main `453a77a...`:
+- Fast CI Run `33015057876`: running at this snapshot
+- Android Build Run `33015057863`: running at this snapshot
 
-Full Build Gate روی main قبلی `1b31899d69d3f1fa98520dcc82a9251a7026cc09` با Runهای واقعی Fast + Android و APK Artifact مستقل اثبات شده و Issue #6 completed است.
+Fresh-read before updating these conclusions.
 
-### Ruleset Gap
-`main-protection` Pull Request را الزام می‌کند اما required status check پلتفرمی هنوز تنظیم نشده است.
-Issue #19 تنها Owner این Gap است. تا زمانی که Ruleset write capability واقعی در دسترس نباشد، enforcement دستی/عملیاتی همان exact-head Green + expected-head merge lock است.
-
-## 3. وضعیت Waveها
+## 3. Completed Waves
 ### Wave 0 — Governance / Reality Baseline
 **COMPLETED**
-
-Canonical docs روی main هستند. سند موازی Governance ساخته نشود.
 
 ### Wave 1 — Flutter Foundation
 **COMPLETED**
 
-Foundation واحد و تست‌پذیر روی main است.
-
 ### Wave 2 — Domain / Persistence / CI Consolidation
 **COMPLETED**
 
-- Timeline Domain
-- Repository contract
-- JSON persistence
-- Fast CI
-- active branch coverage
-
-همگی یکپارچه‌اند.
-
-### Wave 3 — First Vertical Slice
+### Wave 3 — First Product Vertical Slice
 **COMPLETED**
 
 `Quick Capture → Persist → Timeline → View/Edit`
 
-Production bootstrap نیز durable و platform-safe است.
-
-### Wave 3.5 — Android Foundation / Full Build Gate
+### Wave 3.5 — Android Foundation / Build Gate
 **COMPLETED**
 
-- Android files committed
-- real debug APK build proven
-- APK verify/upload automated
-- permanent build workflow read-only
-- post-merge main proof ثبت شده
+### Wave 4 — Typed Product Expansion
+**COMPLETED FOR CURRENT SCOPE**
 
-### Wave 4 — Feature Expansion
-**ACTIVE**
-
-اولین Slice این Wave با PR #34 وارد main شد:
+Shared `TimelineItemType` supports:
 - Note
 - Event
 - Call
 - Idea
 - Activity
 
-همه روی `TimelineItemType` موجود؛ بدون Model/Repository/Storage موازی.
-
 ### Wave 5 — Retrieval & Reliability
-**ACTIVE IN PARALLEL**
+**COMPLETED FOR CURRENT MVP SCOPE**
 
-Issue #35 / PR #36 Application foundation جستجو/فیلتر را می‌سازد:
-- text query
-- type filter
-- ترکیب query + type
-- حفظ newest-first order
-- unmodifiable result
+Integrated:
+- Search application boundary
+- RTL Search + Type UI
+- date-range application boundary
+- RTL Date Range UI
+- combined Text + Type + Date retrieval
+- crash-recoverable JSON persistence
+- CI duplicate-trigger fix
 
-Search UI بعد از Integration Application boundary روی همین contract ساخته می‌شود.
+Recent integration evidence:
+- PR #42 / Issue #41: persistence reliability completed
+- PR #47 / Issue #46: date-range UI completed
 
-## 4. مدل اجرای موازی فعلی
-### Lane A — Application / Retrieval / Data Reliability
-مالک:
-- Search/filter contracts
-- storage schema hardening در صورت نیاز واقعی
-- migration/recovery tests
-- query optimization فقط وقتی Evidence حجم/Latency آن را توجیه کند
+## 4. Active Wave — Capture Semantics
+### Issue #48
+`feat(capture): expose occurredAt for Event and Activity`
 
-Current work:
-- PR #36 SearchTimeline application foundation
+Fresh audit shows no new foundation is needed:
+- `TimelineItem.occurredAt` exists
+- `TimelineItem.timelineAt` already prefers occurredAt over createdAt
+- `QuickCapture.capture(occurredAt: ...)` exists
+
+The product gap is only UI/composition.
+
+### Intended slice
+For Event/Activity Quick Capture:
+- optional Persian/RTL date/time selection
+- pass chosen value to the existing `QuickCapture` use case
+- default capture remains fast and optional
+- Note/Call/Idea current behavior remains stable
+- no new repository/storage/model/schema
+- widget tests for with/without occurredAt
+
+Implementation should begin from current main after the active docs synchronization is safely settled, because the previous retrieval slice touched the same Timeline UI surface.
+
+## 5. Parallel Execution Model
+### Lane A — Core / Data Reliability
+Current state:
+- shared Timeline Domain stable
+- JSON persistence real and crash-recoverable
+- no DB migration justified yet
+
+Next work only when evidence requires it:
+- migration/recovery hardening
+- query optimization
+- indexing/pagination/DB migration
 
 ### Lane B — Product / UX
-مالک:
-- typed capture UX
-- Search UI
-- filter controls
-- date/group views
-- item detail improvements
+Current next owner:
+- Issue #48 occurredAt capture UI
 
-Current state:
-- typed Quick Capture integrated
-- Search UI منتظر contract یکپارچه SearchTimeline است، نه طراحی دوباره Repository
+After #48, choose the next gap from a fresh product/code audit. Do not prebuild speculative foundations.
 
-### Lane C — CI / Android / Documentation
-مالک:
-- Fast CI
-- Android Build Gate
-- artifacts
-- Ruleset hardening وقتی write capability فراهم شود
-- Current State / Handoff / Operation Plan
-
-Current work:
-- PR #32 docs synchronization
-- Issue #19 ruleset gap
-
-## 5. قواعد Parallel Safety
-1. Block شدن Build یک PR، Lane مستقل Application/Docs را متوقف نمی‌کند.
-2. Shared Domain/Repository/Storage فقط با Owner روشن تغییر می‌کند.
-3. UI حق ساخت query/storage path مستقل ندارد؛ Application contract را مصرف می‌کند.
-4. Documentation همزمان به‌روز می‌شود، اما Product Lane را سریالی نمی‌کند.
-5. اگر main بعد از ایجاد PR جلو رفت، PR قبل از Merge با main تازه Sync و دوباره exact-head validate می‌شود.
-6. stale run Evidence نیست؛ concurrency باید Run قدیمی را لغو کند.
-7. Merge فقط با live mergeability + exact current head + Green gates.
+### Lane C — CI / Documentation / Governance
+Current:
+- post-merge validation on main `453a77a...`
+- clean docs replacement branch `docs/current-state-after-reliability`
+- stale PR #43 must be superseded/closed
+- Issue #19 remains Ruleset gap
 
 ## 6. PR / Merge Contract
-هر PR باید:
-- یک هدف اصلی روشن داشته باشد
-- Diff قابل‌بازگشت داشته باشد
-- Test مرتبط داشته باشد
-- Architecture موجود را reuse کند
-- exact-head Fast CI بگیرد
-- اگر `lib/**`, `android/**` یا build surface را تغییر می‌دهد، Android Build Gate واقعی بگیرد
-- Artifact فقط وقتی Build workflow واقعاً اجرا شده گزارش شود
+Every product PR:
+- one clear primary goal
+- reuse existing contracts before creating anything
+- relevant focused tests
+- exact-head `YadNegar CI` Green
+- Android Build exact-head Green when product/build surface changes
+- live head and mergeability re-read immediately before merge
+- merge with `expected_head_sha` where supported
+- post-merge main validation
 
-Merge command باید تا حد امکان expected head SHA را lock کند.
+If main advances after branch creation, synchronize first and rerun gates.
 
-## 7. Feature Expansion Contract
-Featureهای Note/Event/Call/Idea/Activity variant مستقل نیستند؛ همه Timeline item هستند.
+## 7. Retrieval Contract
+Current MVP contract is integrated:
+- repository snapshot
+- `SearchTimeline` for query/type
+- `FilterTimelineByDateRange` for start-inclusive/end-exclusive range
+- UI composes date results with search/type results
 
-قانون:
-- `TimelineItemType` موجود reuse شود.
-- `TimelineRepository` موجود reuse شود.
-- metadata جدید ابتدا به shared contract اضافه شود، نه Feature storage جدا.
-- UI labels فارسی و RTL-first باشند.
+UI end-date semantics:
+- selected end day is user-inclusive
+- application receives next-day exclusive boundary
 
-### نزدیک‌ترین Featureهای باارزش
-1. typed Quick Capture — **Integrated**
-2. occurred-at/date selection برای Event/Activity — candidate
-3. type-specific visual treatment بدون تغییر Domain — candidate
-4. quick filter chips روی Search contract — بعد از PR #36
+Optimization such as a unified `QueryTimeline` is optional only when real read/latency evidence justifies it. It is not a blocker for current product work.
 
-## 8. Retrieval Contract
-### Phase A — Application boundary
-Issue #35 / PR #36:
-`Repository snapshot → SearchTimeline → filtered immutable result`
-
-### Phase B — UI
-بعد از Merge A:
-- search field
-- type filter
-- clear/reset state
-- empty-result state
-- RTL widget tests
-
-### Phase C — Scale only when justified
-فقط اگر داده/Latency واقعی نیاز نشان داد:
-- repository-level query
-- indexing
-- pagination
-- DB migration
-
-تا آن زمان in-memory filtering روی repository snapshot یک MVP آگاهانه است، نه بدهی پنهان.
-
-## 9. Persistence / Reliability
-JSON persistence فعلی:
-- واقعی
-- durable در application support directory
+## 8. Persistence Contract
+JSON persistence is:
+- real
+- stored in application support directory
 - schema-versioned
-- test-covered
+- crash-recoverable with `.tmp`/`.bak`
+- test-covered with real temporary files/directories
 - replaceable
 
-DB migration فقط با Evidence نیاز انجام شود:
-- query volume
-- indexing
-- atomic transaction نیاز
-- migration/recovery complexity
-- performance limit
+Do not add a DB for appearance. Require real evidence such as query volume, transaction needs, migration needs, or performance limits.
 
-هیچ DB صرفاً برای «production-looking architecture» اضافه نشود.
+## 9. CI / Android Automation
+Fast Gate:
+`flutter pub get → flutter analyze → flutter test`
 
-## 10. CI / Build Automation
-### Fast CI
-هدف: feedback سریع.
+Android Gate:
+`flutter pub get → flutter build apk --debug → verify APK → upload artifact`
 
-- pub get
-- analyze
-- test
-- cache
-- concurrency
-- cancel stale runs
-- active branch coverage
+CI trigger model after PR #45:
+- feature work validates via PR to `main`
+- push quality remains on `main`
+- avoid duplicate push + PR quality runs for the same feature SHA
 
-### Android Build
-هدف: deployable surface proof.
+## 10. Ruleset Reality
+Active `main-protection` ruleset id `20952887` requires Pull Requests and protects deletion/non-fast-forward, but does not currently contain a required-status-check rule.
 
-- pub get
-- debug APK build
-- APK existence verification
-- artifact upload
-- read-only token
+Issue #19 owns this gap.
 
-### آینده
-Release build/signing فقط وقتی release credential/process واقعی تعریف شود. Debug APK را Release artifact جا نزن.
+Until real Ruleset write capability is available and verified:
+`exact-head Green gates + live mergeability + expected-head merge lock` is mandatory operational enforcement.
 
-## 11. Documentation همزمان
-چهار سطح:
-
-### Canonical Governance
+## 11. Documentation Contract
+Canonical governance:
 `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
-فقط قواعد ماندگار.
 
-### Active Plan
+Active plan:
 `docs/YADNEGAR_OPERATION_PLAN.md`
-همین سند؛ Waveها و صف واقعی.
 
-### Current State
+Current state:
 `docs/AI_CONTINUATION_STATE.md`
-SHA/PR/CI/Issue/Evidence زنده.
 
-### Handoff
+Handoff:
 `docs/AI_HANDOFF_CURRENT_FA.md`
-نقطه شروع اجرای بعدی.
 
-Rule:
-Implementation/CI تغییر مادی → همان موج Docs Sync، بدون منتظرماندن تا پایان پروژه.
+PR #43 is stale. Replacement branch:
+`docs/current-state-after-reliability`
+
+Do not merge stale snapshots merely to close documentation work.
 
 ## 12. Current Work Queue
 ### Active
-- PR #36 — SearchTimeline application foundation
-- PR #32 — documentation synchronization
-- Issue #19 — required CI status in ruleset؛ blocked by connector capability
+1. Finish post-merge Fast + Android validation on `453a77a...`.
+2. Open/validate clean docs replacement PR; close stale #43 as superseded.
+3. Issue #48 occurredAt Event/Activity capture UI.
+4. Issue #19 Ruleset required-status gap remains blocked by actual write capability.
 
 ### Recently Completed
-- PR #30 — platform Fast CI coverage
-- PR #31 — Android foundation + permanent APK build
-- PR #34 — typed Quick Capture
-- Issues #6, #28, #29, #33 — completed
+- PR #44 — typography
+- PR #45 — CI deduplication
+- PR #42 / Issue #41 — crash-recoverable persistence
+- PR #47 / Issue #46 — date-range retrieval UI
 
-### Next Ready Queue
-1. Merge PR #36 فقط بعد از Fast CI + Android Build exact-head Green.
-2. Search UI روی contract Merge‌شده.
-3. Date/occurredAt capture برای Event/Activity در Lane مستقل.
-4. Final docs sync/merge PR #32.
-5. Ruleset hardening فقط با write capability واقعی.
+## 13. Definition of Done
+A product slice is Done when applicable:
+`Working capability + tests + exact-head CI + Android proof + safe merge + post-main validation + docs impact`
 
-## 13. Definition of Done برای Product Slice
-یک Slice زمانی Done است که:
-- user-visible یا reusable application capability واقعی داشته باشد
-- tests مرتبط سبز باشند
-- Fast CI exact-head Green باشد
-- Android Build در Surfaceهای لازم Green باشد
-- conflict/main drift resolve شده باشد
-- docs impact ثبت شده باشد
-- PR با SHA-lock merge شود
-- main regression evidence بررسی شود
+A docs slice is Done when:
+`Fresh GitHub reconciliation + exact-head validation + non-stale merge`
 
 ## 14. Work Queue Hygiene
-هر continuation:
-1. main SHA Audit
-2. open PRs Audit
-3. exact-head workflow Audit
-4. Issue ownership Audit
-5. stale/duplicate work detection
-6. independent Lane execution
+Every continuation:
+1. main SHA audit
+2. open PR audit
+3. exact-head workflow audit
+4. issue ownership audit
+5. duplicate/stale detection
+6. independent lane execution
 7. safe merge
 8. main validation
 9. docs refresh
-10. next independent Slice
+10. next real product gap
 
-تعداد PR معیار سرعت نیست؛ زمان رسیدن قابلیت معتبر به main معیار است.
-
-## 15. گزارش مالک پروژه
-فقط:
-
-`کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
-
-کوتاه و غیر فنی. جزئیات فنی و Evidence در GitHub باقی بماند.
-
-## 16. خط قرمزها
+## 15. خط قرمزها
 - Foundation دوم
 - App Shell دوم
 - Timeline Model دوم
 - Repository/Storage موازی
-- Search engine موازی قبل از Application contract
-- Build claim بدون Run/Artifact
-- Merge بدون exact-head evidence
-- حذف Test برای سبزشدن
-- required-status ادعایی بدون Ruleset write واقعی
-- سریالی‌کردن Laneهای مستقل
-- نگه‌داشتن سند عملیاتی stale
+- query/date logic duplicate در UI
+- fake persistence/build/test
+- merge با stale evidence
+- ادعای required status check بدون Ruleset proof
+- توقف Laneهای مستقل به خاطر یک Build در حال اجرا
+- نگه داشتن سند عملیاتی stale
 - درصد پیشرفت ساختگی
 
-## 17. معیار سرعت درست
-سرعت مطلوب YadNegar:
+## 16. گزارش مالک پروژه
+`کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
 
-`Gap واقعی → Branch مستقل → Implementation → Test → Fast CI/Build موازی → Merge → Main Proof → Docs → Slice بعدی`
-
-هدف: **Working Software + Evidence در چند ساعت، نه فعالیت نمایشی در چند روز.**
+کوتاه، غیر فنی و نتیجه‌محور.
