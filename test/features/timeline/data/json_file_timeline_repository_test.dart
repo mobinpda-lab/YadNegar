@@ -73,8 +73,10 @@ void main() {
     expect(await temporaryFile.exists(), isFalse);
     expect(await backupFile.exists(), isFalse);
 
-    final reloaded = await JsonFileTimelineRepository(storageFile).listNewestFirst();
+    final reloadedRepository = JsonFileTimelineRepository(storageFile);
+    final reloaded = await reloadedRepository.listNewestFirst();
     expect(reloaded.map((item) => item.id), <String>['idea-2']);
+    expect(await reloadedRepository.findById('note-1'), isNull);
   });
 
   test('delete returns false when id does not exist', () async {
