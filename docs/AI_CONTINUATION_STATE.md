@@ -3,158 +3,124 @@
 Last updated: 2026-08-27
 
 ## Source of Truth
-`GitHub Reality > approved architecture decisions > docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md > exact CI/workflow evidence > conversation memory`
+`GitHub Reality > approved architecture decisions > canonical project docs > exact CI/workflow evidence > conversation memory`
 
-Always fresh-audit GitHub before any write, merge, SHA/status claim, or progress claim.
+Before every write, merge, SHA/status claim, or progress claim: fresh-audit GitHub.
 
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main SHA: `453a77a9e662f705bed8f899a769b425927bebb4`
+Current verified main SHA: `6e379f4de11edfd323f79861b04b16992ee6f614`
 
-Main contains one shared Timeline stack with:
+Current main has one shared Timeline stack:
 - Quick Capture → real JSON persistence → Timeline → View/Edit
-- `TimelineItemType` for Note/Event/Call/Idea/Activity
-- `SearchTimeline` + Persian/RTL text/type retrieval UI
-- `FilterTimelineByDateRange` + Persian/RTL date-range UI
-- Vazirmatn typography with optional private licensed IRANSansX
-- deduplicated CI triggers
-- crash-recoverable JSON writes/recovery
+- Note/Event/Call/Idea/Activity on one `TimelineItem` model
+- Search + Type + Date Range retrieval
+- optional Event/Activity `occurredAt` capture
+- Timeline cards showing meaningful `timelineAt` context
+- crash-recoverable JSON persistence
+- Vazirmatn + optional private licensed IRANSansX
+- deduplicated Fast CI + Android APK build automation
 
 No second Timeline Model / Repository / Storage / App Shell exists.
 
-## Recent Integrated Work
-### PR #44 — Typography
-Merged.
-- open-source Vazirmatn UI + Farsi Digits bundled
-- licensed IRANSansX remains optional for private builds
-- proprietary IRANSansX binaries are not committed publicly
+## Recent Integrated Waves
+### PR #49 / Issue #48 — Event/Activity occurredAt Capture
+Merged as `16eb0e041cb6431c83bb9abc844d0291a5bc1cb4` with expected-head lock.
 
-### PR #45 — CI deduplication
-Merged as `aaff41d1e287372e441ea6809bf61d06b49df44c`.
-- feature PR quality validation uses `pull_request -> main`
-- `push` quality remains on `main`
-- duplicate feature push + PR quality runs are avoided
+Exact PR head: `20597e134e08dcb4a6b1c910ed8d38cdbd99ee6b`
 
-### PR #42 / Issue #41 — Crash-recoverable JSON persistence
-Merged safely as `379f58caf34f2206556246beb94e27a2c85ece78` using exact-head lock.
+Pre-merge:
+- YadNegar CI `33015406333`: success
+- YadNegar Android Build `33015406042`: success
 
-Exact PR head:
-`692c8519d6fc22c20671494ea5304f97babe935d`
+Post-merge main:
+- YadNegar CI `33015801059`: success
+- YadNegar Android Build `33015801063`: success
 
-Pre-merge validation:
-- `YadNegar CI` Run `33012747019`: success
-- `YadNegar Android Build` Run `33012747020`: success
+Issue #48 completed.
 
-Post-merge main proof:
-- `YadNegar CI` Run `33014440255`: success
-- `YadNegar Android Build` Run `33014440247`: success
+### PR #52 / Issue #51 — Timeline Date/Time Context
+Merged as current main `6e379f4de11edfd323f79861b04b16992ee6f614` with expected-head lock.
 
-Issue #41 is completed.
+Exact PR head: `3d082c19200f2b62dd70d382ea885277d17e9337`
 
-### PR #47 / Issue #46 — Timeline Date-range UI
-Merged safely as current main `453a77a9e662f705bed8f899a769b425927bebb4` using expected-head lock.
-
-Exact PR head:
-`10f6d1dc0e288f4a46552a54ad7bfa808c9ccd7e`
-
-Pre-merge exact-head validation:
-- `YadNegar CI` Run `33014650334`: success
-- `YadNegar Android Build` Run `33014650363`: success
-- live mergeability immediately before merge: true
+Pre-merge:
+- YadNegar CI `33016029795`: success
+- YadNegar Android Build `33016029822`: success
 
 Post-merge current-main proof:
-- `YadNegar CI` Run `33015057876`: success
-- `YadNegar Android Build` Run `33015057863`: success
+- YadNegar CI `33016376693`: success
+- YadNegar Android Build `33016376667`: success
 
 Integrated behavior:
-- existing `FilterTimelineByDateRange` reused
-- existing `SearchTimeline` reused
-- same production `TimelineRepository` reused
-- UI selected end day is inclusive while Application boundary remains end-exclusive
-- Text + Type + Date compose without a duplicate query/storage path
-- retrieval clear/reset and filtered empty state cover date filtering
+- Timeline cards reuse `timelineAt`
+- items with occurredAt show occurrence context
+- items without occurredAt fall back to createdAt registration context
+- no Domain/Repository/Storage/dependency change
 
-Issue #46 is completed.
+Issue #51 completed.
 
-## Active Product PR — #49 / Issue #48
-PR #49: `feat(capture): add optional occurredAt for Event and Activity`  
-Branch: `feature/quick-capture-occurred-at`  
-Exact head at this snapshot: `20597e134e08dcb4a6b1c910ed8d38cdbd99ee6b`  
-Base: current main `453a77a9e662f705bed8f899a769b425927bebb4`  
-Live mergeability last verified: true
+## Active Product PR — #54 / Issue #53
+PR #54: `feat(edit): update Event and Activity occurredAt`  
+Branch: `feature/edit-occurred-at`  
+Exact head at this snapshot: `183cddb533b58284c534ad2dacee74b88d6dbaff`  
+Base: current main `6e379f4de11edfd323f79861b04b16992ee6f614`
 
-Fresh audit proved the reusable foundation already existed:
+Fresh audit showed the reusable foundation already existed:
 - `TimelineItem.occurredAt`
 - `TimelineItem.timelineAt`
-- `QuickCapture.capture(occurredAt: ...)`
+- existing `EditTimelineItem`
+- existing Timeline occurredAt picker pattern
 
-Implementation only extends Quick Capture UI/composition:
-- optional Persian/RTL date + time for Event/Activity
-- Note/Call/Idea keep the fast no-date capture path
-- selected date/time can be cleared
-- switching to a type without occurredAt support clears hidden draft state
+Implementation scope:
+- extend existing `EditTimelineItem`; keep `updateText` compatible
+- Event/Activity edit can replace or explicitly clear occurredAt
+- Note/Call/Idea keep text-only edit behavior
+- clearing occurredAt naturally falls back to createdAt through `timelineAt`
+- application + widget regression tests
 - no Domain/Repository/Storage/Schema/dependency change
 
-Widget coverage includes:
-- existing Idea/default Note regression
-- Event persisted with occurredAt
-- Activity clear-date behavior
-- Event → Idea clears occurredAt
-- timelineAt resolves to occurredAt for the Event
-
-Exact-head gates at this snapshot:
-- `YadNegar CI` Run `33015406333`: success
-- `YadNegar Android Build` Run `33015406042`: in progress
-
-Do not merge #49 until Android is success and the live PR head/mergeability are re-read immediately before merge.
+Merge contract for #54:
+1. exact-head YadNegar CI success
+2. exact-head YadNegar Android Build success
+3. live head + mergeability re-read
+4. merge with `expected_head_sha`
+5. post-merge main proof
 
 ## Documentation Reality
 Stale PR #43 was closed without merge and superseded by PR #50.
 
-PR #50 is Draft intentionally while #49 is active. Branch:
-`docs/current-state-after-reliability`
-
-Final docs must be re-synchronized onto the final main after #49 settles, then exact-head validated before merge.
+PR #50 branch `docs/current-state-after-reliability` is synchronized onto current main #52 and tracks active PR #54. It intentionally stays Draft while #54 is active, then receives one final sync/update before exact-head validation and safe merge.
 
 ## Ruleset Reality — Issue #19
-Active ruleset `main-protection` id `20952887`:
-- requires Pull Requests
-- protects deletion and non-fast-forward updates
-- currently has no required-status-check rule
+Active main protection still has no required-status-check rule.
 
-Issue #19 remains open. Current connector exposes Ruleset read but no Ruleset write action.
-
-Operational merge contract until that gap is truly fixed:
+Current connector exposes Ruleset read but no proven Ruleset write action. Until real platform enforcement is writable and verified:
 `Exact current PR head + Green exact-head gates + live mergeability + expected_head_sha merge lock`
 
-Never claim Required Status Check is configured unless a fresh Ruleset read proves it.
+Never claim Required Status Check is configured without a fresh Ruleset read proving it.
 
-## Architecture Rules
-- Flutter / Dart
-- Clean Architecture direction
-- feature-based structure
-- Persian RTL-first
+## Architecture / Speed Rules
+- Flutter / Dart, Persian RTL-first
 - reuse before rebuild
 - no duplicate App Shell / Timeline Model / Repository / Storage
-- UI consumes application contracts instead of duplicating business/data logic
-- JSON persistence is real and replaceable, not fake persistence
-- no fake build/test evidence
+- UI consumes Application contracts
+- real persistence/build/test evidence only
 - independent lanes continue when another lane is blocked
+- documentation and automation move in parallel with implementation
+- produce verified useful software in hours rather than days through coordinated parallel lanes, not by skipping gates
 
 ## Next Real Actions
-1. Finish exact-head Android validation for PR #49.
-2. If both gates are Green, re-read exact head + mergeability and merge with expected-head lock.
-3. Validate the new main with real Fast CI + Android proof.
-4. Re-sync PR #50 docs to the final main, mark it ready, exact-head validate, and merge safely.
-5. Select the next UI/product gap only after a fresh code/issue audit.
-6. Keep Issue #19 open until real Ruleset write capability exists.
+1. Validate PR #54 exact head with Fast CI + Android Build.
+2. If Green, live-read head/mergeability and merge with expected-head lock.
+3. Validate new main with Fast CI + Android proof.
+4. Final-sync PR #50 onto that main, refresh this snapshot and sibling docs, validate and merge docs safely.
+5. Fresh-audit the next product gap and start an independent small vertical slice.
+6. Keep Issue #19 open until Ruleset write is genuinely possible and proven.
 
 ## Trigger
 `ادامه یادنگار`
 
-## Report Style
+## Owner Report Style
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
-
-## Speed Rule
-Produce verified useful software in hours rather than days through coordinated parallel lanes, reuse, automation, exact-ref CI and continuous documentation—not by skipping tests or evidence.
