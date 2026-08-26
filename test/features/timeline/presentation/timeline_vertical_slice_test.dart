@@ -89,15 +89,20 @@ void main() {
     expect(find.text('یادداشت'), findsOneWidget);
     expect(storageFile.existsSync(), isTrue);
 
-    final persisted = await repository.findById('capture-1');
+    final persisted = await tester.runAsync(
+      () => repository.findById('capture-1'),
+    );
     expect(persisted, isNotNull);
     expect(persisted!.text, 'خرید شیر');
     expect(persisted.type, TimelineItemType.note);
     expect(persisted.createdAt, createdAt);
 
     final reloadedRepository = JsonFileTimelineRepository(storageFile);
-    final reloadedItems = await reloadedRepository.listNewestFirst();
-    expect(reloadedItems, hasLength(1));
+    final reloadedItems = await tester.runAsync(
+      reloadedRepository.listNewestFirst,
+    );
+    expect(reloadedItems, isNotNull);
+    expect(reloadedItems!, hasLength(1));
     expect(reloadedItems.single.id, 'capture-1');
     expect(reloadedItems.single.text, 'خرید شیر');
   });
@@ -137,6 +142,8 @@ void main() {
     );
 
     expect(find.byKey(const Key('timeline-empty-state')), findsOneWidget);
-    expect(await repository.listNewestFirst(), isEmpty);
+    final items = await tester.runAsync(repository.listNewestFirst);
+    expect(items, isNotNull);
+    expect(items, isEmpty);
   });
 }
