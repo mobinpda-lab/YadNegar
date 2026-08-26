@@ -3,9 +3,9 @@
 اپلیکیشن فارسی و RTL برای ثبت سریع یادداشت‌ها، رویدادها، تماس‌ها، ایده‌ها و فعالیت‌های روزانه با رویکرد Timeline.
 
 ## وضعیت فعلی
-پروژه در مرحله Documentation / Foundation planning است.
+پروژه در مرحله Documentation / Foundation integration است.
 
-در Snapshot تأییدشده 2026-08-26، Flutter Foundation هنوز در `main` ایجاد نشده بود؛ بنابراین وجود Flutter/Clean Architecture در این Repository فعلاً هدف معماری است، نه وضعیت پیاده‌سازی‌شده.
+در Snapshot تأییدشده `main` در 2026-08-26، Flutter Foundation هنوز Merge نشده بود؛ اما Foundation واقعی در PR #2 ایجاد شده و برای Head دقیق آن Flutter Analyze/Test موفق شده است. تا زمان Merge شدن PR #2، Foundation هنوز وضعیت `main` محسوب نمی‌شود.
 
 ## معماری هدف
 - Flutter / Dart
@@ -17,11 +17,12 @@
 ## مستندات اصلی
 - `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md` — مرجع Canonical عملیات و توسعه
 - `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md` — سند جامع پروژه
-- `docs/YADNEGAR_ACCELERATED_OPERATION_PLAN_FA.md` — برنامه عملیاتی شتاب‌یافته و کار موازی
+- `docs/YADNEGAR_OPERATION_PLAN.md` — برنامه عملیاتی فعال، شتاب‌یافته و موازی
 - `docs/AI_CONTINUATION_STATE.md` — وضعیت جاری و نقطه ادامه
 - `docs/AI_HANDOFF_CURRENT_FA.md` — Handoff فشرده برای Session جدید
 - `PROJECT_DOCUMENTATION_FA.md` — مستند فنی و محصولی
 - `docs/YADNEGAR_DEVELOPMENT_PROTOCOL.md` — ارجاع سازگاری به Canonical document
+- `docs/YADNEGAR_ACCELERATED_OPERATION_PLAN_FA.md` — فقط ارجاع سازگاری تاریخی به برنامه فعال
 
 ## اصل توسعه
 `Audit → Understand → Plan → Parallelize → Execute → Validate → Document → Report`
