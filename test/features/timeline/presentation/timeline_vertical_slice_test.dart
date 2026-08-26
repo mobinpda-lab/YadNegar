@@ -8,6 +8,25 @@ import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.da
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_home.dart';
 
+Future<void> _pumpUntilVisible(
+  WidgetTester tester,
+  Finder finder, {
+  int maxAttempts = 40,
+}) async {
+  for (var attempt = 0; attempt < maxAttempts; attempt++) {
+    await tester.pump(const Duration(milliseconds: 50));
+    if (finder.evaluate().isNotEmpty) {
+      return;
+    }
+
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    });
+  }
+
+  fail('Timed out waiting for $finder');
+}
+
 void main() {
   late Directory tempDirectory;
   late File storageFile;
@@ -45,20 +64,26 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const Key('timeline-empty-state')), findsOneWidget);
+    await _pumpUntilVisible(
+      tester,
+      find.byKey(const Key('timeline-empty-state')),
+    );
 
     await tester.tap(find.byKey(const Key('quick-capture-action')));
-    await tester.pumpAndSettle();
+    await _pumpUntilVisible(
+      tester,
+      find.byKey(const Key('quick-capture-input')),
+    );
     await tester.enterText(
       find.byKey(const Key('quick-capture-input')),
       '  خرید شیر  ',
     );
     await tester.tap(find.byKey(const Key('quick-capture-save')));
-    await tester.pumpAndSettle();
+    await _pumpUntilVisible(
+      tester,
+      find.byKey(const Key('timeline-list')),
+    );
 
-    expect(find.byKey(const Key('timeline-list')), findsOneWidget);
     expect(find.byKey(const Key('timeline-item-capture-1')), findsOneWidget);
     expect(find.text('خرید شیر'), findsOneWidget);
     expect(find.text('یادداشت'), findsOneWidget);
@@ -95,14 +120,22 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await _pumpUntilVisible(
+      tester,
+      find.byKey(const Key('timeline-empty-state')),
+    );
 
     await tester.tap(find.byKey(const Key('quick-capture-action')));
-    await tester.pumpAndSettle();
+    await _pumpUntilVisible(
+      tester,
+      find.byKey(const Key('quick-capture-save')),
+    );
     await tester.tap(find.byKey(const Key('quick-capture-save')));
-    await tester.pumpAndSettle();
+    await _pumpUntilVisible(
+      tester,
+      find.text('متن ثبت سریع نمی‌تواند خالی باشد.'),
+    );
 
-    expect(find.text('متن ثبت سریع نمی‌تواند خالی باشد.'), findsOneWidget);
     expect(find.byKey(const Key('timeline-empty-state')), findsOneWidget);
     expect(await repository.listNewestFirst(), isEmpty);
   });
