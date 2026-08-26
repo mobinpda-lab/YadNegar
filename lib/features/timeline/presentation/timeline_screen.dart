@@ -215,13 +215,38 @@ class TimelineScreen extends StatelessWidget {
           child: ListTile(
             leading: const Icon(Icons.notes),
             title: Text(item.text),
-            subtitle: Text(_typeLabel(item.type)),
+            subtitle: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_typeLabel(item.type)),
+                const SizedBox(height: 2),
+                Text(
+                  _timelineTimeLabel(item),
+                  key: Key('timeline-time-${item.id}'),
+                ),
+              ],
+            ),
+            isThreeLine: true,
             trailing: onItemTap == null ? null : const Icon(Icons.chevron_left),
             onTap: onItemTap == null ? null : () => onItemTap!(item),
           ),
         );
       },
     );
+  }
+
+  String _timelineTimeLabel(TimelineItem item) {
+    final prefix = item.occurredAt == null ? 'زمان ثبت' : 'زمان رخداد';
+    return '$prefix: ${_formatDateTime(item.timelineAt)}';
+  }
+
+  String _formatDateTime(DateTime value) {
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '${value.year}/$month/$day - $hour:$minute';
   }
 
   String _typeLabel(TimelineItemType type) {
