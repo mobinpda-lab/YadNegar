@@ -28,42 +28,33 @@ No duplicate Timeline Model / Repository / Storage / App Shell exists.
 ## Recently Integrated
 ### PR #54 / Issue #53 — occurredAt Edit
 Merged safely as `740c290f8c2c3104dbca6518ee8c3de54b9abc51`.
-
-Pre-merge exact-head:
-- CI `33016928847`: success
-- Android `33016928837`: success
-
-Post-main:
-- CI `33017214825`: success
-- Android `33017214826`: success, including APK build + verify + upload
+- pre-merge CI `33016928847`: success
+- pre-merge Android `33016928837`: success
+- post-main CI `33017214825`: success
+- post-main Android `33017214826`: success
 
 ### PR #56 / Issue #55 — Timeline Type Edit
 Merged safely as current main `71d1d993e362be898be955963653eff832a7da0a` using expected-head lock.
 
 Exact PR head: `ff59496fd12c098a5ebce7cd60dc301bb0fb8724`
-
-Pre-merge exact-head:
-- CI `33017606387`: success
-- Android `33017606312`: success
-- live mergeability immediately before merge: true
-
-Post-main:
-- CI `33017911498`: success
-- Android `33017911496`: success
+- pre-merge CI `33017606387`: success
+- pre-merge Android `33017606312`: success
+- live mergeability before merge: true
+- post-main CI `33017911498`: success
+- post-main Android `33017911496`: success
 
 Integrated behavior:
 - same `EditTimelineItem` extended; no parallel edit use case
 - type can be corrected among Note/Event/Call/Idea/Activity
 - changing Event/Activity to Note/Call/Idea clears hidden occurredAt
 - changing to Event/Activity reuses existing occurredAt controls
-- no Model/Repository/Storage/Schema/dependency change
 
 Issue #55 is completed.
 
 ## Active Product PR — #58 / Issue #57
 PR #58: `feat(timeline): delete items with confirmation`  
 Branch: `feature/delete-timeline-item`  
-Current exact head: `58bce967c3d28fcd70d117ab114ee4d24625166f`  
+Current exact head: `fd1e252b114f207ac6bf38080f1ccc1b749c0557`  
 Base: current main `71d1d993e362be898be955963653eff832a7da0a`
 
 Implementation:
@@ -72,28 +63,39 @@ Implementation:
 - no schema bump, no second storage, no soft-delete foundation
 - small `DeleteTimelineItem` application use case
 - production wiring uses the same shared repository
-- deletion is exposed inside the existing Edit dialog with explicit Persian confirmation
+- deletion is inside the existing Edit dialog with explicit Persian confirmation
 - successful deletion reloads through the existing Timeline/filter state path
 - application, real temp-file persistence, and widget tests added
 
 Validation history:
-- previous head `660edf9...`: Android Green, CI failed only because two older test fakes lacked the expanded `deleteById` interface
-- CI logs identified exactly `timeline_edit_flow_test.dart` and `timeline_search_flow_test.dart`
-- both test fakes have now been updated on current head `58bce967...`
-- do not merge until fresh exact-head CI + Android runs exist and both succeed
+- head `660edf9...`: Android Green; CI found exactly two old test fakes missing `deleteById`
+- both fakes were fixed on later head and Fast CI became Green
+- code review then found a missing proof for the Issue #57 requirement that active Search/Type/Date filters survive deletion reload
+- current head `fd1e252...` adds a combined widget test proving Search + Type + Date state is preserved after deletion
+- because current head changed, all earlier Green evidence is historical only
+- close/reopen was used once to safely retrigger standard PR automation when synchronize did not immediately register a new run
+
+Do not merge #58 until fresh exact-head CI + Android runs exist on `fd1e252...`, both succeed, and live mergeability is re-read.
+
+## Next Product — Issue #59
+`feat(timeline): allow undo after item deletion`
+
+Fresh audit found no existing Undo path or open duplicate issue.
+Planned scope reuses existing `upsert(...)` to restore the just-deleted item from memory after a Snackbar action.
+
+No soft-delete/tombstone/new storage/schema foundation is planned. Do not create a product branch until #58 settles on main.
 
 ## Documentation Lane — PR #50
 PR #43 is closed stale history.
 PR #50 remains the replacement documentation PR and intentionally stays Draft while #58 is active.
 
-This docs branch tracks current main + active product reality. Before docs merge it must be synchronized onto the final product main, freshly audited, exact-head validated, then merged safely.
+Before docs merge it must be synchronized onto the final product main, freshly audited, exact-head validated, then merged safely.
 
 ## Ruleset — Issue #19
 Fresh Ruleset audit still shows `main-protection` active with PR/deletion/non-fast-forward rules but no required-status-check rule.
-
 Connector discovery still exposes Ruleset read only; no proven write action exists.
 
-Operational merge contract remains:
+Operational merge contract:
 `exact current head + Green exact-head CI + Green exact-head Android + live mergeability + expected_head_sha lock + post-main proof`
 
 ## Parallel Speed Rules
@@ -106,12 +108,12 @@ Operational merge contract remains:
 - no stale merge evidence
 
 ## Next Actions
-1. Verify fresh exact-head CI + Android for PR #58 head `58bce967...`.
-2. If any gate fails, fix only the real failing surface and rerun on the new exact head.
-3. If both Green, re-read PR head + mergeability and merge #58 with expected-head lock.
+1. Verify fresh exact-head CI + Android for PR #58 head `fd1e252...`.
+2. Fix only a real failing surface if a gate fails.
+3. If both Green, final-read #58 head + mergeability and merge with expected-head lock.
 4. Validate resulting main with Fast CI + Android proof.
-5. Final-sync PR #50 onto the resulting stable main and merge docs only after exact-head validation.
-6. Fresh-audit the next product gap without creating duplicate foundations.
+5. Start #59 only from the verified new main.
+6. Final-sync PR #50 onto stable main and merge docs only after exact-head validation.
 7. Keep #19 open until Ruleset enforcement is genuinely writable and verified.
 
 ## Trigger
