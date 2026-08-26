@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
@@ -9,10 +10,12 @@ class TimelineHome extends StatefulWidget {
     super.key,
     required this.quickCapture,
     required this.loadTimeline,
+    this.editTimelineItem,
   });
 
   final QuickCapture quickCapture;
   final LoadTimeline loadTimeline;
+  final EditTimelineItem? editTimelineItem;
 
   @override
   State<TimelineHome> createState() => _TimelineHomeState();
@@ -111,6 +114,66 @@ class _TimelineHomeState extends State<TimelineHome> {
     }
   }
 
+  Future<void> _openEdit(TimelineItem item) async {
+    final editTimelineItem = widget.editTimelineItem;
+    if (editTimelineItem == null) {
+      return;
+    }
+
+    var draft = item.text;
+    final text = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('ویرایش یادداشت'),
+        content: TextFormField(
+          key: const Key('timeline-edit-input'),
+          initialValue: item.text,
+          autofocus: true,
+          minLines: 1,
+          maxLines: 6,
+          onChanged: (value) => draft = value,
+          decoration: const InputDecoration(
+            labelText: 'متن',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('انصراف'),
+          ),
+          FilledButton(
+            key: const Key('timeline-edit-save'),
+            onPressed: () => Navigator.of(dialogContext).pop(draft),
+            child: const Text('ذخیره'),
+          ),
+        ],
+      ),
+    );
+
+    if (text == null) {
+      return;
+    }
+
+    try {
+      await editTimelineItem.updateText(id: item.id, text: text);
+      await _reload();
+    } on ArgumentError {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('متن ویرایش نمی‌تواند خالی باشد.')),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ویرایش مورد انجام نشد.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return TimelineScreen(
@@ -118,6 +181,7 @@ class _TimelineHomeState extends State<TimelineHome> {
       isLoading: _isLoading,
       errorMessage: _errorMessage,
       onQuickCapture: _isLoading ? null : _openQuickCapture,
+      onItemTap: widget.editTimelineItem == null ? null : _openEdit,
     );
   }
 }
