@@ -16,7 +16,7 @@ final Random _secureRandom = Random.secure();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppFonts.loadLicensedIranSansX();
+  final hasLicensedIranSansX = await AppFonts.loadLicensedIranSansX();
 
   final supportDirectory = await getApplicationSupportDirectory();
   final repository = JsonFileTimelineRepository(
@@ -25,6 +25,9 @@ Future<void> main() async {
 
   runApp(
     YadNegarApp(
+      fontFamily: hasLicensedIranSansX
+          ? AppFonts.iranSansXFamily
+          : AppFonts.vazirmatnFamily,
       home: TimelineHome(
         quickCapture: QuickCapture(
           repository: repository,
@@ -49,9 +52,11 @@ class YadNegarApp extends StatelessWidget {
   const YadNegarApp({
     super.key,
     this.home = const TimelineScreen(),
+    this.fontFamily = AppFonts.vazirmatnFamily,
   });
 
   final Widget home;
+  final String fontFamily;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +66,7 @@ class YadNegarApp extends StatelessWidget {
       locale: const Locale('fa'),
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: AppFonts.family,
+        fontFamily: fontFamily,
       ),
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
