@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
+import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_home.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
@@ -30,6 +31,7 @@ Future<void> main() async {
         ),
         loadTimeline: LoadTimeline(repository: repository),
         editTimelineItem: EditTimelineItem(repository: repository),
+        searchTimeline: SearchTimeline(repository: repository),
       ),
     ),
   );
