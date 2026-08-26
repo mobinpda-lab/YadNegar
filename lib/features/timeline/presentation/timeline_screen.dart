@@ -9,6 +9,7 @@ class TimelineScreen extends StatelessWidget {
     this.errorMessage,
     this.onQuickCapture,
     this.onItemTap,
+    this.onExportTimeline,
     this.searchController,
     this.selectedFilterType,
     this.hasActiveSearch = false,
@@ -24,6 +25,7 @@ class TimelineScreen extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onQuickCapture;
   final ValueChanged<TimelineItem>? onItemTap;
+  final VoidCallback? onExportTimeline;
   final TextEditingController? searchController;
   final TimelineItemType? selectedFilterType;
   final bool hasActiveSearch;
@@ -39,6 +41,15 @@ class TimelineScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('یادنگار'),
         centerTitle: false,
+        actions: [
+          if (onExportTimeline != null)
+            IconButton(
+              key: const Key('timeline-export-action'),
+              tooltip: 'کپی خروجی Timeline',
+              onPressed: onExportTimeline,
+              icon: const Icon(Icons.copy_all_outlined),
+            ),
+        ],
       ),
       body: _buildPageBody(),
       floatingActionButton: FloatingActionButton.extended(
