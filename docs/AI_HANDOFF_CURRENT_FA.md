@@ -9,98 +9,94 @@ GitHub Reality همیشه مقدم است. قبل از هر Write/Merge وضعی
 ## Repository
 `mobinpda-lab/YadNegar`
 Default branch: `main`
-آخرین main تأییدشده: `0610c401eb5a31a68552be047bc3d765696c2f33`
-Commit: `feat(core): define minimal Timeline Item contract`
+آخرین main تأییدشده: `bb6f97672e446973df94674f6ae16a8dbfd3d930`
+Commit: `ci: validate all active lanes on push`
 
-## Integrated روی main
+## روی main چه چیزی واقعاً Integrated است
 ### Foundation — PR #2
-Merge شده؛ Issue #4 بسته.
-Flutter/Dart foundation + Persian RTL baseline + baseline test.
-Validated head `e614343a80f9c30e7a171ef7aeb1eaebc852a8be` با pub get/analyze/test سبز.
+Flutter/Dart foundation + Persian RTL baseline + baseline tests. Issue #4 بسته.
 
 ### Fast CI — PR #7
 Merge SHA: `9999e31f7aa2fa4717c5f027319e356ca705bebe`
 Validated head: `a6d81645bc21b2a6c2e8af2be3d6e02555f139b7`
 Run `32987365151`: success.
-Fast Gate: `flutter pub get → flutter analyze → flutter test`
-Placeholderهای `test.yml` و `build.yml` حذف شدند.
+Fast Gate: `flutter pub get → flutter analyze → flutter test`.
+Placeholderهای قدیمی حذف شده‌اند.
 Issue #6 فقط برای Full Build Gate واقعی آینده باز است.
 
 ### Timeline Domain — PR #10
-Merge/current main: `0610c401eb5a31a68552be047bc3d765696c2f33`
+Merge SHA: `0610c401eb5a31a68552be047bc3d765696c2f33`
 Validated head: `53825cc629fca1285e20c57bfdbc91369eabfb8c`
-Run `32987199672`: pub get/analyze/test success.
-Contract: note/event/call/idea/activity + `TimelineItem` + `timelineAt = occurredAt ?? createdAt`.
+Run `32987199672`: success.
+Contract مشترک: `TimelineItem`, note/event/call/idea/activity و `timelineAt = occurredAt ?? createdAt`.
 Issue #9 بسته.
 
-## موج موازی فعال
-### Lane A1 — Persistence
-Issue #11 → PR #12 only.
-PR #12: `feat(persistence): persist Timeline items to JSON`
-Branch: `persistence/json-timeline-repository`
-Head: `0dbe99146be2b33f50ed28d3259bd0f0c5741cc4`
+### Persistence — PR #12
+Merge SHA: `cc00db09863592b6b3ccb89de05aa1c428dbb5e7`
+با exact-head CI موفق Merge شده است. Issue #11 تکمیل شده.
 
-Implemented:
+Integrated:
 - `TimelineRepository`
 - `JsonFileTimelineRepository`
-- real disk persistence via `dart:io`
+- واقعی روی disk با `dart:io`
 - schema version 1
 - upsert/find/listNewestFirst
 - duplicate prevention
 - Timeline ordering
 - reload-from-disk tests
-- unsupported-schema test
+- unsupported-schema fail-fast
 
-JSON storage یک MVP dependency-free و قابل‌تعویض است؛ Database نهایی اعلام نشده.
+JSON storage یک MVP آفلاین و قابل‌تعویض است؛ Database نهایی اعلام نشده.
 
-### Lane A2 — Quick Capture Application (stacked)
+### Automation — PR #14
+Merge/current main: `bb6f97672e446973df94674f6ae16a8dbfd3d930`
+Validated head: `669e11bbcde79bc17dbb4c53e0435eed8a5cd792`
+Run `32989549391`: success با Resolve dependencies + Analyze + Test واقعی.
+Issue #13 تکمیل شده.
+
+همان CI واحد اکنون Push laneهای زیر را نیز پوشش می‌دهد:
+`main`, `ci/**`, `fix/**`, `feature/**`, `ui/**`, `core/**`, `persistence/**`, `docs/**`.
+
+## موج موازی فعال
+### Lane A — Quick Capture Application
 Issue #15 → PR #16 only.
 PR #16: `feat(capture): add Quick Capture use case`
 Branch: `feature/quick-capture-use-case`
-Head: `2c2f9f433e92ae3c3d275371c8ad5d0264e2fd0d`
-Base فعلی: `persistence/json-timeline-repository`
+Current base: `main`
+Current head: `8e3c3d1176d89c58b4ed6483152fcebe7c86d6a2`
 
-این PR عمداً روی PR #12 stacked است و پس از Merge #12 باید به `main` retarget شود.
 Implemented:
 - `QuickCapture`
 - injected clock/id generator
-- trim text
+- trim input
 - reject empty text/id
-- reuse `TimelineItem`
-- persistence فقط از طریق `TimelineRepository`
-- unit tests مستقل از UI/file system
+- reuse existing `TimelineItem`
+- write only through `TimelineRepository`
+- default capture type = note
+- unit tests independent of UI/file system
+
+Latest exact-head Actions lookup هنوز Run ثبت‌شده نشان نداده است. Zero Run نه success است نه failure. Merge فقط با Green exact-head.
 
 ### Lane B — UI
 Issue #5 → PR #8 only.
 PR #8: `feat(ui): establish RTL timeline shell`
 Branch: `ui/rtl-timeline-shell`
-Head: `3b7ac04e401bfdc5b88f36eeed614c294a84e6df`
+Current head: `30c3765231e38146b8b14e03a35e05cc3b91f0c4`
 
 Implemented:
 - TimelineScreen
-- RTL shell
-- empty state
-- disabled Quick Capture contract تا Integration
-- Quick Capture accessibility tooltip
+- Persian RTL shell
+- real empty state
+- disabled Quick Capture contract تا wiring
+- tooltip/accessibility
+- stable keys برای empty state و Quick Capture action
 - widget tests
 
-Runهای قدیمی بدون runner/steps Evidence شکست کد نیستند. Current head باید Green شود.
+Live state در آخرین audit: mergeable. Latest exact-head Actions lookup هنوز Run ثبت‌شده نشان نداده است. Merge فقط با Green exact-head.
 
-### Lane C1 — Automation
-Issue #13 → PR #14 only.
-PR #14: `ci: validate all active lanes on push`
-Branch: `ci/expand-active-branch-gates`
-Head: `669e11bbcde79bc17dbb4c53e0435eed8a5cd792`
-
-هدف: همان CI واحد روی Push شاخه‌های `core/**`, `persistence/**`, `docs/**` نیز اجرا شود؛ Workflow موازی جدید ایجاد نشده است.
-
-### Lane C2 — Documentation
-PR #3 Documentation baseline فعال است و با هر Merge/Evidence جدید Sync می‌شود.
-
-## Actions Reality
-CI برای PRهای Merge‌شده #7/#10 Evidence واقعی دارد.
-در آخرین Audit، Headهای جدید #8/#12/#14/#16 هنوز Run جدید ثبت‌شده نداشتند. صفر Run نه Success است نه Failure.
-وقتی Run ظاهر شد، Job/Steps را بررسی کن و فقط exact-head Green را معتبر بدان.
+### Lane C — Documentation
+PR #3 Documentation baseline فعال است و با هر Merge/Evidence Sync می‌شود.
+Branch `docs/yadnegar-documentation-baseline` اکنون به‌دلیل PR #14 Push CI مستقیم نیز می‌گیرد.
 
 ## Vertical Slice
 هدف:
@@ -109,15 +105,19 @@ CI برای PRهای Merge‌شده #7/#10 Evidence واقعی دارد.
 وضعیت:
 - Domain: Integrated
 - Fast CI: Integrated
+- Persistence: Integrated
+- CI automation: Integrated
 - UI shell: PR #8
-- Persistence: PR #12
-- Quick Capture logic: PR #16 stacked
-- قدم بعد: wire UI → QuickCapture → TimelineRepository → real Timeline data، سپس View/Edit.
+- Quick Capture logic: PR #16
+
+Nearest next step after #8/#16:
+`UI action → QuickCapture → TimelineRepository → persisted item → Timeline reload/render`.
+بعد از آن View/Edit روی همان قرارداد.
 
 ## قواعد معماری
 - Reuse before rebuild
 - Foundation/AppShell/Timeline Model/Repository/Storage/CI موازی نساز
-- UI به `dart:io` وابسته نشود
+- UI را مستقیم به `dart:io` وابسته نکن
 - DB آینده فقط بر اساس نیاز واقعی query/index/migration/recovery/performance انتخاب شود
 - Fake persistence یا Build نمایشی گزارش نشود
 
@@ -127,17 +127,20 @@ CI برای PRهای Merge‌شده #7/#10 Evidence واقعی دارد.
 Evidence فقط برای SHA دقیق معتبر است.
 
 ## ترتیب ادامه
-1. Audit زنده main + PR #3/#8/#12/#14/#16 + Issues/Actions.
-2. Poll exact-head Actions موازی.
-3. هر Failure واقعی را از Step تشخیص و همان Branch را Fix کن.
-4. PR #14 را پس از Green Merge کن تا Laneهای فعال روی Push مستقیم Validate شوند.
-5. PR #12 را پس از Green Merge کن؛ سپس #16 را به main retarget و Revalidate کن.
-6. PR #8 فقط با Green current-head و mergeability واقعی Merge شود؛ در صورت drift همان Branch را Sync کن، PR موازی نساز.
-7. پس از Integration، wiring Vertical Slice را در PR کوچک بعدی بساز.
-8. PR #3 را همزمان Sync نگه دار.
+1. Fresh Audit main + PR #3/#8/#16 + Issues/Actions.
+2. exact-head Actions #8 و #16 را موازی بررسی کن.
+3. هر Failure واقعی را از Job/Step تشخیص بده و همان Branch را Fix کن.
+4. هر PR فقط با Green exact-head و mergeability امن Merge شود.
+5. PR #3 را با Mergeها/Evidence Sync نگه دار و از Push CI جدید استفاده کن.
+6. پس از Integration #8/#16، یک PR کوچک wiring برای `Quick Capture → Persist → real Timeline render` بساز.
+7. سپس View/Edit را در همان vertical slice ادامه بده.
+8. Full Build Gate را فقط بعد از Platform build foundation واقعی اضافه کن.
+
+## Automation ادامه
+یک Task ساعتی برای Audit زنده و ادامه واقعی توسعه YadNegar فعال است. هر اجرا باید GitHub را منبع حقیقت بداند، Laneها را موازی نگه دارد، Evidence دقیق بگیرد، Merge امن انجام دهد و Docs را همزمان Sync کند.
 
 ## اصل کار
-کار موازی هماهنگ سریع؛ تولید نرم‌افزار در چند ساعت به‌جای چند روز؛ Automation و Documentation همزمان با Implementation؛ بدون حذف Test/Evidence/Safe Integration.
+کار موازی هماهنگ سریع؛ تولید نرم‌افزار در چند ساعت به‌جای چند روز؛ GitHub Automation و Documentation همزمان با Implementation؛ بدون حذف Test/Evidence/Safe Integration.
 
 ## Trigger
 `ادامه یادنگار`
