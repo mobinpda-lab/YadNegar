@@ -7,72 +7,73 @@ Canonical operating package: `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`.
 ## Repository
 `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main: `e2564db524bfcec17770adc28704c1925efcefc8`  
-Commit: `platform: bootstrap durable Timeline persistence`
+Current verified main: `89c349d304b0f1b1f57e518b7739723e21facc0b`  
+Commit: `feat(timeline): add real View/Edit flow`
 
-## Integrated Real Software
-- Foundation / Persian RTL / Fast CI.
-- Timeline Domain + repository contract + real JSON persistence.
-- Timeline UI + Quick Capture + LoadTimeline + EditTimelineItem.
-- PR #23 merged `329ad83...`: Quick Capture UI → real persist → reload → render. Issue #22 completed.
-- PR #26 merged/current main `e2564db...`: production-safe application-support persistence bootstrap. Issue #24 completed.
-
-## Exact Evidence
-PR #23 final head `a4bc2ffe...`; run `32996798616`; Resolve dependencies, Analyze, Test: success.
-PR #26 final head `84b4a93b...`; run `32997146108`; Resolve dependencies, Analyze, Test: success.
-
-## Active Product Work — PR #27
-Issue #25 → PR #27 `feat(timeline): add real View/Edit flow`.
-Branch: `feature/timeline-view-edit`.
-Current head at this handoff update: `8a6656e30a95e8b63889f103f0bf545a4b5caf48`.
-Base: `e2564db...`.
-
-Implemented:
-- Timeline item tap contract.
-- Persian edit dialog.
-- edit through existing `EditTimelineItem` only.
-- reload through existing `LoadTimeline`.
-- empty-edit feedback.
-- production composition injects EditTimelineItem on the same shared repository.
-- widget tests cover edit/save/reload/render and empty edit.
-
-Do not merge until exact-current-head CI is completed Green and mergeability is safe.
-
-## Production Persistence
-`main()` now uses `getApplicationSupportDirectory()` via compatible `path_provider ^2.1.5`, constructs one `JsonFileTimelineRepository`, and reuses it for application use cases.
-No temp/current-directory fake durability. Plugin remains in composition root.
-
-## Docs — PR #3
-Canonical documentation branch is being synchronized in parallel. After PR #27 outcome, update current main/CI state again, then exact-head validate and merge #3 if safe.
-
-## Ruleset — Issue #19
-`main-protection` id `20952887` is active but still lacks required `YadNegar CI / quality` status enforcement.
-Connector supports Ruleset reads only; no fake mutation.
-Operational rule: exact-head Green before every merge.
-
-## Vertical Slice
+## Current Product State
+Vertical Slice هدف فعلی کامل و روی main یکپارچه است:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-- Capture/Persist/Load/Render: integrated.
-- production persistence bootstrap: integrated.
-- View/Edit: PR #27 under validation.
+روی main اکنون وجود دارد:
+- Flutter/Dart + Persian RTL foundation
+- single Fast CI
+- Timeline Domain
+- TimelineRepository + real JSON disk persistence
+- QuickCapture
+- LoadTimeline
+- EditTimelineItem
+- Timeline UI
+- Quick Capture real persist/reload/render
+- production-safe app-support persistence bootstrap
+- item tap/edit/persist/reload/render
 
-## Platform Build
-No committed Android/iOS/Desktop platform foundation yet.
-No APK/build success may be claimed.
-Next after View/Edit/docs integration: real Android platform foundation, then actual `flutter build apk`, then Full Build Gate.
+## Recent Exact Evidence
+PR #23 final head `a4bc2ffe...`; run `32996798616` success; merged `329ad83c...`; Issue #22 completed.
+PR #26 final head `84b4a93b...`; run `32997146108` success; merged `e2564db5...`; Issue #24 completed.
+PR #27 final head `60a9fe96...`; run `32997724347` success; merged/current main `89c349d3...`; Issue #25 completed.
 
-## Automation
-GitHub CI automation is active. Ruleset required-status hardening remains blocked by missing write capability.
-Separate hourly YadNegar continuation automation exists but is currently disabled.
+For each run, Resolve dependencies, Analyze and Test succeeded.
+
+## View/Edit Integration Detail
+Parallel development initially caused a real merge conflict after production bootstrap merged. The same View/Edit branch was reconciled with fresh main through a real merge commit; no duplicate PR was created. Mergeability was rechecked true before expected-head locked merge.
+
+Production composition now shares the same repository between QuickCapture, LoadTimeline and EditTimelineItem.
+
+## Production Persistence
+`main()` uses `getApplicationSupportDirectory()` with compatible `path_provider ^2.1.5` and one `JsonFileTimelineRepository`.
+No `Directory.systemTemp` / `Directory.current` fake production persistence.
+Platform plugin remains at composition root.
+
+## Docs — PR #3
+Canonical docs branch is receiving the final post-View/Edit sync now. Merge only after exact-final-head CI Green and safe mergeability.
+
+## CI / Ruleset
+Fast Gate: `flutter pub get → flutter analyze → flutter test`.
+GitHub CI automation is active with PR/push validation, cache, concurrency and stale-run cancellation.
+
+Ruleset `main-protection` id `20952887` still lacks platform-required `YadNegar CI / quality`.
+Issue #19 remains open. Current connector has no Ruleset write action, so no fake hardening claim.
+
+## Next Platform Wave
+Issue #28 owns real Android foundation + APK validation.
+Repository still has no committed Android platform project on main, therefore no APK/full build success is claimed yet.
+
+Required sequence:
+1. create Android platform foundation in a real Flutter 3.35 environment.
+2. commit generated platform files.
+3. execute real Android build.
+4. verify APK artifact.
+5. only then extend Issue #6 to a Full Build Gate.
+
+## Automation Reality
+Separate hourly YadNegar continuation automation exists but is currently disabled. GitHub CI automation itself is active.
 
 ## Continue
-1. Check exact-head Actions for PR #27.
-2. Fix same branch if real failure; otherwise merge with expected-head lock.
-3. Validate main + Issue #25 closure.
-4. Sync and exact-head validate/merge PR #3.
-5. Start real Android platform foundation from fresh main.
-6. Run real APK build before creating a Full Build Gate.
+1. Check exact-head CI and mergeability for final docs PR #3; merge if safe.
+2. Fresh-audit main after docs merge.
+3. Start Issue #28 Android platform lane.
+4. Produce real APK evidence before Full Build Gate.
+5. Keep Issue #19 blocked only on real Ruleset write capability.
 
 ## Trigger
 `ادامه یادنگار`
