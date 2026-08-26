@@ -9,6 +9,12 @@ class TimelineScreen extends StatelessWidget {
     this.errorMessage,
     this.onQuickCapture,
     this.onItemTap,
+    this.searchController,
+    this.selectedFilterType,
+    this.hasActiveSearch = false,
+    this.onSearchChanged,
+    this.onTypeFilterChanged,
+    this.onClearSearch,
   });
 
   final List<TimelineItem> items;
@@ -16,6 +22,12 @@ class TimelineScreen extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onQuickCapture;
   final ValueChanged<TimelineItem>? onItemTap;
+  final TextEditingController? searchController;
+  final TimelineItemType? selectedFilterType;
+  final bool hasActiveSearch;
+  final ValueChanged<String>? onSearchChanged;
+  final ValueChanged<TimelineItemType?>? onTypeFilterChanged;
+  final VoidCallback? onClearSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +36,7 @@ class TimelineScreen extends StatelessWidget {
         title: const Text('یادنگار'),
         centerTitle: false,
       ),
-      body: _buildBody(),
+      body: _buildPageBody(),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('quick-capture-action'),
         onPressed: onQuickCapture,
@@ -35,7 +47,69 @@ class TimelineScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildPageBody() {
+    if (searchController == null || onSearchChanged == null) {
+      return _buildContent();
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: TextField(
+            key: const Key('timeline-search-input'),
+            controller: searchController,
+            onChanged: onSearchChanged,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              labelText: 'جستجو در یادنگار',
+              hintText: 'متن مورد را جستجو کنید',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Row(
+            children: [
+              const Text('نوع:'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButton<TimelineItemType>(
+                  key: const Key('timeline-type-filter'),
+                  value: selectedFilterType,
+                  hint: const Text('همه انواع'),
+                  isExpanded: true,
+                  items: TimelineItemType.values
+                      .map(
+                        (type) => DropdownMenuItem<TimelineItemType>(
+                          value: type,
+                          child: Text(_typeLabel(type)),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: onTypeFilterChanged,
+                ),
+              ),
+              if (hasActiveSearch) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  key: const Key('timeline-search-clear'),
+                  tooltip: 'پاک کردن جستجو و فیلتر',
+                  onPressed: onClearSearch,
+                  icon: const Icon(Icons.clear),
+                ),
+              ],
+            ],
+          ),
+        ),
+        Expanded(child: _buildContent()),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
     if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(key: Key('timeline-loading')),
@@ -50,6 +124,32 @@ class TimelineScreen extends StatelessWidget {
             errorMessage!,
             key: const Key('timeline-error'),
             textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    if (items.isEmpty && hasActiveSearch) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.search_off, size: 48),
+              SizedBox(height: 16),
+              Text(
+                'نتیجه‌ای پیدا نشد',
+                key: Key('timeline-search-empty-state'),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'عبارت جستجو یا فیلتر نوع را تغییر دهید.',
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       );
