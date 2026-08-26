@@ -4,6 +4,7 @@ import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
+import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
@@ -53,6 +54,7 @@ class TimelineHome extends StatefulWidget {
     required this.loadTimeline,
     this.editTimelineItem,
     this.deleteTimelineItem,
+    this.restoreTimelineItem,
     this.searchTimeline,
     this.filterTimelineByDateRange,
     this.dateRangePicker,
@@ -63,6 +65,7 @@ class TimelineHome extends StatefulWidget {
   final LoadTimeline loadTimeline;
   final EditTimelineItem? editTimelineItem;
   final DeleteTimelineItem? deleteTimelineItem;
+  final RestoreTimelineItem? restoreTimelineItem;
   final SearchTimeline? searchTimeline;
   final FilterTimelineByDateRange? filterTimelineByDateRange;
   final TimelineDateRangePicker? dateRangePicker;
@@ -510,8 +513,10 @@ class _TimelineHomeState extends State<TimelineHome> {
                       context: dialogContext,
                       builder: (confirmContext) => AlertDialog(
                         title: const Text('حذف این مورد؟'),
-                        content: const Text(
-                          'این مورد از یادنگار حذف می‌شود. این کار قابل بازگشت نیست.',
+                        content: Text(
+                          widget.restoreTimelineItem == null
+                              ? 'این مورد از یادنگار حذف می‌شود. این کار قابل بازگشت نیست.'
+                              : 'این مورد از یادنگار حذف می‌شود. پس از حذف می‌توانید آن را بازگردانید.',
                         ),
                         actions: [
                           TextButton(
@@ -587,8 +592,46 @@ class _TimelineHomeState extends State<TimelineHome> {
         if (!mounted) {
           return;
         }
+        final restoreTimelineItem = widget.restoreTimelineItem;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('مورد حذف شد.')),
+          SnackBar(
+            content: const Text('مورد حذف شد.'),
+            action: restoreTimelineItem == null
+                ? null
+                : SnackBarAction(
+                    label: 'بازگردانی',
+                    onPressed: () async {
+                      try {
+                        final restored = await restoreTimelineItem.restore(item);
+                        if (!mounted) {
+                          return;
+                        }
+                        if (!restored) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('این مورد دیگر قابل بازگردانی نیست.'),
+                            ),
+                          );
+                          return;
+                        }
+                        await _reload();
+                        if (!mounted) {
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('مورد بازگردانده شد.')),
+                        );
+                      } catch (_) {
+                        if (!mounted) {
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('بازگردانی مورد انجام نشد.')),
+                        );
+                      }
+                    },
+                  ),
+          ),
         );
       } catch (_) {
         if (!mounted) {
