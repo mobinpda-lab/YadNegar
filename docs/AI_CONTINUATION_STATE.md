@@ -5,174 +5,200 @@ Last updated: 2026-08-26
 ## Source of Truth
 `GitHub Reality > approved architecture decisions > docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md > exact CI/workflow evidence > conversation memory`
 
-This file is the operational continuation snapshot for moving work between ChatGPT sessions. It is not a substitute for a fresh live GitHub audit.
+This file is the operational continuation snapshot for moving work between ChatGPT sessions. Always fresh-audit GitHub before any write or merge.
 
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main SHA: `c632570a8d09fffecc3ae27e9747f417888b9c5f`  
-Commit: `feat(foundation): establish real Flutter RTL foundation`
+Current verified main SHA: `0610c401eb5a31a68552be047bc3d765696c2f33`  
+Commit: `feat(core): define minimal Timeline Item contract`
 
-PR #2 was merged on 2026-08-26. Issue #4 is closed as completed. Flutter Foundation is real `main` state and no duplicate Foundation should be created.
-
-Verified Foundation on `main` includes:
-- `pubspec.yaml`
-- `lib/main.dart`
-- `test/widget_test.dart`
-- `.github/workflows/flutter-ci.yml`
-- minimal Persian RTL app shell
+Main now contains:
+- Flutter/Dart foundation
+- Persian RTL shell baseline
 - baseline widget test
+- consolidated `YadNegar CI`
+- shared `TimelineItem` Domain contract
 
-PR #2 exact head `e614343a80f9c30e7a171ef7aeb1eaebc852a8be` had successful `flutter pub get`, `flutter analyze` and `flutter test` before merge.
+## Integrated Work
+### PR #2 — Flutter Foundation
+Merged. Issue #4 closed.
+Validated head `e614343a80f9c30e7a171ef7aeb1eaebc852a8be` had successful `flutter pub get`, `flutter analyze`, `flutter test`.
 
-## Current CI Reality
-After Foundation merged, `main` temporarily contains three workflows:
-- `.github/workflows/flutter-ci.yml` — real Flutter validation
-- `.github/workflows/test.yml` — old placeholder
-- `.github/workflows/build.yml` — old placeholder
+### PR #7 — CI consolidation
+Merged to main as:
+`9999e31f7aa2fa4717c5f027319e356ca705bebe`
 
-For main SHA `c632570...` the observed workflow state included:
-- Flutter CI run `32984360283`: completed / failure
-- Test run `32984476621`: completed / startup_failure
-- Build run `32984471010`: queued at the observed snapshot
+Exact validated PR head:
+`a6d81645bc21b2a6c2e8af2be3d6e02555f139b7`
 
-The failed/queued jobs did not provide usable step/log evidence. These statuses are not proof of an application-code regression.
+`YadNegar CI` run `32987365151`: success.
+Job `quality` executed successfully:
+- Checkout
+- Flutter setup
+- dependency resolution
+- analyze
+- test
+
+Main CI result:
+- one Fast Quality Gate
+- `permissions: contents: read`
+- concurrency + `cancel-in-progress: true`
+- Flutter cache
+- explicit diagnostic step names
+- old placeholder `test.yml` removed
+- old placeholder `build.yml` removed
+
+Issue #6 remains open only for a future real Full Build Gate after a valid Platform build path exists.
+
+### PR #10 — Timeline Domain contract
+Merged to main as current SHA:
+`0610c401eb5a31a68552be047bc3d765696c2f33`
+
+Exact validated head:
+`53825cc629fca1285e20c57bfdbc91369eabfb8c`
+
+Flutter CI run `32987199672`: success.
+Executed successfully:
+- `flutter pub get`
+- `flutter analyze`
+- `flutter test`
+
+Integrated contract:
+- `TimelineItemType`: note/event/call/idea/activity
+- `TimelineItem`
+- `timelineAt = occurredAt ?? createdAt`
+- Domain tests
+
+Issue #9 is closed/completed. Do not create a competing Timeline model for this scope.
 
 ## Active Pull Requests
 ### PR #3 — Canonical documentation baseline
 Branch: `docs/yadnegar-documentation-baseline`
-State at latest live audit: open, non-draft, mergeable.
-Scope remains documentation/README only: canonical operating package, comprehensive project document, active operation plan, current state, AI handoff, technical/product documentation and README map.
+Scope: Documentation/README only.
+This PR must remain synchronized with actual GitHub state and exact CI evidence.
 
-### PR #7 — CI consolidation
-Branch: `ci/consolidate-flutter-gates`  
-Current head: `a6d81645bc21b2a6c2e8af2be3d6e02555f139b7`  
-State at latest live audit: open, non-draft, mergeable.
-
-Scope:
-- make `flutter-ci.yml` the single Fast Quality Gate
-- `permissions: contents: read`
-- branch/PR concurrency with `cancel-in-progress: true`
-- Flutter cache
-- explicit diagnostic step names
-- `flutter pub get → flutter analyze → flutter test`
-- remove placeholder `test.yml`
-- remove placeholder `build.yml`
-
-PR #7 was closed/reopened once and then received a fresh diagnostic commit to emit a new synchronize event. At the latest live audit, exact-head workflow lookup for `a6d81645...` still returned zero runs. Do not merge without exact-head evidence.
-
-### PR #8 — RTL Timeline shell
+### PR #8 — RTL Timeline UI shell
 Branch: `ui/rtl-timeline-shell`  
-Head: `5e459940fedf8a5b83cb9708396ca6ea7ca0a989`  
-State at latest live audit: open, non-draft, mergeable.
+Current head: `3b7ac04e401bfdc5b88f36eeed614c294a84e6df`
 
-Scope:
+Current scope:
 - feature-based `TimelineScreen`
 - Persian RTL shell
 - real empty state
-- Quick Capture entry contract disabled until persistence exists
-- widget test for RTL/empty-state/disabled capture
+- Quick Capture entry contract disabled until persistence is integrated
+- accessibility tooltip for Quick Capture
+- widget tests for RTL/empty-state/disabled capture/tooltip
 
-Exact-head Actions now show two failed runs:
-- Flutter CI run `32986361005`: completed / failure
-- old Test run `32986016461`: completed / failure
+Latest commits:
+- `0497ab530f7b12a4e940c3e14a1308303accaf53` — accessibility tooltip
+- `3b7ac04e401bfdc5b88f36eeed614c294a84e6df` — accessibility contract test
 
-Important evidence detail for Flutter CI run `32986361005`: the returned job `98233297567` still reports `status: queued`, no runner, `conclusion: null`, and `steps: []` although the workflow run reports completed/failure. Therefore this still does not prove a UI/code failure. Treat it as unresolved Actions/runner evidence until a real job with executed steps exists.
+Old failed Actions runs without executed steps/runner are not application-failure evidence. Merge only after the current exact head gets real successful `YadNegar CI` evidence.
 
-### PR #10 — Timeline Domain contract
-Branch: `core/timeline-item-contract`  
-Head: `53825cc629fca1285e20c57bfdbc91369eabfb8c`  
-State at latest live audit: open, non-draft, mergeable.
+Issue #5 owns this scope. Do not create another App Shell/Timeline UI foundation.
 
-Scope:
-- `TimelineItemType`: note/event/call/idea/activity
-- storage/UI-independent `TimelineItem`
-- `timelineAt` rule: `occurredAt ?? createdAt`
-- domain tests for time behavior and shared types
+### PR #12 — JSON Timeline persistence
+Branch: `persistence/json-timeline-repository`  
+Current head: `0dbe99146be2b33f50ed28d3259bd0f0c5741cc4`
 
-No Persistence, Repository implementation, UI, Search, Reminder or Migration is included. Exact-head workflow lookup at the latest live audit still returned zero runs.
+Issue #11 owns this scope.
 
-## Closed / Integrated Work
-- PR #1: closed without merge; historical CI-path experiment only.
-- PR #2: merged; Flutter Foundation now on `main`.
-- Issue #4: closed/completed after PR #2; no duplicate Foundation work.
+Implemented:
+- Domain `TimelineRepository`
+- `JsonFileTimelineRepository`
+- real file persistence with `dart:io`
+- schema version `1`
+- `upsert`
+- `findById`
+- `listNewestFirst`
+- duplicate prevention by id
+- ordering by effective `timelineAt`
+- deterministic tie-break
+- reload-from-disk tests using temporary directories
+- fail-fast for unsupported schema versions
+
+No external storage dependency was added. JSON file persistence is an intentionally small, offline, testable and replaceable MVP implementation—not the declared final database.
+
+Out of scope for PR #12:
+- SQLite/Isar/Hive final choice
+- encryption
+- backup/export
+- search/indexing
+- reminders
+- Platform build setup
+
+Merge only after exact-head `YadNegar CI` runs `flutter pub get → flutter analyze → flutter test` successfully.
 
 ## Active Issues / Ownership
-- Issue #5 → PR #8 only for RTL/Timeline UI scope.
-- Issue #6 → PR #7 only for Fast CI consolidation; Full Build Gate remains future work until a valid platform build path exists.
-- Issue #9 → PR #10 only for the minimal Timeline Item Domain contract.
-
-Do not create competing Branches/PRs/Models/AppShells/Storage/CI for these active scopes.
+- Issue #5 → PR #8 UI only.
+- Issue #6 → Full Build Gate future scope; Fast Gate already integrated through PR #7.
+- Issue #9 → completed by merged PR #10.
+- Issue #11 → PR #12 persistence only.
 
 ## Parallel Work Model
-Lane A — Core / Domain / Foundation  
+Lane A — Core / Persistence  
 Lane B — UI / Feature  
 Lane C — CI / Automation / Documentation
 
 Current real parallel wave:
-- Lane A: PR #10 Timeline Domain contract.
-- Lane B: PR #8 RTL Timeline shell.
-- Lane C: PR #7 CI consolidation + PR #3 documentation baseline.
+- Lane A: PR #12 real JSON persistence.
+- Lane B: PR #8 RTL Timeline UI.
+- Lane C: consolidated CI already integrated + PR #3 documentation sync.
 
-File boundaries are intentionally non-overlapping so a blocked Actions lane does not stop independent engineering work.
+File boundaries are intentionally non-overlapping so one lane does not stop the others.
 
 ## Product Direction
 YadNegar is a Persian RTL, Timeline-oriented, capture-first application.
 
-Near-term shared concepts:
-- Note
-- Event
-- Call
-- Idea
-- Activity
-- Quick Capture
-- Timeline
-- date/time handling
-- View/Edit
-
-First real vertical slice target:
+First real vertical slice:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-Later phases may add Search, Filtering, Reminder, Backup, Export and Recovery after the shared foundation is stable.
+Progress toward it:
+- Shared Timeline Domain: integrated.
+- Fast CI: integrated.
+- Timeline UI shell: PR #8 active.
+- Real Persistence: PR #12 active.
+- Next connection: Quick Capture must write through `TimelineRepository` and Timeline must read real data.
 
-## Persistence Rule
-Do not jump directly to a database after PR #10. Audit persistence against:
-- offline behavior
-- Timeline/date sorting and query patterns
-- schema migration
-- backup/recovery
-- export
-- testability
-- performance
-- Flutter ecosystem support
-- maintainability
+## Persistence Decision
+The repository currently has no external storage package or complete Platform build foundation. For the first vertical slice, file-backed JSON is being used because it is:
+- offline
+- dependency-free
+- testable in CI
+- replaceable behind a Domain port
+- sufficient for the first save/list/view/edit loop
 
-Choose one shared persistence foundation; do not create competing storage/repository layers.
-
-## Next Real Actions
-1. Fresh-audit `main`, PR #3/#7/#8/#10, Issues #5/#6/#9 and exact-head Actions before any write/merge.
-2. Obtain trustworthy exact-head GitHub Actions evidence for PR #7; merge CI consolidation first only when the real Fast Gate executes successfully.
-3. After PR #7 merge, revalidate PR #8 and PR #10 using the consolidated CI; merge only after exact-head analyze/test evidence.
-4. Keep PR #3 synchronized with every material merge/evidence change and merge the documentation baseline after valid evidence.
-5. After PR #10 is integrated, audit Persistence options and implement the first real vertical slice: `Quick Capture → Persist → Timeline → View/Edit`.
+This does not prevent a later migration to a database. A future database decision must be justified by real query volume, migration, backup/recovery, indexing, performance and platform requirements.
 
 ## Validation Rule
-No report may call CI green without evidence from the exact ref being discussed.
+No report may call CI green without exact-ref evidence.
 
-Current target validation chain:
+Current Fast Gate:
 `flutter pub get → flutter analyze → flutter test`
 
-Add `flutter build` only when a valid platform project/build path exists and the build really executes.
+Add `flutter build` only when a valid Platform project/build path exists and the build really executes.
 
 ## Architecture Rules
 - Flutter / Dart
 - Clean Architecture direction
 - Feature-Based organization
 - Persian RTL-first UI
-- reuse shared Foundation before adding new foundations
-- no competing Model/Repository/Storage/Router/AppShell without explicit architectural justification
-- no fake persistence or fabricated implementation state
-- no duplicate documentation governance
+- Reuse before rebuild
+- no duplicate App Shell
+- no competing Timeline model
+- no competing Repository/Storage foundation
+- no duplicate CI path
+- no fake persistence claims
+- no duplicate canonical documentation
+
+## Next Real Actions
+1. Fresh-check exact-head Actions for PR #8 and PR #12 in parallel.
+2. Fix any real failing step immediately; do not guess from run-level status alone.
+3. Merge each PR only after exact-head successful analyze/test evidence and live mergeability check.
+4. After persistence/UI integration, create the next small vertical-slice PR connecting Quick Capture → Repository → real Timeline data.
+5. Keep PR #3 synchronized with every material merge/evidence change.
+6. Add Full Build Gate only when a real Platform build foundation exists.
 
 ## Documentation Rule
 Meaningful implementation, CI evidence, current-state documentation and handoff move together. Conversation memory is never the only operational record.
@@ -181,13 +207,13 @@ Meaningful implementation, CI evidence, current-state documentation and handoff 
 `ادامه یادنگار`
 
 Meaning:
-`Audit live GitHub → reconcile docs → inspect open PRs/issues → choose nearest real gaps → parallelize non-conflicting work → execute → validate exact refs → document → report briefly`
+`Audit live GitHub → reconcile docs → inspect active PRs/issues → choose nearest real gaps → parallelize non-conflicting work → execute → validate exact refs → document → report briefly`
 
 ## Report Style
-Keep owner-facing reports short and nontechnical:
+Owner-facing report:
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
 
-Distinguish clearly between Actual, Plan and Blocked work.
+Keep it short, simple and nontechnical. Clearly distinguish Actual, Plan and Blocked work.
 
 ## Speed Rule
-Produce verified useful software in hours rather than days through parallel independent work, small PRs, automation, reuse and fast feedback—not by skipping quality or evidence.
+Produce verified useful software in hours rather than days through coordinated parallel work, small PRs, automation, reuse and fast feedback—not by skipping tests, evidence or safe integration.
