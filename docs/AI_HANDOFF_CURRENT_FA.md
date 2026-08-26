@@ -1,109 +1,84 @@
 # YadNegar — Live AI Handoff
 
 ## مرجع حقیقت
-GitHub Reality مقدم است. قبل از هر Write/Merge یا اعلام SHA/CI/Mergeability وضعیت زنده را دوباره Audit کن.
+GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
-Canonical governance: `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`  
-Active plan: `docs/YADNEGAR_OPERATION_PLAN.md`  
-Current state: `docs/AI_CONTINUATION_STATE.md`
+Repository: `mobinpda-lab/YadNegar`  
+Current main: `740c290f8c2c3104dbca6518ee8c3de54b9abc51`
 
-## Repository
-`mobinpda-lab/YadNegar`  
-Default branch: `main`  
-Current verified main: `6e379f4de11edfd323f79861b04b16992ee6f614`
-
-## وضعیت محصول
-Vertical Slice واقعی:
+## وضعیت واقعی محصول
+یک Timeline مشترک داریم:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-Main اکنون علاوه بر آن دارد:
-- نوع‌های Note/Event/Call/Idea/Activity روی یک مدل مشترک
+قابلیت‌های موجود روی main:
+- Note/Event/Call/Idea/Activity
 - Search + Type + Date Range
-- ثبت اختیاری occurredAt برای Event/Activity
-- نمایش زمان ثبت/رخداد روی کارت Timeline با `timelineAt`
+- Event/Activity occurredAt capture
+- نمایش زمان ثبت/رخداد روی کارت‌ها
+- ویرایش/پاک‌کردن occurredAt برای Event/Activity
 - JSON persistence واقعی و crash-recoverable
-- Vazirmatn + optional private IRANSansX
-- Fast CI + Android APK Build واقعی و deduplicated
+- Fast CI + Android APK Build واقعی
 
-## #49 — occurredAt Capture تکمیل شد
-Merged: `16eb0e041cb6431c83bb9abc844d0291a5bc1cb4`
+## PR #54 / Issue #53 — تکمیل شد
+Merged current main:
+`740c290f8c2c3104dbca6518ee8c3de54b9abc51`
 
-Pre-merge:
-- CI `33015406333`: success
-- Android `33015406042`: success
-
-Post-merge:
-- CI `33015801059`: success
-- Android `33015801063`: success
-
-Issue #48 بسته است.
-
-## #52 — Date/Time Context تکمیل شد
-Merged/current main: `6e379f4de11edfd323f79861b04b16992ee6f614`
-
-Exact head: `3d082c19200f2b62dd70d382ea885277d17e9337`
+Exact head:
+`183cddb533b58284c534ad2dacee74b88d6dbaff`
 
 Pre-merge:
-- CI `33016029795`: success
-- Android `33016029822`: success
+- CI `33016928847`: success
+- Android `33016928837`: success
 
-Post-merge:
-- CI `33016376693`: success
-- Android `33016376667`: success
+Post-main snapshot:
+- CI `33017214825`: success
+- Android `33017214826`: in progress
 
-Issue #51 بسته است.
+## Product فعال — PR #56 / Issue #55
+`feat(edit): allow Timeline item type changes`
 
-## محصول فعال — PR #54 / Issue #53
-`feat(edit): update Event and Activity occurredAt`
-
-Branch: `feature/edit-occurred-at`  
-Exact head snapshot: `183cddb533b58284c534ad2dacee74b88d6dbaff`  
-Base: `6e379f4de11edfd323f79861b04b16992ee6f614`
-
-Reuse شده:
-- `TimelineItem.occurredAt`
-- `timelineAt`
-- همان `EditTimelineItem`
-- همان picker pattern موجود
+Branch: `feature/edit-item-type`  
+Current exact head: `ff59496fd12c098a5ebce7cd60dc301bb0fb8724`
 
 Scope:
-- Event/Activity: تغییر یا پاک کردن occurredAt
-- Note/Call/Idea: همان ویرایش متن ساده
-- `updateText` برای سازگاری حفظ شده
-- Application + Widget tests
+- همان `EditTimelineItem` توسعه یافته؛ Use Case دوم نداریم
+- type از داخل Edit قابل اصلاح است
+- تغییر Event/Activity به Note/Call/Idea occurredAt پنهان را پاک می‌کند
+- تغییر به Event/Activity کنترل زمان موجود را reuse می‌کند
 - بدون Model/Repository/Storage/Schema/dependency جدید
 
-Merge فقط بعد از exact-head CI + Android Green، read نهایی Head/Mergeability و expected-head lock.
+در Snapshot فعلی برای Head جدید هنوز Check Run ثبت نشده است. تا CI و Android واقعی روی همین Head ایجاد و Green نشوند Merge ممنوع است.
 
-## Docs
-PR قدیمی #43 بدون Merge بسته شد.
-PR #50 جایگزین آن است و Branch آن اکنون روی main #52 Sync شده است.
+## Docs — PR #50
+PR #43 stale بسته شده است.
+PR #50 replacement است و Branch آن روی main بعد از #54 Sync شده است.
 
-#50 عمداً تا فعال بودن #54 Draft می‌ماند؛ بعد از Merge محصول یک Final Sync، Fresh Audit، exact-head validation و Merge امن می‌گیرد.
+#50 تا زمانی که Product فعال حرکت می‌کند Draft می‌ماند؛ بعد از settle شدن محصول Final Sync + Fresh Audit + exact-head validation می‌گیرد.
 
-## Ruleset — #19
-Required Status Check هنوز واقعاً در Ruleset تنظیم نشده است.
-تا وقتی Write واقعی Ruleset قابل انجام و Verify نشده:
-`exact-head Green CI/Android + live mergeability + expected-head lock` اجباری است.
+## Automation — Issue #19
+Ruleset زنده هنوز Required Status Check ندارد و Connector فقط Read ارائه می‌دهد.
 
-## مدل ادامه سریع
-Lane A — Core/Data: پایدار؛ Foundation تکراری نساز.  
-Lane B — Product: #54 فعال.  
-Lane C — Automation/Docs: #50 موازی فعال + #19 gap.  
+تا رفع واقعی:
+`exact-head CI Green + Android Green + live mergeability + expected-head lock + post-main proof`
 
-یک Lane در حال Build نباید Laneهای مستقل را متوقف کند.
+## اصل سرعت
+Laneها موازی‌اند:
+- Product/UX
+- Core/Data
+- CI/Automation/Docs
 
-## ادامه کار
-1. Gateهای exact-head #54 را کامل کن.
-2. اگر Green بود، Head/Mergeability را دوباره بخوان و با lock Merge کن.
-3. main جدید را Fast + Android Verify کن.
-4. #50 را Final Sync/Refresh/Validate/Merge کن.
-5. Gap بعدی را با Fresh Audit انتخاب و بلافاصله Slice کوچک بعدی را شروع کن.
+یک Build در حال اجرا نباید Lane مستقل را متوقف کند. سرعت از reuse، PRهای کوچک، automation و مستندسازی هم‌زمان می‌آید؛ نه از حذف تست.
+
+## ادامه
+1. Android post-main #54 را نهایی Verify کن.
+2. Trigger/Gate واقعی #56 را تأیید کن.
+3. #56 فقط با exact-head Green merge شود.
+4. main بعدی را Verify کن.
+5. #50 را Final Sync و امن Merge کن.
+6. Gap بعدی را Fresh Audit کن.
 
 ## Trigger
 `ادامه یادنگار`
 
 ## گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
-
-گزارش کوتاه، غیر فنی و نتیجه‌محور باشد.
