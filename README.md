@@ -16,6 +16,8 @@
 
 ## مستندات اصلی
 - `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md` — مرجع Canonical عملیات و توسعه
+- `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md` — سند جامع پروژه
+- `docs/YADNEGAR_ACCELERATED_OPERATION_PLAN_FA.md` — برنامه عملیاتی شتاب‌یافته و کار موازی
 - `docs/AI_CONTINUATION_STATE.md` — وضعیت جاری و نقطه ادامه
 - `docs/AI_HANDOFF_CURRENT_FA.md` — Handoff فشرده برای Session جدید
 - `PROJECT_DOCUMENTATION_FA.md` — مستند فنی و محصولی
@@ -25,6 +27,9 @@
 `Audit → Understand → Plan → Parallelize → Execute → Validate → Document → Report`
 
 GitHub مرجع اصلی واقعیت پروژه است. تغییرات باید کوچک، قابل Rollback و دارای Evidence باشند و کارهای مستقل تا حد امن به‌صورت موازی انجام شوند.
+
+## اصل سرعت
+هدف تولید نرم‌افزار واقعی در چند ساعت به‌جای چند روز است؛ با کار موازی هماهنگ، GitHub Automation، بازخورد سریع، کنترل کیفیت و مستندسازی همزمان.
 
 ## ادامه پروژه
 Trigger استاندارد:
