@@ -1,0 +1,71 @@
+name: Android Foundation Generator
+
+on:
+  push:
+    branches:
+      - platform/android-foundation
+    paths:
+      - .github/workflows/android-build.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yadnegar-android-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate-and-prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.0'
+          channel: stable
+          cache: true
+
+      - name: Generate Android foundation
+        run: flutter create --platforms=android --project-name yadnegar --org com.mobinpda.lab .
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Verify APK artifact
+        run: test -f build/app/outputs/flutter-apk/app-debug.apk
+
+      - name: Upload proof APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-android-bootstrap-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Commit generated platform files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git status --short
+          if git diff --cached --quiet; then
+            echo "No generated platform changes to commit."
+          else
+            git commit -m "platform(android): generate Flutter Android foundation"
+            git push origin HEAD:platform/android-foundation
+          fi
