@@ -15,6 +15,8 @@ class TimelineScreen extends StatelessWidget {
     this.onSearchChanged,
     this.onTypeFilterChanged,
     this.onClearSearch,
+    this.dateRangeLabel,
+    this.onDateRangeTap,
   });
 
   final List<TimelineItem> items;
@@ -28,6 +30,8 @@ class TimelineScreen extends StatelessWidget {
   final ValueChanged<String>? onSearchChanged;
   final ValueChanged<TimelineItemType?>? onTypeFilterChanged;
   final VoidCallback? onClearSearch;
+  final String? dateRangeLabel;
+  final VoidCallback? onDateRangeTap;
 
   @override
   Widget build(BuildContext context) {
@@ -48,62 +52,80 @@ class TimelineScreen extends StatelessWidget {
   }
 
   Widget _buildPageBody() {
-    if (searchController == null || onSearchChanged == null) {
+    final hasSearchControls = searchController != null && onSearchChanged != null;
+    final hasDateControls = onDateRangeTap != null;
+
+    if (!hasSearchControls && !hasDateControls) {
       return _buildContent();
     }
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: TextField(
-            key: const Key('timeline-search-input'),
-            controller: searchController,
-            onChanged: onSearchChanged,
-            textInputAction: TextInputAction.search,
-            decoration: const InputDecoration(
-              labelText: 'جستجو در یادنگار',
-              hintText: 'متن مورد را جستجو کنید',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
+        if (hasSearchControls) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: TextField(
+              key: const Key('timeline-search-input'),
+              controller: searchController,
+              onChanged: onSearchChanged,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                labelText: 'جستجو در یادنگار',
+                hintText: 'متن مورد را جستجو کنید',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
             ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: Row(
-            children: [
-              const Text('نوع:'),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButton<TimelineItemType>(
-                  key: const Key('timeline-type-filter'),
-                  value: selectedFilterType,
-                  hint: const Text('همه انواع'),
-                  isExpanded: true,
-                  items: TimelineItemType.values
-                      .map(
-                        (type) => DropdownMenuItem<TimelineItemType>(
-                          value: type,
-                          child: Text(_typeLabel(type)),
-                        ),
-                      )
-                      .toList(growable: false),
-                  onChanged: onTypeFilterChanged,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Row(
+              children: [
+                const Text('نوع:'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButton<TimelineItemType>(
+                    key: const Key('timeline-type-filter'),
+                    value: selectedFilterType,
+                    hint: const Text('همه انواع'),
+                    isExpanded: true,
+                    items: TimelineItemType.values
+                        .map(
+                          (type) => DropdownMenuItem<TimelineItemType>(
+                            value: type,
+                            child: Text(_typeLabel(type)),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: onTypeFilterChanged,
+                  ),
                 ),
-              ),
-              if (hasActiveSearch) ...[
-                const SizedBox(width: 8),
-                IconButton(
-                  key: const Key('timeline-search-clear'),
-                  tooltip: 'پاک کردن جستجو و فیلتر',
-                  onPressed: onClearSearch,
-                  icon: const Icon(Icons.clear),
-                ),
+                if (hasActiveSearch) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    key: const Key('timeline-search-clear'),
+                    tooltip: 'پاک کردن جستجو و فیلترها',
+                    onPressed: onClearSearch,
+                    icon: const Icon(Icons.clear),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
+        ],
+        if (hasDateControls)
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, hasSearchControls ? 0 : 12, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                key: const Key('timeline-date-filter'),
+                onPressed: onDateRangeTap,
+                icon: const Icon(Icons.date_range),
+                label: Text(dateRangeLabel ?? 'فیلتر بازه زمانی'),
+              ),
+            ),
+          ),
         Expanded(child: _buildContent()),
       ],
     );
@@ -146,7 +168,7 @@ class TimelineScreen extends StatelessWidget {
               ),
               SizedBox(height: 8),
               Text(
-                'عبارت جستجو یا فیلتر نوع را تغییر دهید.',
+                'عبارت جستجو یا فیلترها را تغییر دهید.',
                 textAlign: TextAlign.center,
               ),
             ],
