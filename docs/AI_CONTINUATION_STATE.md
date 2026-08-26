@@ -11,7 +11,7 @@ Default branch: `main`
 Current verified main SHA: `c632570a8d09fffecc3ae27e9747f417888b9c5f`  
 Commit: `feat(foundation): establish real Flutter RTL foundation`
 
-PR #2 was merged on 2026-08-26. Flutter Foundation is now real `main` state, not only a target.
+PR #2 was merged on 2026-08-26. Flutter Foundation is now real `main` state.
 
 Verified Foundation on `main` includes:
 - `pubspec.yaml`
@@ -34,28 +34,27 @@ For main SHA `c632570...` the observed workflow state included:
 - Test run `32984476621`: completed / startup_failure
 - Build run `32984471010`: queued at the observed snapshot
 
-Do not infer an application-code regression from those statuses without exact job evidence. The repository already has a dedicated consolidation PR to remove the ambiguous three-workflow state.
+The associated failed/queued jobs did not provide usable step/log evidence; a later log fetch returned no stored job log. Therefore these statuses must not be presented as proof of an application-code regression.
 
 ## Active Pull Requests
 ### PR #3 — Canonical documentation baseline
 Branch: `docs/yadnegar-documentation-baseline`
-Status: open / documentation-only.
+Current head after the latest handoff refresh: `41a29bcf207bc17c4fd05222045a086e31e112ef` plus subsequent documentation-only updates.
 
-Package includes:
-- `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
-- `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
-- `docs/YADNEGAR_OPERATION_PLAN.md`
-- `docs/AI_CONTINUATION_STATE.md`
-- `docs/AI_HANDOFF_CURRENT_FA.md`
-- `PROJECT_DOCUMENTATION_FA.md`
-- `docs/YADNEGAR_DEVELOPMENT_PROTOCOL.md`
-- updated `README.md`
+Scope remains documentation/README only:
+- canonical operating package
+- comprehensive project document
+- active operation plan
+- current state
+- AI handoff
+- technical/product documentation
+- README map
 
-This PR must remain documentation/README-only and be merged only after exact-ref validation is satisfactory.
+Merge only after exact-ref validation is satisfactory.
 
 ### PR #7 — CI consolidation
 Branch: `ci/consolidate-flutter-gates`
-Head at creation: `f8cfea3747745ba87184d300b6c3203b0c15f27b`
+Head: `f8cfea3747745ba87184d300b6c3203b0c15f27b`
 
 Scope:
 - make `flutter-ci.yml` the single Fast Quality Gate
@@ -66,32 +65,42 @@ Scope:
 - remove placeholder `test.yml`
 - remove placeholder `build.yml`
 
-APK/full build is not claimed yet because platform build foundation is not present. Issue #6 remains open for the later Full Build Gate.
+PR #7 was closed/reopened once to request a fresh validation event, but no exact-head workflow run had been registered at the latest check. Do not merge without evidence.
 
 ### PR #8 — RTL Timeline shell
 Branch: `ui/rtl-timeline-shell`
-Head at creation: `5e459940fedf8a5b83cb9708396ca6ea7ca0a989`
+Head: `5e459940fedf8a5b83cb9708396ca6ea7ca0a989`
 
 Scope:
 - feature-based `TimelineScreen`
 - Persian RTL shell
 - real empty state
-- Quick Capture entry contract kept disabled until persistence exists
-- widget test for RTL/empty-state/disabled capture contract
+- Quick Capture entry contract disabled until persistence exists
+- widget test for RTL/empty-state/disabled capture
 
-No model, repository or persistence foundation is duplicated in this PR.
+The old placeholder `Test` workflow reported failure for PR #8, but the job had no executed steps/log evidence at inspection time. Treat this as unresolved CI evidence, not a verified UI failure.
+
+### PR #10 — Timeline Domain contract
+Branch: `core/timeline-item-contract`
+Head: `53825cc629fca1285e20c57bfdbc91369eabfb8c`
+
+Scope:
+- `TimelineItemType`: note/event/call/idea/activity
+- storage/UI-independent `TimelineItem`
+- `timelineAt` rule: `occurredAt ?? createdAt`
+- domain tests for time behavior and shared types
+
+No Persistence, Repository implementation, UI, Search, Reminder or Migration is included. No exact-head Actions run had been registered at the latest check.
 
 ## Closed / Integrated Work
 - PR #1: closed without merge; historical CI-path experiment only.
 - PR #2: merged; Flutter Foundation now on `main`.
-- Issue #4 was tied to PR #2 and must not spawn another Foundation implementation.
+- Issue #4: tracked PR #2; no duplicate Foundation work should be created.
 
-## Active Issues
-### Issue #5 — UI / RTL
-Being advanced by PR #8. Do not create a competing App Shell or Router foundation.
-
-### Issue #6 — CI / Automation
-Being advanced by PR #7. Fast Gate consolidation is current priority; Full Build Gate follows only when the repository can actually build a platform artifact.
+## Active Issues / Ownership
+- Issue #5 → PR #8 only for RTL/Timeline UI scope.
+- Issue #6 → PR #7 only for Fast CI consolidation; Full Build Gate remains future work until a valid platform build path exists.
+- Issue #9 → PR #10 only for the minimal Timeline Item Domain contract.
 
 ## Parallel Work Model
 Lane A — Core / Domain / Foundation  
@@ -99,19 +108,18 @@ Lane B — UI / Feature
 Lane C — CI / Automation / Documentation
 
 Current real parallel wave:
-- Lane A: Foundation integrated; next is Timeline/Core contract.
+- Lane A: PR #10 Timeline Domain contract.
 - Lane B: PR #8 RTL Timeline shell.
 - Lane C: PR #7 CI consolidation + PR #3 documentation baseline.
 
-These workstreams use non-overlapping file boundaries and should remain parallel.
+File boundaries are intentionally non-overlapping so a blocked Actions lane does not stop independent engineering work.
 
 ## Next Real Actions
-1. Verify exact-head Actions for PR #7 and merge only when the new single CI gate is trustworthy.
-2. Verify PR #8 with Flutter analyze/test and merge after exact-head evidence.
-3. Keep PR #3 synchronized with current `main`, PR #7 and PR #8; merge its documentation baseline after valid CI evidence.
-4. After CI/UI integration, start Timeline Domain contract in an independent branch.
-5. Decide persistence only after the shared Timeline Item contract is audited and stabilized.
-6. First real product vertical slice remains: `Quick Capture → Persist → Timeline → View/Edit`.
+1. Obtain exact-head GitHub Actions evidence for PR #7; merge CI consolidation first when trustworthy.
+2. Revalidate PR #8 and PR #10 on the consolidated CI and merge only after analyze/test evidence.
+3. Keep PR #3 synchronized and merge the documentation baseline after valid evidence.
+4. After PR #10 is integrated, audit Persistence options against Timeline query, offline behavior, migration, recovery and testability.
+5. Implement the first real vertical slice on the shared contract: `Quick Capture → Persist → Timeline → View/Edit`.
 
 ## Validation Rule
 No report may call CI green without evidence from the exact ref being discussed.
@@ -126,7 +134,7 @@ Add `flutter build` only when a valid platform project/build path exists.
 - Clean Architecture direction
 - Feature-Based organization
 - Persian RTL-first UI
-- shared Foundation reused before adding new foundations
+- reuse shared Foundation before adding new foundations
 - no competing Model/Repository/Storage/Router/AppShell without explicit architectural justification
 - no fake persistence or fabricated implementation state
 
