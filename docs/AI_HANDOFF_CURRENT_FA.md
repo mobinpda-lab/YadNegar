@@ -4,69 +4,75 @@
 مرجع فعال عملیات پروژه:
 `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
 
-این فایل فقط Handoff فشرده است و مرجع Governance موازی نیست.
+این فایل Handoff فشرده است؛ GitHub Reality همیشه مقدم است.
 
-## شروع کار
-1. ابتدا Canonical Operating Package را بخوان.
-2. GitHub زنده را بررسی کن: Repository، `main`، HEAD، Commitهای اخیر، PRهای باز و Workflowهای Ref دقیق.
-3. `docs/AI_CONTINUATION_STATE.md` را با وضعیت واقعی تطبیق بده.
-4. قبل از تغییر، ساختار واقعی فایل‌ها و قابلیت موجود را Audit کن.
-5. نزدیک‌ترین Gap واقعی را انتخاب کن و از دوباره‌کاری جلوگیری کن.
+## شروع هر Session
+1. Repository، `main`، HEAD، PRهای باز، Issues و Actions را زنده بررسی کن.
+2. `docs/AI_CONTINUATION_STATE.md` را با GitHub تطبیق بده.
+3. قابلیت موجود را قبل از ساخت نمونه جدید Audit کن.
+4. نزدیک‌ترین Gap واقعی را انتخاب کن.
+5. Laneهای مستقل را موازی و بدون تداخل فایل/Contract جلو ببر.
 
-## وضعیت پایه‌ای که باید دوباره Verify شود
-در Snapshot تاریخ 2026-08-26:
-- Repository: `mobinpda-lab/YadNegar`
-- Default branch: `main`
-- Main SHA: `08a799c10a313926cb5d0a88a2601d9b4b132745`
-- Root فقط `.github/` و `README.md` داشت.
-- `pubspec.yaml`، `lib/` و `test/` در Root وجود نداشتند.
-- `build.yml` و `test.yml` Placeholder بودند.
+## Snapshot جاری — 2026-08-26
+Repository: `mobinpda-lab/YadNegar`  
+Main SHA: `c632570a8d09fffecc3ae27e9747f417888b9c5f`
 
-این موارد Snapshot هستند؛ در Session بعد باید دوباره از GitHub Verify شوند.
+واقعیت فعلی:
+- Flutter Foundation روی `main` Merge شده است.
+- `pubspec.yaml`, `lib/`, `test/` وجود دارند.
+- RTL shell پایه و baseline widget test وجود دارند.
+- PR #2 Foundation Merge شده است.
+- PR #7 برای CI consolidation فعال است.
+- PR #8 برای RTL Timeline shell فعال است.
+- PR #3 بسته Canonical documentation فعال است.
 
-## هویت محصول
-YadNegar یک اپلیکیشن فارسی، RTL و Timeline-oriented برای ثبت سریع اطلاعات روزمره است.
+## موج موازی فعال
+### Lane A — Core / Domain
+Foundation آماده است؛ مرحله بعد Timeline Item/Core contract است.
 
-حوزه‌های هدف:
-- یادداشت
-- رویداد
-- تماس
-- ایده
-- فعالیت روزانه
-- Timeline
-- Quick Capture
-- تاریخ و زمان
+### Lane B — UI
+PR #8:
+- TimelineScreen
+- RTL shell
+- empty state
+- Quick Capture contract غیرفعال تا Persistence واقعی
 
-## معماری
-Target:
-- Flutter / Dart
-- Clean Architecture
-- Feature-Based Architecture
-- Domain با وابستگی حداقلی به Infrastructure
-- Shared Foundation پایدار
-- Persian RTL-first UI
+### Lane C — CI / Documentation
+PR #7:
+- یک Fast Quality Gate واقعی
+- concurrency + cancel stale runs
+- pub get/analyze/test
+- حذف Workflowهای Placeholder
 
-تا زمانی که کد واقعی وجود ندارد، Target را به‌عنوان وضعیت پیاده‌سازی‌شده گزارش نکن.
+PR #3:
+- Canonical governance
+- سند جامع
+- برنامه عملیاتی
+- Current State/Handoff
 
-## توسعه موازی
-Lane A: Core / Domain / Foundation  
-Lane B: UI / Feature  
-Lane C: CI / Automation / Documentation
+## CI Reality
+روی اولین Merge Foundation، وضعیت Workflowهای سه‌گانه مبهم شد و Runهای failure/startup_failure دیده شد. این موضوع با حدس به کد نسبت داده نشود. PR #7 برای حذف همین ابهام ساخته شده است.
 
-کارهای مستقل همزمان انجام شوند. Foundation مشترک و فایل‌های مشترک باید مالکیت و ترتیب روشن داشته باشند.
+Evidence فقط برای Ref دقیق معتبر است.
+
+## هدف محصولی نزدیک
+اولین Vertical Slice واقعی:
+`Quick Capture → Persist → Timeline → View/Edit`
+
+قبل از Persistence:
+- Shared Timeline Item contract را مشخص کن.
+- Storage را از روی معیار واقعی انتخاب کن.
+- Model/Repository/Storage موازی نساز.
 
 ## Validation
-زنجیره هدف:
-`flutter pub get → flutter analyze → flutter test → flutter build`
+فعلاً:
+`flutter pub get → flutter analyze → flutter test`
 
-Evidence فقط برای Commit/Ref دقیق معتبر است. Placeholder Workflow معادل Flutter validation نیست.
+`flutter build` فقط وقتی platform project/build path واقعی وجود داشته باشد.
 
 ## ادامه
-Trigger کاربر:
+Trigger:
 `ادامه یادنگار`
 
-معنی آن:
-`Audit live GitHub → compare current state → select nearest real gap → execute safe work → validate → document → report`
-
-## اصل Handoff
-از حافظه گفتگو پروژه را بازسازی نکن. GitHub واقعی، Canonical document، Current State و Evidence دقیق مبنای ادامه هستند.
+معنی:
+`Audit live GitHub → reconcile docs → continue nearest real gaps → parallel execute → validate exact refs → document → report`
