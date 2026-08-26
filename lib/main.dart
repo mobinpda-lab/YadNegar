@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 
 void main() {
   runApp(const YadNegarApp());
@@ -13,14 +14,11 @@ class YadNegarApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'یادنگار',
       locale: const Locale('fa'),
-      home: const Directionality(
+      builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
-        child: Scaffold(
-          body: Center(
-            child: Text('یادنگار'),
-          ),
-        ),
+        child: child ?? const SizedBox.shrink(),
       ),
+      home: const TimelineScreen(),
     );
   }
 }
