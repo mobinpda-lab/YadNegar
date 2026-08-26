@@ -8,57 +8,57 @@ Active operation plan: `docs/YADNEGAR_OPERATION_PLAN.md` v2.0.
 ## Repository
 `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main: `324e20104288949972254b2670ee61e1961b3d7a`
+Current verified main: `feee7e92464df470a4ad14b8a5437bf5a7bc8648`
 
 ## Product State
 Vertical Slice اصلی کامل است:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-Main همچنین دارد:
-- typed Quick Capture با `TimelineItemType` واحد
-- Android foundation واقعی
-- Fast CI و Android APK Build Gate واقعی
-- `SearchTimeline` Application foundation
+Main additionally contains:
+- typed Quick Capture
+- `SearchTimeline`
+- Persian RTL Search UI + type filter
+- production-safe persistence
+- Android foundation
+- Fast CI + real APK Build Gate
 
-هیچ Model/Repository/Storage/AppShell موازی ساخته نشده است.
+No duplicate Model/Repository/Storage/AppShell exists.
 
-## Search Application — Integrated
-PR #36 / Issue #35 completed.
+## Search — Integrated
+PR #36 Search Application merged as `324e20104288949972254b2670ee61e1961b3d7a` after exact-head Fast + Android Green.
 
-Final head:
-`528c668456e4abf02715bed5325c36b640086bde`
+PR #38 Search UI final head:
+`7d0228de134f8bac41f63b00f7d4699206d3a913`
 
-Exact-head evidence:
-- Fast CI `33003230438`: success
-- Android Build `33003230489`: success
-- APK artifact `9619570453`
-- digest `sha256:4a7f2967dbbfefb3be9a9a66dfb9831d1aa01d6b60db7aefb1d3a9d637e1cec5`
+Evidence:
+- Fast CI `33003778572`: success
+- Android Build `33003778621`: success
+- APK artifact `9619820772`
+- digest `sha256:b2edbad3173ccee08bfb7c8b3a3586f20634b2e9e1ea17503e8a58183f771d57`
 
-Merged as main:
-`324e20104288949972254b2670ee61e1961b3d7a`.
+PR #38 merged as current verified main:
+`feee7e92464df470a4ad14b8a5437bf5a7bc8648`.
 
-## Search UI — PR #38 ACTIVE
-Issue #37.
-Branch: `feature/timeline-search-ui`.
-Head: `7d0228de134f8bac41f63b00f7d4699206d3a913`.
+## Date-range Retrieval — PR #40 ACTIVE
+Issue #39.
+Branch: `feature/timeline-date-range`.
+Current exact head:
+`3c162f2c57fe5b1299d14b63d2dd1a8fe538c308`.
+
+This branch was rebuilt directly on current main after #38; old CI evidence must not be reused.
 
 Implemented:
-- RTL Persian search field
-- optional Timeline type filter
-- clear/reset
-- no-results state
-- SearchTimeline injection using the same Repository
-- active filter/search preserved after capture/edit reload
-- stale async result protection
-- widget tests for search/filter/clear/empty
+- `FilterTimelineByDateRange`
+- repository-only dependency
+- `timelineAt` semantics
+- inclusive start / exclusive end
+- optional one-sided bounds
+- invalid range rejection
+- preserved ordering
+- unmodifiable output
+- focused unit tests
 
-The branch was rebuilt on the integrated SearchTimeline main, so it no longer carries duplicated Search Application commits.
-
-Current exact-head gates:
-- `YadNegar CI` Run `33003778572`
-- `YadNegar Android Build` Run `33003778621`
-
-Do not merge until both are completed Green, exact-head APK artifact exists, and live mergeability is safe.
+Fresh Fast CI + Android Build are running for the new exact head. Merge only after both Green + exact-head APK artifact + live mergeability safe.
 
 ## CI
 Fast Gate:
@@ -67,24 +67,20 @@ Fast Gate:
 Android Gate:
 `flutter pub get → flutter build apk --debug → verify → upload artifact`
 
-Issue #6 and #28 completed.
-
 ## Reuse From Arvin
-User has explicitly allowed reuse of Arvin code/patterns when useful.
-Before reuse: fresh-audit Arvin and adapt only compatible pieces. Never create duplicate YadNegar Model/Repository/Storage/AppShell/CI foundation merely because Arvin has an implementation.
+User explicitly allows reuse of Arvin code/patterns where useful.
+Always fresh-audit Arvin first and adapt compatible pieces only; never duplicate YadNegar foundations/contracts blindly.
 
 ## Ruleset
-`main-protection` id `20952887` still lacks required `YadNegar CI / quality` enforcement.
-Issue #19 remains open because current connector has no Ruleset write action.
+Fresh audit confirms `main-protection` id `20952887` still has no required status check rule. Issue #19 remains open because connector only exposes Ruleset read.
 
 ## Continue
-1. Check PR #38 exact-head Fast + Android results.
-2. Inspect exact-head APK artifact and live mergeability.
-3. Merge #38 only when both gates are Green.
-4. Validate new main after merge.
-5. Final-sync and validate docs branch `docs/search-retrieval-sync`, then merge it with exact-head docs CI Green.
-6. Continue Wave 5 reliability/date/group retrieval lanes independently.
-7. Keep #19 open until actual Ruleset write capability exists.
+1. Finish PR #40 fresh exact-head Fast + Android validation.
+2. Verify APK artifact and live mergeability; merge with expected-head lock only if safe.
+3. Validate new main after merge.
+4. Final-sync docs and open/merge docs PR only after exact-head docs CI Green.
+5. Continue Wave 5 grouping/reliability lanes independently.
+6. Keep #19 open until actual Ruleset write capability exists.
 
 ## Trigger
 `ادامه یادنگار`
