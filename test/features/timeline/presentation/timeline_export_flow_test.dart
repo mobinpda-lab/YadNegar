@@ -20,7 +20,9 @@ void main() {
       MaterialApp(
         home: TimelineScreen(
           items: visibleItems,
-          clipboardWriter: (text) async => copiedText = text,
+          clipboardWriter: (text) async {
+            copiedText = text;
+          },
         ),
       ),
     );
@@ -41,7 +43,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: TimelineScreen(
-          clipboardWriter: (text) async => writeCount++,
+          clipboardWriter: (text) async {
+            writeCount++;
+          },
         ),
       ),
     );
@@ -67,7 +71,9 @@ void main() {
       MaterialApp(
         home: TimelineScreen(
           items: <TimelineItem>[item],
-          clipboardWriter: (text) async => throw StateError('clipboard failed'),
+          clipboardWriter: (text) async {
+            throw StateError('clipboard failed');
+          },
         ),
       ),
     );
