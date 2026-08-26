@@ -7,69 +7,89 @@ Last updated: 2026-08-27
 
 Fresh-audit GitHub before every write, merge, SHA/status claim, or progress claim.
 
-## Current Main
+## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current main SHA: `509817c344d014579e28f62d64ff8465b722f3b9`
+Current verified main SHA: `dcdefb3155322b5d49972b196786e569bc541267`
 
-Main now includes the existing shared Timeline stack plus safe item deletion with explicit Persian confirmation. No duplicate Timeline Model / Repository / Storage / App Shell exists.
+Main has one shared Timeline stack:
+`Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete → Undo`
+
+Capabilities:
+- Note / Event / Call / Idea / Activity on one `TimelineItem`
+- Persian RTL UI
+- crash-recoverable schema-versioned JSON persistence
+- Search + Type + Date Range
+- occurredAt capture/edit for Event/Activity
+- item type correction
+- safe delete with Persian confirmation
+- Undo after delete with conflict/no-overwrite protection
+- Fast CI + Android APK build/verify/upload
+
+No duplicate Timeline Model / Repository / Storage / App Shell exists.
 
 ## Integrated — PR #61 / Issue #57
-`feat(timeline): delete items with confirmation`
+Safe delete merged as `509817c344d014579e28f62d64ff8465b722f3b9`.
 
-Exact pre-merge head: `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`
+Exact pre-merge head `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`:
+- CI `33020857429`: success
+- Android `33020857455`: success
+- live mergeability clean
+- merge used expected-head lock
 
-Pre-merge proof:
-- YadNegar CI run `33020857429`: success
-- YadNegar Android Build run `33020857455`: success
-- Android build/verify/upload steps: success
+Post-main on `509817c...`:
+- CI `33023724452`: success
+- Android `33023724492`: success, including APK build/verify/upload
+
+## Integrated — PR #63 / Issue #59
+Undo deletion merged as current main `dcdefb3155322b5d49972b196786e569bc541267`.
+
+Exact pre-merge head `373a1b8cf18016d27e01297abc70ff6034ef6d2c`:
+- CI `33023943769`: success
+- Android `33023943767`: success
 - live mergeability: true / clean
-- merge used `expected_head_sha=b10f3d2...`
+- merge used `expected_head_sha=373a1b8...`
 
-Merged as `509817c344d014579e28f62d64ff8465b722f3b9` using merge history preservation so the stacked Undo work can retarget cleanly.
+Post-main on `dcdefb3...`:
+- CI `33024326747`: success
+- Android `33024326787`: success
+- Android build + verify + artifact upload: success
 
-Integrated behavior:
-- `deleteById` on the existing `TimelineRepository`
-- crash-safe JSON delete through existing `_readAll → _writeAll`
-- small `DeleteTimelineItem` use case
-- Edit-dialog Persian confirmation
-- Search/Type/Date state preserved after delete reload
-- real-file/application/widget coverage
-- no schema bump, second storage, tombstone or soft-delete foundation
+Integrated Undo behavior:
+- small `RestoreTimelineItem` uses existing `findById + upsert`
+- restores original id/type/text/createdAt/occurredAt from memory
+- refuses restore if the id has already been reused, preventing overwrite of newer data
+- Search/Type/Date state survives delete and Undo reload
+- no Repository contract / schema / storage / tombstone / soft-delete foundation change
 
-Post-main Fast CI + Android runs for `509817c...` are currently active; do not call main post-merge verified until both complete Green.
+Issue #59 is closed completed.
 
-## Active Product — PR #63 / Issue #59
-`feat(timeline): allow undo after item deletion`
+## Automation
+### Issue #62 — recovered / closed
+Delayed PR merge-ref/workflow registration was investigated without bypassing gates.
+PR #63 proved normal synchronize registration again on one exact head with both workflows and no carrier churn. Issue #62 is closed completed.
 
-Branch: `feature/delete-undo-stacked`  
-Current exact head: `5d651814147289ae3b410d5f023eb777fb91f53e`  
-Base: `main` at `509817c...`  
-Status: Draft until post-main #61 proof and fresh exact-head #63 gates are Green.
-
-Scope is only five files above main:
-- small `RestoreTimelineItem` using existing `findById + upsert`
-- refuse restore if same id already exists, preventing overwrite of newer data
-- Persian `بازگردانی` SnackBar action after successful delete
-- restore original in-memory item; no history storage
-- existing Search/Type/Date reload path reused
-- application + widget coverage, including metadata and filter preservation
-
-No Repository contract, schema, storage, Timeline model or delete-path duplication.
-
-## Automation — Issue #62
-The delayed PR merge-ref/workflow registration incident remains open. #61 eventually recovered and received valid exact-head gates. Keep #62 open until #63 or another normal PR proves registration is reproducibly healthy without carrier churn.
-
-No direct workflow-dispatch action exists in the connected GitHub tooling. Historical runs are never reused for a new head.
-
-## Documentation — PR #50
-PR #50 remains Draft and is refreshed in parallel. Before docs merge it must be structurally synchronized onto stable final main and receive fresh exact-head validation.
-
-## Ruleset — Issue #19
-Required status checks are still not proven writable/enforced through the available connector.
+### Issue #19 — still open
+Live `main-protection` Ruleset requires PR and blocks deletion/non-fast-forward, but has no required-status-check rule. Connected GitHub tooling still exposes Ruleset read only.
 
 Operational merge contract remains:
 `exact current head + Green exact-head CI + Green exact-head Android + live mergeability + expected_head_sha lock + post-main proof`
+
+## Documentation — PR #50
+PR #50 is the active documentation reconciliation lane. Final scope includes current-state docs plus stale README refresh.
+Before merge, branch must be structurally synchronized onto current verified main `dcdefb3...`, then exact-head validation is required.
+
+## Next Product — Issue #64
+`feat(export): copy Timeline export to clipboard`
+
+Fresh Wave 6 audit:
+- Comprehensive plan defines Wave 6 as Reminder / Backup / Export.
+- no existing code for reminder/backup/export was found.
+- current dependencies are Flutter + path_provider only.
+- Reminder would introduce permission/scheduling and likely data-contract work.
+- smallest low-risk vertical slice is user-facing Export using existing repository data and Flutter Clipboard, with no dependency/schema/storage changes.
+
+Issue #64 is open. Product branch starts only after final docs synchronization.
 
 ## Parallel Speed Rules
 - verified software in hours through coordinated independent lanes
@@ -81,13 +101,11 @@ Operational merge contract remains:
 - no stale merge evidence
 
 ## Next Actions
-1. Finish post-main Fast CI + Android proof for `509817c...`.
-2. Add one final conflict-path widget proof to #63, creating a normal synchronize event on the retargeted PR.
-3. Require fresh exact-head Fast CI + Android for #63.
-4. If both Green, re-read live head/mergeability and merge #63 with expected-head lock.
-5. Validate resulting main again.
-6. Final-sync PR #50 only after the product wave settles.
-7. Keep #62 and #19 open until their automation gaps are genuinely resolved.
+1. Final-sync PR #50 structurally onto main `dcdefb3...`.
+2. Validate docs exact head and merge safely.
+3. Start Issue #64 from the verified main after docs settle.
+4. Keep Issue #19 open until required status enforcement is genuinely writable and verified.
+5. Reopen #62 only if workflow-registration symptoms recur.
 
 ## Trigger
 `ادامه یادنگار`
