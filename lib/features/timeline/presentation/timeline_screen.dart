@@ -8,12 +8,14 @@ class TimelineScreen extends StatelessWidget {
     this.isLoading = false,
     this.errorMessage,
     this.onQuickCapture,
+    this.onItemTap,
   });
 
   final List<TimelineItem> items;
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback? onQuickCapture;
+  final ValueChanged<TimelineItem>? onItemTap;
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +94,8 @@ class TimelineScreen extends StatelessWidget {
             leading: const Icon(Icons.notes),
             title: Text(item.text),
             subtitle: Text(_typeLabel(item.type)),
+            trailing: onItemTap == null ? null : const Icon(Icons.chevron_left),
+            onTap: onItemTap == null ? null : () => onItemTap!(item),
           ),
         );
       },
