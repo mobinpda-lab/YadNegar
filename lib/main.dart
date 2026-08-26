@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:yadnegar/features/timeline/application/delete_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
@@ -37,6 +38,7 @@ Future<void> main() async {
         ),
         loadTimeline: LoadTimeline(repository: repository),
         editTimelineItem: EditTimelineItem(repository: repository),
+        deleteTimelineItem: DeleteTimelineItem(repository: repository),
         searchTimeline: SearchTimeline(repository: repository),
         filterTimelineByDateRange: FilterTimelineByDateRange(
           repository: repository,
