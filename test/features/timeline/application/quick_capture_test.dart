@@ -35,6 +35,18 @@ void main() {
     expect(repository.upsertedItems, <TimelineItem>[item]);
   });
 
+  test('uses the injected clock when occurredAt is omitted', () async {
+    final item = await quickCapture.capture(
+      type: TimelineItemType.note,
+      text: 'یادداشت',
+    );
+
+    expect(item.createdAt, now);
+    expect(item.occurredAt, isNull);
+    expect(item.timelineAt, now);
+    expect(repository.upsertedItems.single, same(item));
+  });
+
   test('rejects empty text without writing to the repository', () async {
     await expectLater(
       quickCapture.capture(
