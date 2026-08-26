@@ -82,6 +82,26 @@ void main() {
     expect(updated.occurredAt, occurredAt);
   });
 
+  test('supported type change can preserve existing occurredAt', () async {
+    final event = TimelineItem(
+      id: 'event-1',
+      type: TimelineItemType.event,
+      text: 'جلسه',
+      createdAt: DateTime.utc(2026, 8, 26, 12),
+      occurredAt: DateTime.utc(2026, 8, 27, 10),
+    );
+    repository.items[event.id] = event;
+
+    final updated = await editTimelineItem.update(
+      id: event.id,
+      text: event.text,
+      type: TimelineItemType.activity,
+    );
+
+    expect(updated.type, TimelineItemType.activity);
+    expect(updated.occurredAt, event.occurredAt);
+  });
+
   test('changing to a type without occurredAt clears hidden occurredAt', () async {
     final updated = await editTimelineItem.update(
       id: original.id,
