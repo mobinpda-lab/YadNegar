@@ -8,117 +8,83 @@ Active operation plan: `docs/YADNEGAR_OPERATION_PLAN.md` v2.0.
 ## Repository
 `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main: `866a61b8ba8d26666d4d0436d36f402478af25b3`
+Current verified main: `324e20104288949972254b2670ee61e1961b3d7a`
 
 ## Product State
 Vertical Slice اصلی کامل است:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-Main additionally has typed Quick Capture:
-- یادداشت
-- رویداد
-- تماس
-- ایده
-- فعالیت
+Main همچنین دارد:
+- typed Quick Capture با `TimelineItemType` واحد
+- Android foundation واقعی
+- Fast CI و Android APK Build Gate واقعی
+- `SearchTimeline` Application foundation
 
-همه از `TimelineItemType` واحد استفاده می‌کنند؛ هیچ Model/Repository/Storage موازی ساخته نشده است.
+هیچ Model/Repository/Storage/AppShell موازی ساخته نشده است.
 
-## CI / Android — Fully Proven
+## Search Application — Integrated
+PR #36 / Issue #35 completed.
+
+Final head:
+`528c668456e4abf02715bed5325c36b640086bde`
+
+Exact-head evidence:
+- Fast CI `33003230438`: success
+- Android Build `33003230489`: success
+- APK artifact `9619570453`
+- digest `sha256:4a7f2967dbbfefb3be9a9a66dfb9831d1aa01d6b60db7aefb1d3a9d637e1cec5`
+
+Merged as main:
+`324e20104288949972254b2670ee61e1961b3d7a`.
+
+## Search UI — PR #38 ACTIVE
+Issue #37.
+Branch: `feature/timeline-search-ui`.
+Head: `7d0228de134f8bac41f63b00f7d4699206d3a913`.
+
+Implemented:
+- RTL Persian search field
+- optional Timeline type filter
+- clear/reset
+- no-results state
+- SearchTimeline injection using the same Repository
+- active filter/search preserved after capture/edit reload
+- stale async result protection
+- widget tests for search/filter/clear/empty
+
+The branch was rebuilt on the integrated SearchTimeline main, so it no longer carries duplicated Search Application commits.
+
+Current exact-head gates:
+- `YadNegar CI` Run `33003778572`
+- `YadNegar Android Build` Run `33003778621`
+
+Do not merge until both are completed Green, exact-head APK artifact exists, and live mergeability is safe.
+
+## CI
 Fast Gate:
 `flutter pub get → flutter analyze → flutter test`
 
 Android Gate:
 `flutter pub get → flutter build apk --debug → verify → upload artifact`
 
-Issue #6 و #28 completed هستند.
+Issue #6 and #28 completed.
 
-Main `1b31899d...` Full Build proof:
-- Fast `33001323525`: success
-- Android `33001323462`: success
-- APK artifact `9618821948`
-
-## Typed Quick Capture — Integrated
-PR #34 final head `d0d206fd765dc5aa19963a971ac7c1eb4b9830ca`:
-- Fast `33001576158`: success
-- Android `33001576065`: success
-- artifact `9618919403`
-
-Merged as current main:
-`866a61b8ba8d26666d4d0436d36f402478af25b3`.
-Issue #33 completed.
-
-Post-merge main:
-- Fast `33002034902`: success
-- Android `33002034898`: success
-- APK artifact `9619095963`
-- digest `sha256:468baac70018672d1de564c5d90271cef8bdb4d73d1f042d76728e4825613ae0`
-
-## PR #36 — Search Application Foundation
-Issue #35.
-Current head:
-`c5547185b8501f029b70958882b69ddb460b3f31`.
-
-Implemented:
-- SearchTimeline
-- text query
-- optional Timeline type filter
-- combined query/type
-- repository order preservation
-- immutable result
-- unit tests
-
-Branch was deliberately synchronized to current main after #34. GitHub auto-closed the zero-diff PR during reset; the same #36 was reopened after Search commits were reapplied. Do not create a duplicate PR.
-
-Current evidence:
-- push Fast CI `33002127769`: success
-- reopened PR Fast `33002697220`: running
-- reopened PR Android `33002697213`: running
-
-Merge only after both exact-head gates are success + APK artifact + live mergeability true.
-
-## Search UI — Stacked Branch
-Issue #37.
-Branch: `feature/timeline-search-ui`.
-Current head:
-`59a9958a21cb0536a8f39257d7e2e6b374c68150`.
-
-Already implemented in parallel:
-- RTL Persian search field
-- Timeline type filter
-- clear/reset
-- no-results state
-- SearchTimeline injection in production
-- current filter retained on reload after capture/edit
-- async stale-result protection
-- widget tests for search/filter/clear/empty
-
-Fast CI Run `33002653180` is validating the branch.
-This is intentionally not yet a PR to main because it depends on PR #36. After #36 merges, synchronize this branch to main and open a main PR so Fast CI + Android Build both execute.
-
-## Docs — PR #32
-Docs branch is actively synchronized in parallel and now includes:
-- Full Build proof
-- typed capture integration
-- PR #36 state
-- Search UI stacked state
-- Operation Plan v2.0
-
-Before docs merge: final live audit + exact-head docs CI Green.
+## Reuse From Arvin
+User has explicitly allowed reuse of Arvin code/patterns when useful.
+Before reuse: fresh-audit Arvin and adapt only compatible pieces. Never create duplicate YadNegar Model/Repository/Storage/AppShell/CI foundation merely because Arvin has an implementation.
 
 ## Ruleset
-`main-protection` id `20952887` still does not platform-require `YadNegar CI / quality`.
+`main-protection` id `20952887` still lacks required `YadNegar CI / quality` enforcement.
 Issue #19 remains open because current connector has no Ruleset write action.
 
 ## Continue
-1. Check #36 Fast + Android exact-head results; merge only both Green + artifact + safe mergeability.
-2. Check stacked Search UI Fast CI; fix any real failure same branch.
-3. After #36 merge, rebase/synchronize Search UI to main without duplicating work, open PR, require Fast + Android Green.
-4. Validate main after merge.
-5. Final-sync/validate/merge docs #32.
-6. Keep #19 open until actual Ruleset write capability exists.
-
-## Automation Reality
-GitHub CI automation is active. Separate hourly YadNegar continuation automation exists but is currently disabled.
+1. Check PR #38 exact-head Fast + Android results.
+2. Inspect exact-head APK artifact and live mergeability.
+3. Merge #38 only when both gates are Green.
+4. Validate new main after merge.
+5. Final-sync and validate docs branch `docs/search-retrieval-sync`, then merge it with exact-head docs CI Green.
+6. Continue Wave 5 reliability/date/group retrieval lanes independently.
+7. Keep #19 open until actual Ruleset write capability exists.
 
 ## Trigger
 `ادامه یادنگار`
