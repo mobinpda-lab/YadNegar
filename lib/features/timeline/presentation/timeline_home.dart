@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
+import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
+
+typedef TimelineDateRangePicker = Future<DateTimeRange?> Function(
+  BuildContext context,
+  DateTimeRange? initialRange,
+);
 
 class _QuickCaptureDraft {
   const _QuickCaptureDraft({required this.text, required this.type});
@@ -20,12 +26,16 @@ class TimelineHome extends StatefulWidget {
     required this.loadTimeline,
     this.editTimelineItem,
     this.searchTimeline,
+    this.filterTimelineByDateRange,
+    this.dateRangePicker,
   });
 
   final QuickCapture quickCapture;
   final LoadTimeline loadTimeline;
   final EditTimelineItem? editTimelineItem;
   final SearchTimeline? searchTimeline;
+  final FilterTimelineByDateRange? filterTimelineByDateRange;
+  final TimelineDateRangePicker? dateRangePicker;
 
   @override
   State<TimelineHome> createState() => _TimelineHomeState();
@@ -39,9 +49,33 @@ class _TimelineHomeState extends State<TimelineHome> {
   String? _errorMessage;
   String _query = '';
   TimelineItemType? _filterType;
+  DateTime? _dateStart;
+  DateTime? _dateEndExclusive;
   int _loadGeneration = 0;
 
-  bool get _hasActiveSearch => _query.trim().isNotEmpty || _filterType != null;
+  bool get _hasSearchQueryOrType => _query.trim().isNotEmpty || _filterType != null;
+
+  bool get _hasDateRange => _dateStart != null && _dateEndExclusive != null;
+
+  bool get _hasActiveSearch => _hasSearchQueryOrType || _hasDateRange;
+
+  DateTimeRange? get _selectedDateRange {
+    if (!_hasDateRange) {
+      return null;
+    }
+    return DateTimeRange(
+      start: _dateStart!,
+      end: _dateEndExclusive!.subtract(const Duration(days: 1)),
+    );
+  }
+
+  String? get _dateRangeLabel {
+    final range = _selectedDateRange;
+    if (range == null) {
+      return null;
+    }
+    return '${_formatDate(range.start)} تا ${_formatDate(range.end)}';
+  }
 
   @override
   void initState() {
@@ -67,9 +101,32 @@ class _TimelineHomeState extends State<TimelineHome> {
 
     try {
       final searchTimeline = widget.searchTimeline;
-      final items = searchTimeline == null
-          ? await widget.loadTimeline.load()
-          : await searchTimeline.search(query: _query, type: _filterType);
+      final dateFilter = widget.filterTimelineByDateRange;
+      late final List<TimelineItem> items;
+
+      if (_hasDateRange && dateFilter != null) {
+        final dateItems = await dateFilter.filter(
+          start: _dateStart,
+          end: _dateEndExclusive,
+        );
+
+        if (_hasSearchQueryOrType && searchTimeline != null) {
+          final searchItems = await searchTimeline.search(
+            query: _query,
+            type: _filterType,
+          );
+          final dateIds = dateItems.map((item) => item.id).toSet();
+          items = List<TimelineItem>.unmodifiable(
+            searchItems.where((item) => dateIds.contains(item.id)),
+          );
+        } else {
+          items = dateItems;
+        }
+      } else if (searchTimeline != null) {
+        items = await searchTimeline.search(query: _query, type: _filterType);
+      } else {
+        items = await widget.loadTimeline.load();
+      }
 
       if (!mounted || generation != _loadGeneration) {
         return;
@@ -99,10 +156,55 @@ class _TimelineHomeState extends State<TimelineHome> {
     _reload();
   }
 
+  Future<void> _openDateRangeFilter() async {
+    final picker = widget.dateRangePicker ?? _showDateRangePicker;
+    final range = await picker(context, _selectedDateRange);
+    if (range == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _dateStart = _startOfDay(range.start);
+      _dateEndExclusive = _startOfDay(range.end).add(const Duration(days: 1));
+    });
+    await _reload();
+  }
+
+  Future<DateTimeRange?> _showDateRangePicker(
+    BuildContext context,
+    DateTimeRange? initialRange,
+  ) {
+    return showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      initialDateRange: initialRange,
+      helpText: 'انتخاب بازه زمانی',
+      cancelText: 'انصراف',
+      confirmText: 'اعمال',
+      saveText: 'اعمال',
+    );
+  }
+
+  DateTime _startOfDay(DateTime value) {
+    if (value.isUtc) {
+      return DateTime.utc(value.year, value.month, value.day);
+    }
+    return DateTime(value.year, value.month, value.day);
+  }
+
+  String _formatDate(DateTime value) {
+    final month = value.month.toString().padLeft(2, '0');
+    final day = value.day.toString().padLeft(2, '0');
+    return '${value.year}/$month/$day';
+  }
+
   void _clearSearch() {
     _searchController.clear();
     _query = '';
     _filterType = null;
+    _dateStart = null;
+    _dateEndExclusive = null;
     _reload();
   }
 
@@ -281,7 +383,10 @@ class _TimelineHomeState extends State<TimelineHome> {
       onSearchChanged: widget.searchTimeline == null ? null : _onSearchChanged,
       onTypeFilterChanged:
           widget.searchTimeline == null ? null : _onTypeFilterChanged,
-      onClearSearch: widget.searchTimeline == null ? null : _clearSearch,
+      onClearSearch: _hasActiveSearch ? _clearSearch : null,
+      dateRangeLabel: _dateRangeLabel,
+      onDateRangeTap:
+          widget.filterTimelineByDateRange == null ? null : _openDateRangeFilter,
     );
   }
 }
