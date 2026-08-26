@@ -25,6 +25,7 @@ class TimelineScreen extends StatelessWidget {
               SizedBox(height: 16),
               Text(
                 'هنوز چیزی ثبت نشده',
+                key: Key('timeline-empty-state'),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
@@ -38,6 +39,7 @@ class TimelineScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        key: const Key('quick-capture-action'),
         onPressed: onQuickCapture,
         tooltip: 'ثبت سریع',
         icon: const Icon(Icons.add),
