@@ -9,6 +9,7 @@ void main() {
     final emptyState = find.text('هنوز چیزی ثبت نشده');
     expect(find.text('یادنگار'), findsOneWidget);
     expect(emptyState, findsOneWidget);
+    expect(find.byIcon(Icons.timeline), findsOneWidget);
     expect(find.text('ثبت سریع'), findsOneWidget);
     expect(find.byTooltip('ثبت سریع'), findsOneWidget);
     expect(
