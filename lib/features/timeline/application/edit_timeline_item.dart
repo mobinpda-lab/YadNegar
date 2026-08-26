@@ -9,6 +9,15 @@ class EditTimelineItem {
   Future<TimelineItem> updateText({
     required String id,
     required String text,
+  }) {
+    return update(id: id, text: text);
+  }
+
+  Future<TimelineItem> update({
+    required String id,
+    required String text,
+    bool replaceOccurredAt = false,
+    DateTime? occurredAt,
   }) async {
     final normalizedId = id.trim();
     if (normalizedId.isEmpty) {
@@ -30,7 +39,7 @@ class EditTimelineItem {
       type: existing.type,
       text: normalizedText,
       createdAt: existing.createdAt,
-      occurredAt: existing.occurredAt,
+      occurredAt: replaceOccurredAt ? occurredAt : existing.occurredAt,
     );
 
     await repository.upsert(updated);
