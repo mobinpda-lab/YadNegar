@@ -78,7 +78,10 @@ class _TimelineHomeState extends State<TimelineHome> {
           title: const Text('ثبت سریع'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Text('نوع مورد'),
+              const SizedBox(height: 4),
               DropdownButton<TimelineItemType>(
                 key: const Key('quick-capture-type'),
                 value: selectedType,
