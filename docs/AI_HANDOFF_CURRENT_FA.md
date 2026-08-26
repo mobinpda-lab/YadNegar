@@ -1,185 +1,149 @@
 # YadNegar — Live AI Handoff
 
 ## قانون اصلی
-مرجع فعال عملیات پروژه:
+مرجع عملیات پروژه:
 `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
 
-این فایل برای انتقال پروژه بین گفتگوهای ChatGPT است. GitHub Reality همیشه مقدم است؛ قبل از هر Write/Merge یک Audit زنده انجام بده.
+GitHub Reality همیشه مقدم است. قبل از هر Write/Merge وضعیت زنده را Audit کن.
 
 ## Repository
 `mobinpda-lab/YadNegar`
+Default branch: `main`
+آخرین main تأییدشده: `0610c401eb5a31a68552be047bc3d765696c2f33`
+Commit: `feat(core): define minimal Timeline Item contract`
 
-Default branch:
-`main`
+## Integrated روی main
+### Foundation — PR #2
+Merge شده؛ Issue #4 بسته.
+Flutter/Dart foundation + Persian RTL baseline + baseline test.
+Validated head `e614343a80f9c30e7a171ef7aeb1eaebc852a8be` با pub get/analyze/test سبز.
 
-آخرین main تأییدشده در این Snapshot:
-`0610c401eb5a31a68552be047bc3d765696c2f33`
+### Fast CI — PR #7
+Merge SHA: `9999e31f7aa2fa4717c5f027319e356ca705bebe`
+Validated head: `a6d81645bc21b2a6c2e8af2be3d6e02555f139b7`
+Run `32987365151`: success.
+Fast Gate: `flutter pub get → flutter analyze → flutter test`
+Placeholderهای `test.yml` و `build.yml` حذف شدند.
+Issue #6 فقط برای Full Build Gate واقعی آینده باز است.
 
-Current main commit:
-`feat(core): define minimal Timeline Item contract`
-
-## شروع هر Session
-1. `main`، PRهای باز، Issues و Actions را زنده بررسی کن.
-2. `docs/AI_CONTINUATION_STATE.md` را با GitHub تطبیق بده.
-3. Workstream تکراری نساز.
-4. قابلیت موجود را Reuse کن.
-5. Laneهای مستقل را موازی نگه دار.
-6. هیچ CI/Test/Build موفقی را بدون Evidence برای SHA دقیق گزارش نکن.
-7. مستندات را همزمان با تغییر واقعی GitHub Update کن.
-
-## چه چیزی روی main واقعاً Merge شده
-### Foundation
-PR #2 Merge شده؛ Issue #4 بسته است.
-Flutter/Dart foundation، RTL baseline و baseline test واقعی هستند.
-
-### CI
-PR #7 Merge شده.
-Merge SHA:
-`9999e31f7aa2fa4717c5f027319e356ca705bebe`
-
-Validated head:
-`a6d81645bc21b2a6c2e8af2be3d6e02555f139b7`
-
-CI run:
-`32987365151` — success
-
-Fast Gate واقعی:
-`flutter pub get → flutter analyze → flutter test`
-
-Placeholderهای قدیمی `test.yml` و `build.yml` حذف شده‌اند.
-Workflow فعلی concurrency، stale-run cancellation، Flutter cache و permissions محدود دارد.
-Issue #6 فقط برای Full Build Gate آینده باز مانده است.
-
-### Timeline Domain
-PR #10 Merge شده.
-Merge SHA/current main:
-`0610c401eb5a31a68552be047bc3d765696c2f33`
-
-Validated head:
-`53825cc629fca1285e20c57bfdbc91369eabfb8c`
-
-Flutter CI run:
-`32987199672` — success
-
-Contract:
-- note/event/call/idea/activity
-- `TimelineItem`
-- `timelineAt = occurredAt ?? createdAt`
-
-Issue #9 بسته است.
+### Timeline Domain — PR #10
+Merge/current main: `0610c401eb5a31a68552be047bc3d765696c2f33`
+Validated head: `53825cc629fca1285e20c57bfdbc91369eabfb8c`
+Run `32987199672`: pub get/analyze/test success.
+Contract: note/event/call/idea/activity + `TimelineItem` + `timelineAt = occurredAt ?? createdAt`.
+Issue #9 بسته.
 
 ## موج موازی فعال
-### Lane A — Persistence
+### Lane A1 — Persistence
 Issue #11 → PR #12 only.
-
-PR #12:
-`feat(persistence): persist Timeline items to JSON`
-
-Branch:
-`persistence/json-timeline-repository`
-
-Head در این Snapshot:
-`0dbe99146be2b33f50ed28d3259bd0f0c5741cc4`
+PR #12: `feat(persistence): persist Timeline items to JSON`
+Branch: `persistence/json-timeline-repository`
+Head: `0dbe99146be2b33f50ed28d3259bd0f0c5741cc4`
 
 Implemented:
 - `TimelineRepository`
 - `JsonFileTimelineRepository`
-- disk persistence via `dart:io`
+- real disk persistence via `dart:io`
 - schema version 1
 - upsert/find/listNewestFirst
-- duplicate prevention by id
+- duplicate prevention
 - Timeline ordering
 - reload-from-disk tests
-- unsupported-schema failure test
+- unsupported-schema test
 
-هیچ dependency ذخیره‌سازی خارجی اضافه نشده است.
-این JSON storage، MVP قابل‌تعویض است و Database نهایی اعلام نشده است.
+JSON storage یک MVP dependency-free و قابل‌تعویض است؛ Database نهایی اعلام نشده.
+
+### Lane A2 — Quick Capture Application (stacked)
+Issue #15 → PR #16 only.
+PR #16: `feat(capture): add Quick Capture use case`
+Branch: `feature/quick-capture-use-case`
+Head: `2c2f9f433e92ae3c3d275371c8ad5d0264e2fd0d`
+Base فعلی: `persistence/json-timeline-repository`
+
+این PR عمداً روی PR #12 stacked است و پس از Merge #12 باید به `main` retarget شود.
+Implemented:
+- `QuickCapture`
+- injected clock/id generator
+- trim text
+- reject empty text/id
+- reuse `TimelineItem`
+- persistence فقط از طریق `TimelineRepository`
+- unit tests مستقل از UI/file system
 
 ### Lane B — UI
 Issue #5 → PR #8 only.
-
-PR #8:
-`feat(ui): establish RTL timeline shell`
-
-Branch:
-`ui/rtl-timeline-shell`
-
-Current head:
-`3b7ac04e401bfdc5b88f36eeed614c294a84e6df`
+PR #8: `feat(ui): establish RTL timeline shell`
+Branch: `ui/rtl-timeline-shell`
+Head: `3b7ac04e401bfdc5b88f36eeed614c294a84e6df`
 
 Implemented:
 - TimelineScreen
 - RTL shell
 - empty state
-- disabled Quick Capture contract تا Persistence integration
+- disabled Quick Capture contract تا Integration
 - Quick Capture accessibility tooltip
-- widget tests including accessibility contract
+- widget tests
 
-Runهای قدیمی failure بدون runner/steps، Evidence شکست کد نیستند.
-Head فعلی باید با CI واقعی سبز شود.
+Runهای قدیمی بدون runner/steps Evidence شکست کد نیستند. Current head باید Green شود.
 
-### Lane C — Documentation / Automation
-Fast CI روی main Merge شده است.
-PR #3 Documentation baseline همچنان فعال است و باید با هر Merge/Evidence جدید Sync شود.
+### Lane C1 — Automation
+Issue #13 → PR #14 only.
+PR #14: `ci: validate all active lanes on push`
+Branch: `ci/expand-active-branch-gates`
+Head: `669e11bbcde79bc17dbb4c53e0435eed8a5cd792`
 
-## هدف محصولی نزدیک
-Vertical Slice:
+هدف: همان CI واحد روی Push شاخه‌های `core/**`, `persistence/**`, `docs/**` نیز اجرا شود؛ Workflow موازی جدید ایجاد نشده است.
+
+### Lane C2 — Documentation
+PR #3 Documentation baseline فعال است و با هر Merge/Evidence جدید Sync می‌شود.
+
+## Actions Reality
+CI برای PRهای Merge‌شده #7/#10 Evidence واقعی دارد.
+در آخرین Audit، Headهای جدید #8/#12/#14/#16 هنوز Run جدید ثبت‌شده نداشتند. صفر Run نه Success است نه Failure.
+وقتی Run ظاهر شد، Job/Steps را بررسی کن و فقط exact-head Green را معتبر بدان.
+
+## Vertical Slice
+هدف:
 `Quick Capture → Persist → Timeline → View/Edit`
 
 وضعیت:
-- Domain: انجام شده.
-- CI: انجام شده.
-- UI shell: PR #8.
-- Persistence واقعی: PR #12.
-- قدم بعد از Merge این دو: اتصال Quick Capture به Repository و نمایش داده واقعی Timeline.
+- Domain: Integrated
+- Fast CI: Integrated
+- UI shell: PR #8
+- Persistence: PR #12
+- Quick Capture logic: PR #16 stacked
+- قدم بعد: wire UI → QuickCapture → TimelineRepository → real Timeline data، سپس View/Edit.
 
-## Persistence Rule
-در این مرحله مستقیم سراغ DB نرو مگر نیاز واقعی اثبات شود.
-MVP JSON file انتخاب شده چون offline، dependency-free، CI-testable و قابل‌تعویض است.
-DB آینده فقط بر اساس query volume، indexing، migration، recovery، performance و platform requirements انتخاب شود.
-
-## چیزهایی که نباید ساخته شوند
-- Foundation دوم
-- App Shell دوم
-- Timeline Model دوم
-- Repository/Storage موازی برای Scope PR #12
-- CI موازی
-- Fake persistence که به‌عنوان Feature واقعی گزارش شود
-- Build نمایشی بدون Platform build path
-- Canonical docs موازی
+## قواعد معماری
+- Reuse before rebuild
+- Foundation/AppShell/Timeline Model/Repository/Storage/CI موازی نساز
+- UI به `dart:io` وابسته نشود
+- DB آینده فقط بر اساس نیاز واقعی query/index/migration/recovery/performance انتخاب شود
+- Fake persistence یا Build نمایشی گزارش نشود
 
 ## Validation
-هر PR فقط با Evidence exact-head Merge شود.
-
-Fast Gate:
 `flutter pub get → flutter analyze → flutter test`
-
 `flutter build` فقط بعد از Platform foundation واقعی.
+Evidence فقط برای SHA دقیق معتبر است.
 
 ## ترتیب ادامه
-1. Audit زنده PR #8 و PR #12 و Actions آن‌ها.
-2. هر Failure واقعی را از Step/Job تشخیص بده و همان Branch را Fix کن.
-3. با Green exact-head و mergeable بودن، PRها را امن Merge کن.
-4. main جدید را Verify کن.
-5. PR بعدی Vertical Slice را برای اتصال Quick Capture → Repository → Timeline real data بساز.
-6. PR #3 را همزمان Sync نگه دار.
-7. Full Build Gate را بعداً و فقط روی Platform واقعی اجرا کن.
+1. Audit زنده main + PR #3/#8/#12/#14/#16 + Issues/Actions.
+2. Poll exact-head Actions موازی.
+3. هر Failure واقعی را از Step تشخیص و همان Branch را Fix کن.
+4. PR #14 را پس از Green Merge کن تا Laneهای فعال روی Push مستقیم Validate شوند.
+5. PR #12 را پس از Green Merge کن؛ سپس #16 را به main retarget و Revalidate کن.
+6. PR #8 فقط با Green current-head و mergeability واقعی Merge شود؛ در صورت drift همان Branch را Sync کن، PR موازی نساز.
+7. پس از Integration، wiring Vertical Slice را در PR کوچک بعدی بساز.
+8. PR #3 را همزمان Sync نگه دار.
 
 ## اصل کار
-کار موازی هماهنگ سریع.
-تولید نرم‌افزار در چند ساعت به‌جای چند روز.
-GitHub Automation و Documentation همزمان با Implementation.
-سرعت نباید Test، Evidence، Recovery یا Safe Integration را حذف کند.
-
-## گزارش مالک پروژه
-کوتاه و غیرفنی:
-`کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
+کار موازی هماهنگ سریع؛ تولید نرم‌افزار در چند ساعت به‌جای چند روز؛ Automation و Documentation همزمان با Implementation؛ بدون حذف Test/Evidence/Safe Integration.
 
 ## Trigger
 `ادامه یادنگار`
-
 معنی:
 `Audit live GitHub → reconcile docs → avoid duplicate work → parallel execute → validate exact refs → merge safe work → continue vertical slice → document → short report`
 
-## هشدار
-این فایل Snapshot است و ممکن است چند دقیقه بعد قدیمی شود. SHA یا وضعیت PR را بدون Audit زنده Current فرض نکن.
+## گزارش مالک
+`کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
+کوتاه، ساده و غیرفنی.
