@@ -1,153 +1,208 @@
 # سند جامع پروژه یادنگار (YadNegar)
-## نسخه 1.0 — مرجع جامع محصول، مهندسی، اجرا و تداوم
+## نسخه 1.1 — مرجع جامع محصول، مهندسی، اجرا و تداوم
 
 **Project:** YadNegar / یادنگار  
 **Repository:** `mobinpda-lab/YadNegar`  
 **Default Branch:** `main`  
 **Product Direction:** Persian RTL, Timeline-oriented personal memory/activity capture  
-**Technology Target:** Flutter / Dart  
+**Technology:** Flutter / Dart  
 **Architecture Target:** Clean Architecture + Feature-Based Architecture  
 **Reality Authority:** GitHub Repository State  
-**Canonical Governance:** `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
+**Canonical Governance:** `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`  
+**Current Execution Plan:** `docs/YADNEGAR_OPERATION_PLAN.md`
 
 ---
 
 ## 1. هدف این سند
-این سند تصویر جامع پروژه یادنگار را در یک نقطه جمع می‌کند: هویت محصول، وضعیت واقعی Repository، معماری هدف، شیوه توسعه، برنامه موازی، CI و GitHub Automation، کنترل کیفیت، مستندسازی، Release و تداوم بین Sessionهای AI.
+این سند تصویر جامع و متمرکز YadNegar را نگه می‌دارد: محصول، وضعیت واقعی GitHub، معماری، مسیرهای توسعه، CI و Automation، مستندسازی، کنترل کیفیت، مدیریت ریسک، Release و روش ادامه توسط AI یا توسعه‌دهنده دیگر.
 
-این سند جایگزین GitHub Reality نیست. هر ادعای «وضعیت فعلی» باید با Repository و Ref دقیق Verify شود.
+این سند Snapshot/Reference است؛ جای GitHub Reality را نمی‌گیرد.
 
 ترتیب اعتبار:
 
-`GitHub Reality > Approved ADR/Architecture Decisions > Canonical Operating Package > Comprehensive Project Document > Current-State/Handoff > Conversation Memory`
+`GitHub Reality > Approved ADR/Architecture Decisions > Canonical Operating Package > Comprehensive Project Document > Current State/Handoff > Conversation Memory`
+
+وقتی منابع اختلاف دارند، حدس ممنوع است:
+
+`Verify GitHub → identify discrepancy → update current docs → preserve history`
 
 ---
 
-## 2. وضعیت واقعی Verify‌شده در 2026-08-26
-در زمان تدوین این نسخه، `main` مجدداً بررسی شد.
+## 2. تجربه‌های قابل انتقال از پروژه Arvin
+YadNegar پروژه مستقل است و کد/مدل Arvin نباید بدون Audit وارد آن شود؛ اما چند اصل اجرایی Arvin به‌عنوان تجربه مهندسی منتقل می‌شود:
 
-### Repository
+1. GitHub منبع حقیقت، نه حافظه گفتگو.
+2. هر Session مهم با Audit واقعی شروع شود.
+3. Workstreamهای مستقل به‌صورت موازی اجرا شوند.
+4. Fast Lane CI برای بازخورد سریع و Full Gate برای Integration/Build از هم جدا شوند.
+5. Runهای stale با `concurrency/cancel-in-progress` متوقف شوند.
+6. Evidence فقط برای SHA دقیق معتبر است.
+7. قابلیت موجود قبل از ساخت نمونه جدید Audit شود.
+8. مستندسازی همزمان با Implementation انجام شود.
+9. یک Canonical governance فعال وجود داشته باشد و اسناد رقیب ساخته نشوند.
+10. Progress از Working Software و Definition of Done محاسبه شود، نه تعداد Commit/PR.
+11. PRها کوچک، قابل Review و قابل Rollback باشند.
+12. یک Lane مسدود نباید Lane مستقل دیگر را متوقف کند.
+
+### چیزی که از Arvin کپی نمی‌شود
+- مدل محصول
+- Storage contract
+- Feature list
+- UI contract اختصاصی
+- Backup/Sync implementation
+- Workflow خاصی که به ساختار فعلی YadNegar نمی‌خورد
+
+اصل انتقال:
+`Reuse execution lessons, not unverified implementation assumptions.`
+
+---
+
+## 3. وضعیت واقعی Verify‌شده در 2026-08-26
+### Repository و main
 - Repository: `mobinpda-lab/YadNegar`
 - Default branch: `main`
-- دسترسی متصل GitHub: Read/Write فعال
-- Repository عمومی و قابل Push است.
-
-### HEAD تأییدشده main
-- SHA: `08a799c10a313926cb5d0a88a2601d9b4b132745`
+- دسترسی GitHub متصل: Read/Write
+- `main` HEAD: `08a799c10a313926cb5d0a88a2601d9b4b132745`
 - Message: `ci: add initial build workflow skeleton`
 - Date: 2026-08-17
 
-### ساختار Root تأییدشده main
-در Snapshot فوق فقط موارد زیر در Root وجود داشت:
+### Root فعلی main
+در Snapshot تأییدشده:
 - `.github/`
 - `README.md`
 
-در `main` تأییدشده موارد زیر وجود نداشت:
+در `main` هنوز وجود ندارد:
 - `pubspec.yaml`
 - `lib/`
 - `test/`
 
-**نتیجه:** Flutter Foundation هنوز در `main` ایجاد نشده است. هر سندی که Flutter/Clean Architecture را ذکر می‌کند، در حال حاضر «هدف» را بیان می‌کند نه Implementation موجود را.
+بنابراین Flutter Foundation هنوز روی `main` Merge نشده است.
 
-### CI تأییدشده
-Workflowهای موجود:
-- `.github/workflows/build.yml`
-- `.github/workflows/test.yml`
+### Workflowهای فعلی main
+- `.github/workflows/build.yml` — Placeholder
+- `.github/workflows/test.yml` — Placeholder
 
-هر دو Placeholder هستند و فقط Checkout + Echo اجرا می‌کنند. Runهای آن‌ها موفق بوده‌اند، اما این موفقیت فقط Placeholder را اثبات می‌کند و معادل `flutter analyze/test/build` نیست.
-
----
-
-## 3. وضعیت کار مستندسازی جاری
-برای جلوگیری از تغییر مستقیم روی `main`، Branch زیر ایجاد شده است:
-
-`docs/yadnegar-documentation-baseline`
-
-PR فعال:
-
-`#3 — docs: establish YadNegar canonical project documentation`
-
-این PR فقط Documentation/README را تغییر می‌دهد و هیچ کد برنامه یا رفتار Workflow را تغییر نمی‌دهد.
-
-مستندات فعال این Branch:
-- `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
-- `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
-- `docs/YADNEGAR_ACCELERATED_OPERATION_PLAN_FA.md`
-- `docs/AI_CONTINUATION_STATE.md`
-- `docs/AI_HANDOFF_CURRENT_FA.md`
-- `PROJECT_DOCUMENTATION_FA.md`
-- `docs/YADNEGAR_DEVELOPMENT_PROTOCOL.md`
+این Workflowها فقط Checkout + Echo را اجرا می‌کنند. سبز بودنشان Flutter quality evidence نیست.
 
 ---
 
-## 4. هویت و مأموریت محصول
-یادنگار یک اپلیکیشن فارسی، سریع و کم‌اصطکاک برای ثبت و مرور چیزهایی است که کاربر در طول روز نمی‌خواهد فراموش کند.
+## 4. وضعیت Pull Requestهای واقعی
+### PR #3 — Documentation Baseline
+**State:** Open  
+**Branch:** `docs/yadnegar-documentation-baseline`  
+**Purpose:** Canonical docs + comprehensive reference + current state + handoff + operational plan + README map
 
-محور تجربه:
+این PR باید Documentation/README-only باقی بماند و مسیر Governance پروژه را تثبیت کند.
 
-`Capture quickly → Organize minimally → Review through Timeline → Find later`
+### PR #2 — Flutter Foundation
+**State:** Open / Draft / Mergeable  
+**Branch:** `feat/foundation-flutter`  
+**Verified Head:** `e614343a80f9c30e7a171ef7aeb1eaebc852a8be`
 
-گروه‌های اصلی محتوای هدف:
+محتوا:
+- `pubspec.yaml`
+- `lib/main.dart`
+- `test/widget_test.dart`
+- `.github/workflows/flutter-ci.yml`
+- Flutter app shell فارسی/RTL حداقلی
+
+Exact-head Evidence:
+- `flutter pub get`: success
+- `flutter analyze`: success
+- `flutter test`: success
+- `Flutter CI`: success
+
+**مهم:** Build APK/Release برای این Head به‌عنوان Evidence فعلی تأیید نشده است.
+
+### PR #1 — Parallel CI path experiment
+PR آزمایشی قدیمی بود و در 2026-08-26 بدون Merge بسته شد؛ چون PR #3 مستندسازی واقعی و PR #2 Flutter CI واقعی را جایگزین آن کردند.
+
+این تاریخچه حفظ می‌شود، اما Workstream فعال نیست.
+
+---
+
+## 5. Work Queue فعال
+### Issue #4 — Foundation integration
+هدف: Review و Integration PR #2؛ Foundation جدید ساخته نشود.
+
+### Issue #5 — RTL App Shell / Timeline Contract
+هدف: توسعه UI بر پایه موجود، بدون `MaterialApp`/Router/Foundation دوم.
+
+### Issue #6 — CI Consolidation
+هدف: reuse از Flutter CI موجود و حذف ابهام Placeholderها؛ سپس Fast Lane + Full Gate.
+
+این سه Issue اولین Wave عملیاتی هماهنگ را تشکیل می‌دهند.
+
+---
+
+## 6. هویت و مأموریت محصول
+یادنگار اپلیکیشنی فارسی، سریع و کم‌اصطکاک برای ثبت و مرور اطلاعات روزمره است.
+
+چرخه اصلی تجربه:
+
+`Capture quickly → Organize minimally → Review in Timeline → Find/Edit later`
+
+گروه‌های محتوای هدف:
 - یادداشت
 - رویداد
 - تماس
 - ایده
 - فعالیت روزانه
 
-ارزش اصلی محصول:
-- ثبت سریع بدون فرم‌های سنگین
-- نمایش زمانی و قابل‌فهم
-- فارسی و RTL از پایه
-- نگهداری منظم اطلاعات روزمره
-- پایه‌ای قابل‌توسعه برای Search، Reminder، Backup و قابلیت‌های بعدی
+ارزش اصلی:
+- ثبت در چند ثانیه
+- Timeline واضح
+- RTL واقعی
+- حداقل فرم و اصطکاک
+- ذخیره قابل اعتماد
+- قابلیت توسعه بدون بازنویسی Foundation
 
 ---
 
-## 5. اصول طراحی محصول
-1. **Capture-first:** ثبت باید سریع‌تر از سازمان‌دهی باشد.
-2. **Timeline-first:** Timeline نمای اصلی مرور رخدادهای روزانه است.
-3. **Low friction:** تعداد Tap و تصمیم‌های اجباری حداقل باشد.
-4. **RTL-native:** RTL یک Patch نهایی نیست؛ بخشی از Foundation UI است.
-5. **Progressive complexity:** قابلیت‌های پیچیده فقط بعد از تثبیت Core اضافه شوند.
-6. **No fake structure:** Feature یا مدل خالی فقط برای پرکردن معماری ساخته نشود.
-7. **Offline-ready by design:** تصمیم Persistence باید امکان استفاده روزمره بدون وابستگی دائمی به شبکه را در نظر بگیرد.
-8. **Recoverable data:** هر تصمیم Storage باید Migration/Backup/Recovery آینده را ممکن نگه دارد.
+## 7. اصول طراحی محصول
+### Capture-first
+ثبت سریع بر طبقه‌بندی پیچیده مقدم است.
+
+### Timeline-first
+مرور زمانی، ستون اصلی تجربه است.
+
+### RTL-native
+RTL از Foundation UI شروع می‌شود، نه Patch نهایی.
+
+### Progressive complexity
+Search/Reminder/Backup و قابلیت‌های سنگین بعد از Vertical Slice اصلی.
+
+### Shared foundation
+Featureهای Note/Event/Call/Idea/Activity تا حد امکان بر Contract مشترک Timeline سوار شوند.
+
+### No fake architecture
+Folder/Service/Repository/Model بدون مصرف واقعی فقط برای «تمیز به نظر رسیدن» ساخته نشود.
+
+### Data recoverability
+Storage باید Migration/Backup/Recovery آینده را ممکن نگه دارد.
 
 ---
 
-## 6. Scope اولیه محصول
-### Core MVP واقعی
-- اجرای سالم Flutter app
-- App Shell فارسی/RTL
-- ثبت سریع یک Timeline Item
-- ذخیره محلی معتبر
-- Timeline مرتب‌شده بر اساس زمان
-- مشاهده جزئیات
-- ویرایش
-- حذف امن/قابل‌کنترل
-- تست‌های پایه
-- CI واقعی
+## 8. Scope نسخه اولیه واقعی
+نسخه اولیه زمانی معنا دارد که یک Flow واقعی End-to-End کار کند:
 
-### Feature Expansion
-پس از Core:
-- Note
-- Event
-- Call
-- Idea
-- Daily Activity
-- Search/Filter
-- Tags/Categories در صورت نیاز واقعی
-- Reminder/Notification در صورت تعریف Contract روشن
-- Backup/Restore
-- Export/Share در مرحله مناسب
+`Quick Capture → Local Persistence → Timeline → Detail/Edit`
 
-Featureهای آینده نباید باعث ایجاد Storage یا Domain foundation موازی شوند.
+حداقل قابلیت:
+- App اجرا شود.
+- فارسی/RTL باشد.
+- Item ثبت شود.
+- Item بعد از restart باقی بماند.
+- Timeline آن را نمایش دهد.
+- Edit حفظ شود.
+- Test/CI واقعی داشته باشد.
+
+Featureهای متعدد قبل از این Vertical Slice اولویت پایین‌تری دارند.
 
 ---
 
-## 7. معماری هدف
-### جهت وابستگی
-
+## 9. معماری هدف
+### Dependency Direction
 `Presentation → Application → Domain`
 
 `Infrastructure/Data → Domain Contracts`
@@ -157,8 +212,8 @@ Featureهای آینده نباید باعث ایجاد Storage یا Domain foun
 lib/
   app/
     app.dart
-    routing/
     theme/
+    navigation/
   core/
     error/
     time/
@@ -174,248 +229,298 @@ lib/
 test/
 ```
 
-این ساختار یک هدف است. Foundation اولیه باید کوچک بماند و فقط پوشه‌هایی ایجاد شوند که استفاده واقعی دارند.
+این ساختار باید Incremental باشد. پوشه خالی بدون Implementation واقعی ایجاد نشود.
 
-### قوانین معماری
-- Domain به UI/Storage وابستگی مستقیم نداشته باشد.
-- Repository interface در Boundary مناسب تعریف شود.
-- Implementation ذخیره‌سازی بیرون Domain باشد.
-- Shared Core کوچک و با مسئولیت روشن بماند.
-- هیچ Service عمومی بدون مصرف واقعی ساخته نشود.
-- Featureها از Shared Foundation استفاده کنند، نه Foundation موازی.
+### قوانین
+- Domain وابستگی مستقیم به Flutter UI/Storage نداشته باشد.
+- Repository contract در Boundary مناسب باشد.
+- Data implementation بیرون Domain باشد.
+- Shared core کوچک بماند.
+- Feature foundation موازی ممنوع مگر ADR.
 
 ---
 
-## 8. قرارداد مفهومی Timeline Item
-Schema نهایی هنوز تصمیم تأییدشده نیست؛ با این حال مدل مفهومی باید امکان این مفاهیم را بدهد:
+## 10. Foundation موجود در PR #2
+PR #2 اولین پایه واقعی Flutter را ایجاد کرده است؛ بنابراین ادامه پروژه باید آن را reuse کند.
+
+### App Shell موجود
+- `MaterialApp`
+- title فارسی `یادنگار`
+- `locale: fa`
+- `Directionality` RTL
+- Scaffold/Center/Text کمینه
+
+### Test موجود
+Smoke/widget test وجود عنوان و Directionality مؤثر RTL را بررسی می‌کند.
+
+### CI موجود
+`flutter-ci.yml`:
+- Flutter setup
+- pub get
+- analyze
+- test
+
+### قاعده توسعه بعدی
+به‌جای ساخت App/CI Foundation جدید:
+`Audit PR #2 → integrate → extend`
+
+---
+
+## 11. قرارداد مفهومی Timeline Item
+Schema نهایی هنوز تصمیم معماری تأییدشده نیست.
+
+مدل مفهومی باید احتمالاً این مفاهیم را پوشش دهد:
 - `id`
 - `type`
 - `title/text`
 - `createdAt`
-- `occurredAt/scheduledAt` در صورت نیاز
+- `occurredAt/scheduledAt` حسب نوع
 - metadata خاص Feature
-- lifecycle/status در صورت نیاز واقعی
+- lifecycle/status در صورت نیاز
 
-قاعده مهم:
-از ساخت پنج مدل کاملاً جدا برای Note/Event/Call/Idea/Activity قبل از مشخص‌شدن اشتراک واقعی آن‌ها خودداری شود. ابتدا Contract مشترک Timeline Item بررسی شود، سپس Extensionهای Feature طراحی شوند.
+### تصمیم قبل از کدنویسی Persistence
+باید بررسی شود:
+- یک Shared Timeline Item + Variant؟
+- یا Entityهای مستقل با Contract مشترک؟
+
+تا قبل از این تصمیم، Storage schema نباید روی حدس تثبیت شود.
 
 ---
 
-## 9. Persistence Strategy
-در Snapshot فعلی هیچ Persistence واقعی وجود ندارد و فناوری نهایی انتخاب نشده است.
+## 12. Persistence Strategy
+Storage فعلی هنوز روی main وجود ندارد و فناوری نهایی انتخاب نشده است.
 
-انتخاب Storage باید بر اساس Audit و معیارهای زیر انجام شود:
-- query مناسب Timeline
-- Migration
-- local/offline behavior
+معیار تصمیم:
+- offline/local reliability
+- Timeline queries
+- migration
+- search/filter
+- performance
 - testability
-- performance در حجم روزمره
-- search/filter support
-- Backup/Restore
+- backup/restore
 - platform compatibility
 - maintenance cost
 
-هیچ پکیج یا Database صرفاً بر اساس محبوبیت انتخاب نشود.
-
-### Contract ایمنی داده
-هر تغییر Schema در آینده حسب مورد باید داشته باشد:
+### Data Safety Contract
+هر Schema change مهم حسب مورد:
 `Schema Version + Migration Path + Backward Compatibility + Validation + Recovery/Rollback`
 
 ---
 
-## 10. UI/UX Contract
+## 13. UI/UX Contract
 ### اصول
-- فارسی و RTL از اولین Screen
-- Material با شخصی‌سازی کنترل‌شده
-- hierarchy آرام و کم‌نویز
-- ثبت سریع در دسترس
-- Timeline قابل اسکن
-- تاریخ/زمان خوانا
-- رفتارهای ثابت و قابل‌پیش‌بینی
+- فارسی/RTL-first
+- hierarchy آرام
+- low visual noise
+- capture قابل دسترس
+- Timeline قابل Scan
+- تاریخ/زمان واضح
+- Navigation ساده
+- Empty/Error/Loading state واقعی
 - Accessibility پایه
 
 ### Surfaceهای اولیه
 - App Shell
-- Timeline Screen
+- Timeline
 - Quick Capture
 - Item Card
 - Item Detail/Edit
-- Empty/Loading/Error states
-- Settings پایه در زمان نیاز
+- Settings در زمان نیاز واقعی
 
-### ضد بدهی UI
-UI mock بزرگ قبل از Domain/Foundation ساخته نشود. در عین حال UI مستقل مثل Theme/RTL shell می‌تواند پس از Flutter bootstrap و با Boundary روشن موازی پیش برود.
+### قانون reuse
+UI بعدی باید `YadNegarApp` موجود PR #2 را گسترش دهد، نه Foundation دوم بسازد.
 
 ---
 
-## 11. مدل تولید نرم‌افزار: ساعت‌ها به‌جای روزها
-هدف پروژه صف خطی نیست؛ یک Software Production System است.
+## 14. مدل تولید نرم‌افزار: ساعت‌ها به‌جای روزها
+YadNegar یک صف خطی نیست.
 
-فرمول:
+چرخه:
 
-`Audit → Decompose → Identify Dependencies → Parallel Workstreams → Fast Feedback → Evidence → Controlled Integration`
+`Audit → Reuse → Decompose → Parallelize → Execute → Fast Feedback → Full Gate → Evidence → Document → Integrate`
 
-سرعت از این موارد می‌آید:
-- کارهای مستقل همزمان
-- PRهای کوچک
+سرعت از این‌ها می‌آید:
+- کار مستقل همزمان
+- PR کوچک
 - reuse
-- automation
-- cancel کردن CI قدیمی
-- testهای focused برای Fast Lane
-- Full Gate فقط در نقطه مناسب
-- ثبت تصمیم و وضعیت همزمان با کار
+- CI سریع
+- cancel stale runs
+- test focused
+- documentation parallel
 
-سرعت از این موارد **نمی‌آید**:
+سرعت از این‌ها نمی‌آید:
 - حذف تست
-- Commit مستقیم پرریسک روی main
-- ساخت Feature موازی تکراری
-- merge بدون evidence
-- پنهان‌کردن failure
+- Merge بی‌Evidence
+- کار مستقیم پرریسک روی main
+- Feature/Storage موازی تکراری
 - بازنویسی تاریخچه
 
 ---
 
-## 12. Workstream Governance
+## 15. Parallel Workstream Governance
 ### Lane A — Foundation / Core / Domain
-خروجی‌ها:
-- Flutter bootstrap
-- dependency baseline
-- app entry
-- Domain contracts
+- Foundation integration
 - Timeline Item contract
-- Persistence boundary
-- core tests
+- Repository contract
+- Persistence foundation
 
-### Lane B — UI / Feature
-خروجی‌ها:
-- RTL shell
-- theme
-- Timeline presentation
-- Quick Capture UI
-- Item screens
+### Lane B — UI / Product
+- RTL shell extension
+- Theme
+- Timeline UI
+- Quick Capture
 
 ### Lane C — CI / Automation / Documentation
-خروجی‌ها:
-- Fast Lane workflow
-- Full Build workflow
-- concurrency policy
-- test/analyze automation
-- PR/Issue discipline
-- Current State/Handoff updates
-- evidence records
+- CI consolidation
+- Fast Lane
+- Full Gate
+- Artifact validation
+- Current State/Handoff
 
-### قانون استقلال
-هر Lane باید Scope، فایل‌ها، dependency، branch و validation روشن داشته باشد. Lane مسدود، Lane مستقل را متوقف نمی‌کند.
+### Rule
+- Shared files یک Owner در هر Wave.
+- Lane مستقل همزمان.
+- Blocked lane دیگران را متوقف نکند.
+- Integration point از قبل مشخص شود.
 
 ---
 
-## 13. GitHub Operating Model
-### Branching
-- `foundation/**` برای Foundation
-- `feature/**` برای Feature
-- `ui/**` برای UI مستقل
-- `ci/**` برای Automation
-- `docs/**` برای Documentation
-- `fix/**` برای اصلاحات
+## 16. GitHub Branching Model
+Branch naming پیشنهادی:
+- `foundation/**`
+- `core/**`
+- `ui/**`
+- `feature/**`
+- `ci/**`
+- `docs/**`
+- `fix/**`
 
-نام Branch قرارداد مطلق نیست، اما Scope باید واضح باشد.
+Contract اصلی اسم نیست؛ Scope روشن و عدم overlap است.
 
-### PR
+---
+
+## 17. Pull Request Policy
 هر PR:
 - یک هدف اصلی
-- Diff کوچک
-- توضیح Scope
-- Validation/Evidence
-- ریسک/rollback در صورت نیاز
-- عدم مخلوط‌کردن معماری + UI + CI نامرتبط
+- diff کوچک
+- Out-of-scope روشن
+- Validation مشخص
+- exact-head Evidence
+- docs impact
+- rollback consideration
 
-### Main
-`main` باید تا حد امکان فقط از طریق PRهای Validate‌شده تغییر کند.
+PR چندمنظوره Architecture + Feature + CI + UI غیرمرتبط باید Decompose شود.
 
 ---
 
-## 14. GitHub Automation Target
-تجربه موفق Arvin به یادنگار با تطبیق، نه Copy کور، منتقل می‌شود.
+## 18. GitHub Automation Architecture
+### Phase 1 — موجود
+PR #2 Flutter CI واقعی Analyze/Test دارد.
+
+### Phase 2 — Consolidation
+پس از Foundation merge:
+- Placeholder `build.yml/test.yml` Audit شوند.
+- یک Quality Gate روشن ساخته شود.
+- Workflow تکراری حذف/تبدیل شود.
 
 ### Fast Lane
-پس از Flutter Foundation:
-- Trigger روی PR و Branchهای کاری
-- `concurrency` بر اساس Branch/PR
-- `cancel-in-progress: true`
-- `flutter pub get`
-- `flutter analyze`
-- `flutter test`
-- در صورت رشد تست‌ها، Matrix بر اساس Surfaceهای مستقل
+هدف: Feedback سریع روی PR/working branch.
 
-هدف: feedback سریع و جلوگیری از مصرف زمان روی Runهای قدیمی.
+Contract پیشنهادی:
+- branch/PR concurrency
+- `cancel-in-progress: true`
+- Flutter cache
+- pub get
+- analyze
+- test
 
 ### Full Gate
-برای PR آماده Merge و Push به main:
-- dependencies
-- analyze
+برای Integration/Ready PR/main:
 - full tests
-- build target
+- build وقتی Platform foundation وجود دارد
 - verify artifact
-- upload artifact در مرحله مناسب
+- upload artifact در مرحله RC/Release
 
-### Documentation Automation
-در مرحله بعد:
-- validate links/required docs
-- check Current-State freshness rules در صورت ارزش واقعی
-- progress score فقط وقتی Definition-of-Done قابل‌اندازه‌گیری باشد
+### Surface Matrix
+با رشد پروژه:
+- timeline
+- capture
+- persistence
+- ui
 
-اتوماسیون نباید قبل از وجود ورودی واقعی به نمایش مصنوعی کیفیت تبدیل شود.
+تست‌های مستقل می‌توانند موازی شوند.
 
----
-
-## 15. CI Evidence Policy
-CI فقط برای SHA دقیق معتبر است.
-
-گزارش صحیح:
-- `Analyze passed on <sha>`
-- `Tests passed on <sha>`
-- `Build passed on <sha>`
-
-گزارش غیرمجاز:
-- «CI سبز است» وقتی فقط Placeholder اجرا شده است.
-- نسبت‌دادن Run یک Commit به Commit دیگر.
+### Automation Rule
+Workflow فقط وقتی اضافه شود که انتظار، خطای انسانی یا Evidence مبهم را کم کند.
 
 ---
 
-## 16. Definition of Ready
-Task زمانی Ready است که:
-- خروجی مشخص باشد
-- وضعیت موجود Audit شده باشد
-- Scope روشن باشد
-- Dependency معلوم باشد
-- فایل/Boundary مشخص باشد
-- Validation تعریف شده باشد
-- integration point معلوم باشد
+## 19. Evidence Policy
+Evidence فقط برای Ref دقیق معتبر است.
+
+صحیح:
+- Analyze passed on SHA X
+- Test passed on SHA X
+- Build passed on SHA X
+
+غلط:
+- «CI سبز است» چون Placeholder سبز بود.
+- نسبت‌دادن Build یک SHA به SHA دیگر.
+- ادعای Build برای PR #2 وقتی فعلاً فقط Analyze/Test Verify شده است.
 
 ---
 
-## 17. Definition of Done
-برای کار محصول، حسب مورد:
+## 20. Quality Chain
+زنجیره هدف:
 
-`Implementation + Unit/Widget Test + Analyze + Integration Check + Build/CI + Evidence + Documentation + Review + Merge`
+`flutter pub get → flutter analyze → flutter test → integration validation → flutter build → artifact verification`
 
-Code written ≠ Done.
+همه مراحل در هر PR الزامی نیستند؛ Gate متناسب با Risk/Stage انتخاب می‌شود.
 
-Documentation written ≠ Done تا وقتی در GitHub ثبت/Review نشده باشد.
+### Test types با رشد پروژه
+- Unit
+- Widget
+- Integration
+- RTL behavior
+- Golden پس از Design stabilization
+- Migration tests
+- persistence/recovery tests
 
 ---
 
-## 18. Documentation-as-Code
-مستندسازی باید همزمان و موازی با کار عملی انجام شود.
+## 21. Definition of Ready
+کار زمانی Ready است که:
+- Objective روشن
+- Existing work Audit شده
+- Scope/Out-of-scope روشن
+- Dependency روشن
+- Parallel safety معلوم
+- Validation تعریف‌شده
+- Evidence موردنیاز معلوم
+- integration point مشخص
 
-### Canonical
+---
+
+## 22. Definition of Done
+حسب نوع کار:
+
+`Working Change + Tests + Exact CI Evidence + Documentation + Review + Safe Integration`
+
+کد نوشته‌شده به‌تنهایی Done نیست.
+
+مستند نوشته‌شده تا وقتی در GitHub ثبت/Review نشده Done نیست.
+
+---
+
+## 23. Documentation-as-Code
+### Canonical Governance
 `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
 
-### Comprehensive
+### Comprehensive Project Reference
 `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
 
-### Operational Plan
-`docs/YADNEGAR_ACCELERATED_OPERATION_PLAN_FA.md`
+### Single Active Execution Plan
+`docs/YADNEGAR_OPERATION_PLAN.md`
 
 ### Current State
 `docs/AI_CONTINUATION_STATE.md`
@@ -426,154 +531,165 @@ Documentation written ≠ Done تا وقتی در GitHub ثبت/Review نشده 
 ### Technical/Product Detail
 `PROJECT_DOCUMENTATION_FA.md`
 
-قاعده:
-- تاریخچه حفظ شود.
-- Current State stale نماند.
-- Governance سند موازی متعدد تولید نکند.
-- Feature docs فقط وقتی ارزش واقعی دارند ساخته شوند.
+### Compatibility Pointer
+`docs/YADNEGAR_DEVELOPMENT_PROTOCOL.md`
+
+قاعده: سند اجرایی موازی رقیب ساخته نشود؛ Current State باید پس از تغییر معنی‌دار تازه شود.
 
 ---
 
-## 19. گزارش‌دهی به مالک پروژه
-گزارش‌ها کوتاه، غیر فنی و نتیجه‌محور باشند.
+## 24. برنامه عملیاتی سطح بالا
+### Wave 0 — Documentation Baseline
+PR #3
 
-قالب استاندارد:
+### Wave 1 — Foundation Integration
+Issue #4 / PR #2
 
-`کجا هستیم | چه انجام شد | وضعیت | مانع/ریسک | قدم بعد`
+### Wave 2 — Parallel Expansion
+A: Timeline Domain Contract  
+B: RTL App Shell/Timeline Surface  
+C: CI Consolidation/Fast Lane
 
-برچسب‌ها:
-- **واقعیت**: Verify شده
-- **برنامه**: هنوز اجرا نشده
-- **مسدود**: مانع واقعی
-- **نیاز به تصمیم**: تصمیم مالک لازم است
+### Wave 3 — First Vertical Slice
+`Capture → Persist → Timeline → Edit`
 
-جزئیات فنی در GitHub باقی می‌ماند مگر برای تصمیم کاربر ضروری باشد.
+### Wave 4 — Item Types
+Note / Event / Call / Idea / Activity
+
+### Wave 5 — Search & Reliability
+Search/Filter + persistence hardening + migration
+
+### Wave 6 — Reminder / Backup / Export
+پس از Data Contract پایدار
+
+### Wave 7 — Release
+E2E + build + artifact + smoke + recovery
+
+جزئیات: `docs/YADNEGAR_OPERATION_PLAN.md`
 
 ---
 
-## 20. Failure / Recovery
-چرخه استاندارد:
+## 25. ریسک‌های فعلی
+### R1 — Foundation هنوز روی main نیست
+اقدام: reuse و Integration PR #2؛ Foundation جدید ممنوع.
+
+### R2 — CI چندمسیره و مبهم
+main دو Placeholder دارد و PR #2 Flutter CI واقعی اضافه می‌کند.  
+اقدام: Issue #6 برای consolidation.
+
+### R3 — Draft Foundation PR ممکن است بی‌دلیل متوقف بماند
+Evidence Analyze/Test سبز است.  
+اقدام: Review دقیق و Ready کردن پس از Verify نهایی.
+
+### R4 — Over-engineering قبل از Vertical Slice
+اقدام: اول Capture→Persist→Timeline.
+
+### R5 — Duplicate documentation
+اقدام: یک Operational Plan فعال، یک Canonical governance.
+
+### R6 — Stale current state
+اقدام: refresh بعد از Mergeهای معنی‌دار.
+
+---
+
+## 26. Recovery و Failure Handling
+چرخه:
 
 `Detect → Classify → Contain → Recover → Validate → Document → Improve`
 
-برای تغییرات Foundation/Data:
+برای Foundation/Data changes:
 - rollback روشن
-- migration/recovery consideration
-- عدم overwrite مخرب
-- حفظ تاریخچه
+- history preservation
+- migration/recovery قبل از تغییر مخرب
 
 ---
 
-## 21. Release Governance
-پس از رسیدن به مرحله Build واقعی:
+## 27. Release Governance
+وقتی Platform/Build واقعی شکل گرفت:
 
 `Development → Validation → Release Candidate → Approval → Artifact → Smoke Test → Release → Monitor`
 
-Release باید Ref/Version/Evidence روشن داشته باشد.
+Release باید:
+- version/tag
+- exact SHA
+- validation evidence
+- release notes
+- rollback/recovery
+
+داشته باشد.
 
 ---
 
-## 22. ریسک‌های فعلی پروژه
-### R1 — Foundation هنوز وجود ندارد
-اثر: تمام Feature/CI واقعی به آن وابسته‌اند.  
-اقدام: Flutter bootstrap کمینه اولین مسیر کدنویسی باشد.
+## 28. گزارش مالک پروژه
+گزارش پروژه باید کوتاه و غیر فنی باشد:
 
-### R2 — CI فعلی ظاهر سبز ولی Placeholder است
-اثر: امکان برداشت اشتباه از کیفیت.  
-اقدام: مستندسازی صریح فعلی + تبدیل به CI واقعی فقط پس از Foundation.
+`کجا هستیم | چه انجام شد | وضعیت | مانع | قدم بعد`
 
-### R3 — Over-engineering قبل از اولین Vertical Slice
-اثر: تأخیر و دوباره‌کاری.  
-اقدام: ساخت کمترین Foundation لازم، سپس یک Slice واقعی Capture→Store→Timeline.
+جزئیات فنی در GitHub Evidence باقی می‌ماند.
 
-### R4 — تداخل Workstreamها
-اثر: Merge conflict و دوباره‌کاری.  
-اقدام: Ownership فایل/Foundation و PR کوچک.
-
-### R5 — اسناد stale
-اثر: AI Session بعدی از وضعیت غلط ادامه می‌دهد.  
-اقدام: Current State در هر Merge مهم به‌روزرسانی شود.
+برچسب‌ها:
+- **واقعیت** — Verify شده
+- **برنامه** — هنوز اجرا نشده
+- **مسدود** — blocker واقعی
+- **نیاز به تصمیم** — تصمیم Owner
 
 ---
 
-## 23. Roadmap سطح بالا
-### Wave 0 — Governance & Documentation Baseline
-- Canonical docs
-- comprehensive doc
-- current state
-- handoff
-- operational plan
+## 29. Metrics بعد از شکل‌گیری CI
+- PR lead time
+- Fast Lane feedback time
+- Full Gate duration
+- stale-run cancellation benefit
+- rework rate
+- regression escape count
 
-### Wave 1 — Flutter Foundation
-- minimal Flutter project
-- baseline app/test
-- dependency resolution
-
-### Wave 2 — Parallel Foundation Expansion
-Lane A: Timeline/Domain contract  
-Lane B: RTL App Shell  
-Lane C: Fast Lane CI + Full Gate
-
-### Wave 3 — First Vertical Slice
-`Quick Capture → Persist → Timeline → Edit`
-
-### Wave 4 — Item Types
-Note / Event / Call / Idea / Activity بر Foundation مشترک
-
-### Wave 5 — Retrieval & Reliability
-Search/Filter + persistence hardening + migration tests
-
-### Wave 6 — Reminder / Backup / Export
-فقط پس از تثبیت Contractهای قبلی
-
-### Wave 7 — Release Readiness
-E2E + artifact + smoke + recovery + release documentation
+Metric برای کاهش اتلاف است، نه نمایش درصد مصنوعی.
 
 ---
 
-## 24. معیار موفقیت نسخه اولیه قابل‌استفاده
-- برنامه Flutter واقعی اجرا شود.
-- UI فارسی RTL باشد.
-- کاربر در چند ثانیه Item ثبت کند.
-- Item بعد از بسته/باز شدن باقی بماند.
-- Timeline درست نمایش دهد.
-- ویرایش درست کار کند.
-- تست‌های Core و UI کلیدی سبز باشند.
-- CI واقعی روی SHA دقیق سبز باشد.
-- Build قابل نصب تولید شود.
-- Current State و Handoff با همان وضعیت همگام باشند.
+## 30. نزدیک‌ترین اقدامات واقعی
+1. PR #3: تکمیل/Review Documentation baseline.
+2. PR #2: Verify مجدد exact-head CI و Audit diff.
+3. PR #2: Mark Ready for Review در صورت سالم بودن.
+4. Merge Foundation پس از Review.
+5. Issue #6: CI consolidation.
+6. Issue #5 و Timeline Core Contract در Branchهای مستقل و موازی.
+7. First Vertical Slice.
 
 ---
 
-## 25. پروتکل «ادامه یادنگار»
-وقتی کاربر می‌گوید:
+## 31. پروتکل «ادامه یادنگار»
+Trigger:
 
 `ادامه یادنگار`
 
-معنی اجرایی:
+فرآیند:
 1. Verify GitHub access.
-2. Verify `main` HEAD.
-3. Verify open PRs and active branches.
-4. Verify exact workflow evidence.
-5. Read Canonical + Current State + Operational Plan.
-6. Audit existing implementation.
-7. Select nearest real unfinished work.
-8. Parallelize independent lanes.
-9. Execute low-risk reversible work.
-10. Validate.
-11. Update documentation/evidence.
-12. Commit/PR.
-13. Report briefly and non-technically.
+2. Verify main HEAD.
+3. Read open PRs/Issues.
+4. Verify exact-head workflows.
+5. Read Canonical + Comprehensive + Current State + Operation Plan.
+6. Audit implementation before creating work.
+7. Reuse existing work.
+8. Find nearest real gap.
+9. Parallelize independent lanes.
+10. Execute reversible work.
+11. Validate exact ref.
+12. Update documentation/evidence.
+13. Commit/PR/integrate.
+14. Report briefly and non-technically.
 
 ---
 
-## 26. اصل نهایی
+## 32. اصل نهایی
 **کار واقعی، نه گزارش‌سازی.**
+
+**Reuse قبل از Rebuild.**
 
 **موازی، هماهنگ و سریع، بدون حذف کنترل کیفیت.**
 
-**مستندسازی همزمان با Implementation.**
+**GitHub Automation برای کاهش زمان انتظار و ابهام.**
 
-**GitHub Automation برای کاهش زمان انتظار، نه برای نمایش مصنوعی پیشرفت.**
+**مستندسازی همزمان با Implementation.**
 
 **GitHub Reality همیشه بالاتر از حافظه و Snapshot است.**
