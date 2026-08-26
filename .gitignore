@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Proprietary licensed IRANSansX build assets only.
+# Open-source Vazirmatn assets under assets/fonts/vazirmatn/ are tracked.
+/assets/fonts/IRANSansX*.ttf
+/assets/fonts/IRANSansX*.otf
+/assets/fonts/IRANSansX*.woff
+/assets/fonts/IRANSansX*.woff2
+/assets/fonts/FontLicense.txt

@@ -8,6 +8,7 @@ on:
     paths:
       - 'lib/**'
       - 'android/**'
+      - 'assets/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/android-build.yml'
@@ -16,6 +17,7 @@ on:
     paths:
       - 'lib/**'
       - 'android/**'
+      - 'assets/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/android-build.yml'
@@ -42,6 +44,23 @@ jobs:
           flutter-version: '3.35.0'
           channel: stable
           cache: true
+
+      - name: Restore licensed IRANSansX fonts when configured
+        shell: bash
+        env:
+          IRANSANSX_FANUM_REGULAR_B64: ${{ secrets.IRANSANSX_FANUM_REGULAR_B64 }}
+          IRANSANSX_FANUM_BOLD_B64: ${{ secrets.IRANSANSX_FANUM_BOLD_B64 }}
+        run: |
+          if [[ -n "${IRANSANSX_FANUM_REGULAR_B64:-}" && -n "${IRANSANSX_FANUM_BOLD_B64:-}" ]]; then
+            mkdir -p assets/fonts
+            printf '%s' "$IRANSANSX_FANUM_REGULAR_B64" | base64 --decode > assets/fonts/IRANSansXFaNum-Regular.ttf
+            printf '%s' "$IRANSANSX_FANUM_BOLD_B64" | base64 --decode > assets/fonts/IRANSansXFaNum-Bold.ttf
+            test -s assets/fonts/IRANSansXFaNum-Regular.ttf
+            test -s assets/fonts/IRANSansXFaNum-Bold.ttf
+            echo "Licensed IRANSansX fonts restored for this private build context."
+          else
+            echo "IRANSansX secrets are not configured; build will use the platform fallback font."
+          fi
 
       - name: Resolve dependencies
         run: flutter pub get
