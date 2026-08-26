@@ -17,86 +17,93 @@ Vertical Slice اصلی واقعی است:
 `Quick Capture → Persist → Timeline → View/Edit`
 
 Main additionally has:
-- typed Quick Capture on the shared `TimelineItemType`
-- `SearchTimeline` + RTL text/type retrieval UI
-- `FilterTimelineByDateRange` + RTL date-range UI
-- Vazirmatn typography + optional private licensed IRANSansX
+- typed Quick Capture on shared `TimelineItemType`
+- Search + Type retrieval
+- Date Range retrieval UI on existing application contract
+- Vazirmatn + optional private licensed IRANSansX
 - deduplicated feature/main CI triggers
-- crash-recoverable JSON persistence in the same `JsonFileTimelineRepository`
-
-هیچ Model/Repository/Storage موازی ساخته نشده است.
+- crash-recoverable JSON persistence in the same repository
 
 ## Reliability — #42 Integrated
-Issue #41 completed and PR #42 merged with exact-head lock.
+Issue #41 completed.
 
 Merged main:
 `379f58caf34f2206556246beb94e27a2c85ece78`
 
-Pre-merge exact-head proof:
+Pre-merge:
 - Fast CI `33012747019`: success
 - Android `33012747020`: success
 
-Post-merge proof:
+Post-merge:
 - Fast CI `33014440255`: success
 - Android `33014440247`: success
 
 ## Date Range UI — #47 Integrated
-Issue #46 completed.  
-PR exact head before merge:
+Issue #46 completed.
+
+Exact PR head:
 `10f6d1dc0e288f4a46552a54ad7bfa808c9ccd7e`
 
-Pre-merge exact-head gates:
-- `YadNegar CI` Run `33014650334`: success
-- `YadNegar Android Build` Run `33014650363`: success
+Pre-merge:
+- Fast CI `33014650334`: success
+- Android `33014650363`: success
 - live mergeability: true
 
-Merged safely as current main:
+Merged as current main:
 `453a77a9e662f705bed8f899a769b425927bebb4`
 
-Integrated behavior:
-- existing `FilterTimelineByDateRange` reused
-- same `TimelineRepository` reused
-- UI end date included via next-day exclusive Application boundary
-- Date + Text + Type compose
-- clear/reset and filtered empty state cover date filtering
-- widget tests cover multiple days, inclusive end date and retrieval combinations
+Post-merge current-main proof:
+- Fast CI `33015057876`: success
+- Android `33015057863`: success
 
-Post-merge current-main gates at this snapshot:
-- Fast CI `33015057876`: running
-- Android `33015057863`: running
+## Active Product — PR #49 / Issue #48
+`feat(capture): add optional occurredAt for Event and Activity`
 
-Fresh-check these runs before claiming post-merge Green.
+Branch:
+`feature/quick-capture-occurred-at`
 
-## Next Product Slice — Issue #48
-`feat(capture): expose occurredAt for Event and Activity`
+Exact head at this snapshot:
+`20597e134e08dcb4a6b1c910ed8d38cdbd99ee6b`
 
-Do not rebuild foundations. Current code already has:
+Foundation is reused, not rebuilt:
 - `TimelineItem.occurredAt`
 - `TimelineItem.timelineAt`
 - `QuickCapture.capture(occurredAt: ...)`
 
-Missing gap is only Quick Capture UI/composition. Implement optional date/time for Event/Activity from current main after docs sync; reuse the existing contracts.
+Added only UI/composition + focused widget tests:
+- Event/Activity optional date + time
+- clear selected date/time
+- hidden occurredAt state cleared when switching to unsupported type
+- Note/Call/Idea current fast capture path remains
+
+Current exact-head gates:
+- Fast CI `33015406333`: success
+- Android `33015406042`: in progress
+
+Do not merge until Android is success and a final live head/mergeability read is safe.
 
 ## Docs
-PR #43 is stale and must not be merged unchanged.
+Old PR #43 was closed without merge because it was stale.
+Replacement PR #50 is Draft while #49 is active.
 
-Replacement branch:
+Branch:
 `docs/current-state-after-reliability`
 
-It is synchronized onto current main and records #42/#47 reality plus #48 next work. Open/validate the replacement PR, then close #43 as superseded.
+After #49 settles, sync this branch onto final main, refresh the snapshot, mark ready, validate exact head and merge safely.
 
 ## Ruleset — #19
-`main-protection` is active but still does not contain a required-status-check rule.
+`main-protection` still does not contain a required-status-check rule.
 
 Until real Ruleset write capability exists:
-`exact-head Green CI/Build + live mergeability + expected-head lock` is the operational safety contract.
+`exact-head Green CI/Build + live mergeability + expected-head lock` is mandatory.
 
 ## ادامه کار
-1. Finish current-main post-merge Fast + Android validation.
-2. Open the clean docs replacement PR from `docs/current-state-after-reliability`.
-3. Close stale #43 as superseded; merge docs only after exact-head validation.
-4. Start #48 from current main without duplicate Domain/Application/Storage work.
-5. Keep #19 open until actual platform enforcement is writable and proven.
+1. Finish #49 Android exact-head gate.
+2. If Green, final-read #49 head/mergeability and merge safely.
+3. Validate new main.
+4. Final-sync/validate/merge Draft docs PR #50.
+5. Fresh-audit the next product gap; do not create duplicate foundations.
+6. Keep #19 open until actual platform enforcement is writable and proven.
 
 ## Trigger
 `ادامه یادنگار`
