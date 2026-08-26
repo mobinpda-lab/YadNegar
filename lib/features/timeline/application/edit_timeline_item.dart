@@ -16,6 +16,7 @@ class EditTimelineItem {
   Future<TimelineItem> update({
     required String id,
     required String text,
+    TimelineItemType? type,
     bool replaceOccurredAt = false,
     DateTime? occurredAt,
   }) async {
@@ -34,15 +35,27 @@ class EditTimelineItem {
       throw StateError('Timeline item "$normalizedId" was not found.');
     }
 
+    final targetType = type ?? existing.type;
+    final changedToTypeWithoutOccurredAt =
+        type != null && !_supportsOccurredAt(targetType);
+
     final updated = TimelineItem(
       id: existing.id,
-      type: existing.type,
+      type: targetType,
       text: normalizedText,
       createdAt: existing.createdAt,
-      occurredAt: replaceOccurredAt ? occurredAt : existing.occurredAt,
+      occurredAt: changedToTypeWithoutOccurredAt
+          ? null
+          : replaceOccurredAt
+              ? occurredAt
+              : existing.occurredAt,
     );
 
     await repository.upsert(updated);
     return updated;
+  }
+
+  bool _supportsOccurredAt(TimelineItemType type) {
+    return type == TimelineItemType.event || type == TimelineItemType.activity;
   }
 }

@@ -56,6 +56,42 @@ void main() {
     expect(await backupFile.exists(), isFalse);
   });
 
+  test('delete persists removal through the crash-safe write path', () async {
+    await repository.upsert(buildItem());
+    await repository.upsert(
+      TimelineItem(
+        id: 'idea-2',
+        type: TimelineItemType.idea,
+        text: 'باقی بماند',
+        createdAt: DateTime.utc(2026, 8, 26, 11),
+      ),
+    );
+
+    final deleted = await repository.deleteById('note-1');
+
+    expect(deleted, isTrue);
+    expect(await temporaryFile.exists(), isFalse);
+    expect(await backupFile.exists(), isFalse);
+
+    final reloadedRepository = JsonFileTimelineRepository(storageFile);
+    final reloaded = await reloadedRepository.listNewestFirst();
+    expect(reloaded.map((item) => item.id), <String>['idea-2']);
+    expect(await reloadedRepository.findById('note-1'), isNull);
+  });
+
+  test('delete returns false when id does not exist without staging a write', () async {
+    await repository.upsert(buildItem());
+
+    final deleted = await repository.deleteById('missing');
+
+    expect(deleted, isFalse);
+    expect(await storageFile.exists(), isTrue);
+    expect(await temporaryFile.exists(), isFalse);
+    expect(await backupFile.exists(), isFalse);
+    final items = await repository.listNewestFirst();
+    expect(items.single.id, 'note-1');
+  });
+
   test('recovers previous primary when interruption leaves only backup', () async {
     await repository.upsert(buildItem(text: 'نسخه امن'));
     await storageFile.rename(backupFile.path);

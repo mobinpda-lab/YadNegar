@@ -90,6 +90,9 @@ class _RecordingTimelineRepository implements TimelineRepository {
   final List<TimelineItem> upsertedItems = <TimelineItem>[];
 
   @override
+  Future<bool> deleteById(String id) async => false;
+
+  @override
   Future<void> upsert(TimelineItem item) async {
     upsertedItems.add(item);
   }

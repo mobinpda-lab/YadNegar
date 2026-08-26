@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:yadnegar/features/timeline/application/delete_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
+import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
@@ -33,12 +35,16 @@ class _EditTimelineDraft {
   const _EditTimelineDraft({
     required this.text,
     required this.replaceOccurredAt,
+    this.replacementType,
     this.occurredAt,
+    this.deleteRequested = false,
   });
 
   final String text;
+  final TimelineItemType? replacementType;
   final bool replaceOccurredAt;
   final DateTime? occurredAt;
+  final bool deleteRequested;
 }
 
 class TimelineHome extends StatefulWidget {
@@ -47,6 +53,8 @@ class TimelineHome extends StatefulWidget {
     required this.quickCapture,
     required this.loadTimeline,
     this.editTimelineItem,
+    this.deleteTimelineItem,
+    this.restoreTimelineItem,
     this.searchTimeline,
     this.filterTimelineByDateRange,
     this.dateRangePicker,
@@ -56,6 +64,8 @@ class TimelineHome extends StatefulWidget {
   final QuickCapture quickCapture;
   final LoadTimeline loadTimeline;
   final EditTimelineItem? editTimelineItem;
+  final DeleteTimelineItem? deleteTimelineItem;
+  final RestoreTimelineItem? restoreTimelineItem;
   final SearchTimeline? searchTimeline;
   final FilterTimelineByDateRange? filterTimelineByDateRange;
   final TimelineDateRangePicker? dateRangePicker;
@@ -411,78 +421,150 @@ class _TimelineHomeState extends State<TimelineHome> {
     }
 
     var draft = item.text;
+    var selectedType = item.type;
     var occurredAt = item.occurredAt;
-    final supportsOccurredAt = _supportsOccurredAt(item.type);
 
     final editDraft = await showDialog<_EditTimelineDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text('ویرایش ${_typeLabel(item.type)}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                key: const Key('timeline-edit-input'),
-                initialValue: item.text,
-                autofocus: true,
-                minLines: 1,
-                maxLines: 6,
-                onChanged: (value) => draft = value,
-                decoration: const InputDecoration(
-                  labelText: 'متن',
-                ),
-              ),
-              if (supportsOccurredAt) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  key: const Key('timeline-edit-occurred-at'),
-                  onPressed: () async {
-                    final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
-                    final value = await picker(
-                      dialogContext,
-                      occurredAt ?? item.createdAt,
-                    );
-                    if (value == null || !dialogContext.mounted) {
+        builder: (context, setDialogState) {
+          final supportsOccurredAt = _supportsOccurredAt(selectedType);
+          return AlertDialog(
+            title: Text('ویرایش ${_typeLabel(selectedType)}'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('نوع مورد'),
+                const SizedBox(height: 4),
+                DropdownButton<TimelineItemType>(
+                  key: const Key('timeline-edit-type'),
+                  value: selectedType,
+                  isExpanded: true,
+                  items: TimelineItemType.values
+                      .map(
+                        (type) => DropdownMenuItem<TimelineItemType>(
+                          value: type,
+                          child: Text(_typeLabel(type)),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: (type) {
+                    if (type == null) {
                       return;
                     }
-                    setDialogState(() => occurredAt = value);
+                    setDialogState(() {
+                      selectedType = type;
+                      if (!_supportsOccurredAt(type)) {
+                        occurredAt = null;
+                      }
+                    });
                   },
-                  icon: const Icon(Icons.event),
-                  label: Text(
-                    occurredAt == null
-                        ? 'تاریخ و زمان (اختیاری)'
-                        : _formatDateTime(occurredAt!),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('timeline-edit-input'),
+                  initialValue: item.text,
+                  autofocus: true,
+                  minLines: 1,
+                  maxLines: 6,
+                  onChanged: (value) => draft = value,
+                  decoration: const InputDecoration(
+                    labelText: 'متن',
                   ),
                 ),
-                if (occurredAt != null)
-                  TextButton(
-                    key: const Key('timeline-edit-occurred-at-clear'),
-                    onPressed: () => setDialogState(() => occurredAt = null),
-                    child: const Text('پاک کردن تاریخ و زمان'),
+                if (supportsOccurredAt) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('timeline-edit-occurred-at'),
+                    onPressed: () async {
+                      final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
+                      final value = await picker(
+                        dialogContext,
+                        occurredAt ?? item.createdAt,
+                      );
+                      if (value == null || !dialogContext.mounted) {
+                        return;
+                      }
+                      setDialogState(() => occurredAt = value);
+                    },
+                    icon: const Icon(Icons.event),
+                    label: Text(
+                      occurredAt == null
+                          ? 'تاریخ و زمان (اختیاری)'
+                          : _formatDateTime(occurredAt!),
+                    ),
                   ),
+                  if (occurredAt != null)
+                    TextButton(
+                      key: const Key('timeline-edit-occurred-at-clear'),
+                      onPressed: () => setDialogState(() => occurredAt = null),
+                      child: const Text('پاک کردن تاریخ و زمان'),
+                    ),
+                ],
               ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('انصراف'),
             ),
-            FilledButton(
-              key: const Key('timeline-edit-save'),
-              onPressed: () => Navigator.of(dialogContext).pop(
-                _EditTimelineDraft(
-                  text: draft,
-                  replaceOccurredAt: supportsOccurredAt,
-                  occurredAt: occurredAt,
+            actions: [
+              if (widget.deleteTimelineItem != null)
+                TextButton(
+                  key: const Key('timeline-edit-delete'),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: dialogContext,
+                      builder: (confirmContext) => AlertDialog(
+                        title: const Text('حذف این مورد؟'),
+                        content: Text(
+                          widget.restoreTimelineItem == null
+                              ? 'این مورد از یادنگار حذف می‌شود. این کار قابل بازگشت نیست.'
+                              : 'این مورد از یادنگار حذف می‌شود. پس از حذف می‌توانید آن را بازگردانید.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(confirmContext).pop(false),
+                            child: const Text('انصراف'),
+                          ),
+                          FilledButton(
+                            key: const Key('timeline-delete-confirm'),
+                            onPressed: () => Navigator.of(confirmContext).pop(true),
+                            child: const Text('حذف'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed != true || !dialogContext.mounted) {
+                      return;
+                    }
+                    Navigator.of(dialogContext).pop(
+                      _EditTimelineDraft(
+                        text: draft,
+                        replacementType: selectedType == item.type ? null : selectedType,
+                        replaceOccurredAt: supportsOccurredAt,
+                        occurredAt: occurredAt,
+                        deleteRequested: true,
+                      ),
+                    );
+                  },
+                  child: const Text('حذف'),
                 ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('انصراف'),
               ),
-              child: const Text('ذخیره'),
-            ),
-          ],
-        ),
+              FilledButton(
+                key: const Key('timeline-edit-save'),
+                onPressed: () => Navigator.of(dialogContext).pop(
+                  _EditTimelineDraft(
+                    text: draft,
+                    replacementType: selectedType == item.type ? null : selectedType,
+                    replaceOccurredAt: supportsOccurredAt,
+                    occurredAt: occurredAt,
+                  ),
+                ),
+                child: const Text('ذخیره'),
+              ),
+            ],
+          );
+        },
       ),
     );
 
@@ -490,10 +572,83 @@ class _TimelineHomeState extends State<TimelineHome> {
       return;
     }
 
+    if (editDraft.deleteRequested) {
+      final deleteTimelineItem = widget.deleteTimelineItem;
+      if (deleteTimelineItem == null) {
+        return;
+      }
+      try {
+        final deleted = await deleteTimelineItem.delete(id: item.id);
+        if (!mounted) {
+          return;
+        }
+        if (!deleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('مورد برای حذف پیدا نشد.')),
+          );
+          return;
+        }
+        await _reload();
+        if (!mounted) {
+          return;
+        }
+        final restoreTimelineItem = widget.restoreTimelineItem;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('مورد حذف شد.'),
+            action: restoreTimelineItem == null
+                ? null
+                : SnackBarAction(
+                    label: 'بازگردانی',
+                    onPressed: () async {
+                      try {
+                        final restored = await restoreTimelineItem.restore(item);
+                        if (!mounted) {
+                          return;
+                        }
+                        if (!restored) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('این مورد دیگر قابل بازگردانی نیست.'),
+                            ),
+                          );
+                          return;
+                        }
+                        await _reload();
+                        if (!mounted) {
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('مورد بازگردانده شد.')),
+                        );
+                      } catch (_) {
+                        if (!mounted) {
+                          return;
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('بازگردانی مورد انجام نشد.')),
+                        );
+                      }
+                    },
+                  ),
+          ),
+        );
+      } catch (_) {
+        if (!mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حذف مورد انجام نشد.')),
+        );
+      }
+      return;
+    }
+
     try {
       await editTimelineItem.update(
         id: item.id,
         text: editDraft.text,
+        type: editDraft.replacementType,
         replaceOccurredAt: editDraft.replaceOccurredAt,
         occurredAt: editDraft.occurredAt,
       );
