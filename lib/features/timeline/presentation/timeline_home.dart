@@ -12,11 +12,21 @@ typedef TimelineDateRangePicker = Future<DateTimeRange?> Function(
   DateTimeRange? initialRange,
 );
 
+typedef TimelineOccurredAtPicker = Future<DateTime?> Function(
+  BuildContext context,
+  DateTime initialDateTime,
+);
+
 class _QuickCaptureDraft {
-  const _QuickCaptureDraft({required this.text, required this.type});
+  const _QuickCaptureDraft({
+    required this.text,
+    required this.type,
+    this.occurredAt,
+  });
 
   final String text;
   final TimelineItemType type;
+  final DateTime? occurredAt;
 }
 
 class TimelineHome extends StatefulWidget {
@@ -28,6 +38,7 @@ class TimelineHome extends StatefulWidget {
     this.searchTimeline,
     this.filterTimelineByDateRange,
     this.dateRangePicker,
+    this.occurredAtPicker,
   });
 
   final QuickCapture quickCapture;
@@ -36,6 +47,7 @@ class TimelineHome extends StatefulWidget {
   final SearchTimeline? searchTimeline;
   final FilterTimelineByDateRange? filterTimelineByDateRange;
   final TimelineDateRangePicker? dateRangePicker;
+  final TimelineOccurredAtPicker? occurredAtPicker;
 
   @override
   State<TimelineHome> createState() => _TimelineHomeState();
@@ -186,6 +198,37 @@ class _TimelineHomeState extends State<TimelineHome> {
     );
   }
 
+  Future<DateTime?> _showOccurredAtPicker(
+    BuildContext context,
+    DateTime initialDateTime,
+  ) async {
+    final date = await showDatePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      initialDate: initialDateTime,
+      helpText: 'تاریخ رویداد یا فعالیت',
+      cancelText: 'انصراف',
+      confirmText: 'بعدی',
+    );
+    if (date == null || !context.mounted) {
+      return null;
+    }
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initialDateTime),
+      helpText: 'زمان رویداد یا فعالیت',
+      cancelText: 'انصراف',
+      confirmText: 'اعمال',
+    );
+    if (time == null) {
+      return null;
+    }
+
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
   DateTime _startOfDay(DateTime value) {
     if (value.isUtc) {
       return DateTime.utc(value.year, value.month, value.day);
@@ -197,6 +240,16 @@ class _TimelineHomeState extends State<TimelineHome> {
     final month = value.month.toString().padLeft(2, '0');
     final day = value.day.toString().padLeft(2, '0');
     return '${value.year}/$month/$day';
+  }
+
+  String _formatDateTime(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '${_formatDate(value)} - $hour:$minute';
+  }
+
+  bool _supportsOccurredAt(TimelineItemType type) {
+    return type == TimelineItemType.event || type == TimelineItemType.activity;
   }
 
   void _clearSearch() {
@@ -211,6 +264,7 @@ class _TimelineHomeState extends State<TimelineHome> {
   Future<void> _openQuickCapture() async {
     var draft = '';
     var selectedType = TimelineItemType.note;
+    DateTime? occurredAt;
 
     final captureDraft = await showDialog<_QuickCaptureDraft>(
       context: context,
@@ -239,7 +293,12 @@ class _TimelineHomeState extends State<TimelineHome> {
                   if (type == null) {
                     return;
                   }
-                  setDialogState(() => selectedType = type);
+                  setDialogState(() {
+                    selectedType = type;
+                    if (!_supportsOccurredAt(type)) {
+                      occurredAt = null;
+                    }
+                  });
                 },
               ),
               const SizedBox(height: 12),
@@ -253,6 +312,35 @@ class _TimelineHomeState extends State<TimelineHome> {
                   hintText: 'چه چیزی را می‌خواهید به خاطر بسپارید؟',
                 ),
               ),
+              if (_supportsOccurredAt(selectedType)) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  key: const Key('quick-capture-occurred-at'),
+                  onPressed: () async {
+                    final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
+                    final value = await picker(
+                      dialogContext,
+                      occurredAt ?? DateTime.now(),
+                    );
+                    if (value == null || !dialogContext.mounted) {
+                      return;
+                    }
+                    setDialogState(() => occurredAt = value);
+                  },
+                  icon: const Icon(Icons.event),
+                  label: Text(
+                    occurredAt == null
+                        ? 'تاریخ و زمان (اختیاری)'
+                        : _formatDateTime(occurredAt!),
+                  ),
+                ),
+                if (occurredAt != null)
+                  TextButton(
+                    key: const Key('quick-capture-occurred-at-clear'),
+                    onPressed: () => setDialogState(() => occurredAt = null),
+                    child: const Text('پاک کردن تاریخ و زمان'),
+                  ),
+              ],
             ],
           ),
           actions: [
@@ -263,7 +351,11 @@ class _TimelineHomeState extends State<TimelineHome> {
             FilledButton(
               key: const Key('quick-capture-save'),
               onPressed: () => Navigator.of(dialogContext).pop(
-                _QuickCaptureDraft(text: draft, type: selectedType),
+                _QuickCaptureDraft(
+                  text: draft,
+                  type: selectedType,
+                  occurredAt: occurredAt,
+                ),
               ),
               child: const Text('ثبت'),
             ),
@@ -280,6 +372,7 @@ class _TimelineHomeState extends State<TimelineHome> {
       await widget.quickCapture.capture(
         text: captureDraft.text,
         type: captureDraft.type,
+        occurredAt: captureDraft.occurredAt,
       );
       await _reload();
     } on ArgumentError {
