@@ -16,8 +16,8 @@ class QuickCapture {
   final TimelineIdGenerator idGenerator;
 
   Future<TimelineItem> capture({
-    required TimelineItemType type,
     required String text,
+    TimelineItemType type = TimelineItemType.note,
     DateTime? occurredAt,
   }) async {
     final normalizedText = text.trim();
