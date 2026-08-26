@@ -13,6 +13,9 @@ class _MemoryTimelineRepository implements TimelineRepository {
   final Map<String, TimelineItem> _items;
 
   @override
+  Future<bool> deleteById(String id) async => _items.remove(id) != null;
+
+  @override
   Future<TimelineItem?> findById(String id) async => _items[id];
 
   @override
