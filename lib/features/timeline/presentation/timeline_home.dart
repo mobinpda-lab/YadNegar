@@ -33,10 +33,12 @@ class _EditTimelineDraft {
   const _EditTimelineDraft({
     required this.text,
     required this.replaceOccurredAt,
+    this.replacementType,
     this.occurredAt,
   });
 
   final String text;
+  final TimelineItemType? replacementType;
   final bool replaceOccurredAt;
   final DateTime? occurredAt;
 }
@@ -411,78 +413,109 @@ class _TimelineHomeState extends State<TimelineHome> {
     }
 
     var draft = item.text;
+    var selectedType = item.type;
     var occurredAt = item.occurredAt;
-    final supportsOccurredAt = _supportsOccurredAt(item.type);
 
     final editDraft = await showDialog<_EditTimelineDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text('ویرایش ${_typeLabel(item.type)}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                key: const Key('timeline-edit-input'),
-                initialValue: item.text,
-                autofocus: true,
-                minLines: 1,
-                maxLines: 6,
-                onChanged: (value) => draft = value,
-                decoration: const InputDecoration(
-                  labelText: 'متن',
-                ),
-              ),
-              if (supportsOccurredAt) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  key: const Key('timeline-edit-occurred-at'),
-                  onPressed: () async {
-                    final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
-                    final value = await picker(
-                      dialogContext,
-                      occurredAt ?? item.createdAt,
-                    );
-                    if (value == null || !dialogContext.mounted) {
+        builder: (context, setDialogState) {
+          final supportsOccurredAt = _supportsOccurredAt(selectedType);
+          return AlertDialog(
+            title: Text('ویرایش ${_typeLabel(selectedType)}'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('نوع مورد'),
+                const SizedBox(height: 4),
+                DropdownButton<TimelineItemType>(
+                  key: const Key('timeline-edit-type'),
+                  value: selectedType,
+                  isExpanded: true,
+                  items: TimelineItemType.values
+                      .map(
+                        (type) => DropdownMenuItem<TimelineItemType>(
+                          value: type,
+                          child: Text(_typeLabel(type)),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: (type) {
+                    if (type == null) {
                       return;
                     }
-                    setDialogState(() => occurredAt = value);
+                    setDialogState(() {
+                      selectedType = type;
+                      if (!_supportsOccurredAt(type)) {
+                        occurredAt = null;
+                      }
+                    });
                   },
-                  icon: const Icon(Icons.event),
-                  label: Text(
-                    occurredAt == null
-                        ? 'تاریخ و زمان (اختیاری)'
-                        : _formatDateTime(occurredAt!),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('timeline-edit-input'),
+                  initialValue: item.text,
+                  autofocus: true,
+                  minLines: 1,
+                  maxLines: 6,
+                  onChanged: (value) => draft = value,
+                  decoration: const InputDecoration(
+                    labelText: 'متن',
                   ),
                 ),
-                if (occurredAt != null)
-                  TextButton(
-                    key: const Key('timeline-edit-occurred-at-clear'),
-                    onPressed: () => setDialogState(() => occurredAt = null),
-                    child: const Text('پاک کردن تاریخ و زمان'),
+                if (supportsOccurredAt) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('timeline-edit-occurred-at'),
+                    onPressed: () async {
+                      final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
+                      final value = await picker(
+                        dialogContext,
+                        occurredAt ?? item.createdAt,
+                      );
+                      if (value == null || !dialogContext.mounted) {
+                        return;
+                      }
+                      setDialogState(() => occurredAt = value);
+                    },
+                    icon: const Icon(Icons.event),
+                    label: Text(
+                      occurredAt == null
+                          ? 'تاریخ و زمان (اختیاری)'
+                          : _formatDateTime(occurredAt!),
+                    ),
                   ),
+                  if (occurredAt != null)
+                    TextButton(
+                      key: const Key('timeline-edit-occurred-at-clear'),
+                      onPressed: () => setDialogState(() => occurredAt = null),
+                      child: const Text('پاک کردن تاریخ و زمان'),
+                    ),
+                ],
               ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('انصراف'),
             ),
-            FilledButton(
-              key: const Key('timeline-edit-save'),
-              onPressed: () => Navigator.of(dialogContext).pop(
-                _EditTimelineDraft(
-                  text: draft,
-                  replaceOccurredAt: supportsOccurredAt,
-                  occurredAt: occurredAt,
-                ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('انصراف'),
               ),
-              child: const Text('ذخیره'),
-            ),
-          ],
-        ),
+              FilledButton(
+                key: const Key('timeline-edit-save'),
+                onPressed: () => Navigator.of(dialogContext).pop(
+                  _EditTimelineDraft(
+                    text: draft,
+                    replacementType: selectedType == item.type ? null : selectedType,
+                    replaceOccurredAt: supportsOccurredAt,
+                    occurredAt: occurredAt,
+                  ),
+                ),
+                child: const Text('ذخیره'),
+              ),
+            ],
+          );
+        },
       ),
     );
 
@@ -494,6 +527,7 @@ class _TimelineHomeState extends State<TimelineHome> {
       await editTimelineItem.update(
         id: item.id,
         text: editDraft.text,
+        type: editDraft.replacementType,
         replaceOccurredAt: editDraft.replaceOccurredAt,
         occurredAt: editDraft.occurredAt,
       );
