@@ -34,41 +34,31 @@ For main SHA `c632570...` the observed workflow state included:
 - Test run `32984476621`: completed / startup_failure
 - Build run `32984471010`: queued at the observed snapshot
 
-The associated failed/queued jobs did not provide usable step/log evidence; a later log fetch returned no stored job log. Therefore these statuses must not be presented as proof of an application-code regression.
+The failed/queued jobs did not provide usable step/log evidence; a later log fetch returned no stored job log. These statuses are not proof of an application-code regression.
 
 ## Active Pull Requests
 ### PR #3 — Canonical documentation baseline
 Branch: `docs/yadnegar-documentation-baseline`
-Current head after the latest handoff refresh: `41a29bcf207bc17c4fd05222045a086e31e112ef` plus subsequent documentation-only updates.
-
-Scope remains documentation/README only:
-- canonical operating package
-- comprehensive project document
-- active operation plan
-- current state
-- AI handoff
-- technical/product documentation
-- README map
-
-Merge only after exact-ref validation is satisfactory.
+Scope remains documentation/README only: canonical operating package, comprehensive project document, active operation plan, current state, AI handoff, technical/product documentation and README map.
 
 ### PR #7 — CI consolidation
-Branch: `ci/consolidate-flutter-gates`
-Head: `f8cfea3747745ba87184d300b6c3203b0c15f27b`
+Branch: `ci/consolidate-flutter-gates`  
+Current head: `a6d81645bc21b2a6c2e8af2be3d6e02555f139b7`
 
 Scope:
 - make `flutter-ci.yml` the single Fast Quality Gate
 - `permissions: contents: read`
-- branch/PR concurrency with stale-run cancellation
+- branch/PR concurrency with `cancel-in-progress: true`
 - Flutter cache
+- explicit diagnostic step names
 - `flutter pub get → flutter analyze → flutter test`
 - remove placeholder `test.yml`
 - remove placeholder `build.yml`
 
-PR #7 was closed/reopened once to request a fresh validation event, but no exact-head workflow run had been registered at the latest check. Do not merge without evidence.
+PR #7 was closed/reopened once and then received a fresh diagnostic commit to emit a new synchronize event. At the latest Audit, GitHub still reported zero workflow runs for branch `ci/consolidate-flutter-gates`. Do not merge without exact-head evidence.
 
 ### PR #8 — RTL Timeline shell
-Branch: `ui/rtl-timeline-shell`
+Branch: `ui/rtl-timeline-shell`  
 Head: `5e459940fedf8a5b83cb9708396ca6ea7ca0a989`
 
 Scope:
@@ -81,7 +71,7 @@ Scope:
 The old placeholder `Test` workflow reported failure for PR #8, but the job had no executed steps/log evidence at inspection time. Treat this as unresolved CI evidence, not a verified UI failure.
 
 ### PR #10 — Timeline Domain contract
-Branch: `core/timeline-item-contract`
+Branch: `core/timeline-item-contract`  
 Head: `53825cc629fca1285e20c57bfdbc91369eabfb8c`
 
 Scope:
