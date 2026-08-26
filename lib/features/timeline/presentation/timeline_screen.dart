@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+import 'package:yadnegar/settings/font_settings_page.dart';
 
 class TimelineScreen extends StatelessWidget {
   const TimelineScreen({
@@ -35,6 +36,18 @@ class TimelineScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('یادنگار'),
         centerTitle: false,
+        actions: [
+          IconButton(
+            key: const Key('font-settings-action'),
+            tooltip: 'تنظیم فونت',
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => const FontSettingsPage(),
+              ),
+            ),
+            icon: const Icon(Icons.text_fields_outlined),
+          ),
+        ],
       ),
       body: _buildPageBody(),
       floatingActionButton: FloatingActionButton.extended(
