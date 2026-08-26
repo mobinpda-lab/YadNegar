@@ -4,74 +4,60 @@
 GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
 Repository: `mobinpda-lab/YadNegar`  
-Current verified main: `71d1d993e362be898be955963653eff832a7da0a`
+Current main: `509817c344d014579e28f62d64ff8465b722f3b9`
 
-## وضعیت محصول روی main
-یک Timeline مشترک داریم:
-`Quick Capture → Persist → Timeline → View/Edit`
+## وضعیت محصول
+Timeline واحد حفظ شده و قابلیت حذف امن هم وارد main شده است.
 
-قابلیت‌ها:
-- Note/Event/Call/Idea/Activity
-- Search + Type + Date Range
-- Event/Activity occurredAt capture
-- نمایش زمان ثبت/رخداد روی کارت‌ها
-- ویرایش/پاک‌کردن occurredAt
-- اصلاح type از همان Edit flow
-- JSON persistence واقعی و crash-recoverable
-- Fast CI + Android APK Build/Verify/Upload واقعی
+### PR #61 / Issue #57 — Merge شد
+حذف Timeline item با confirmation فارسی تکمیل شد.
 
-## PR #56 / Issue #55 — تکمیل شد
-Merged main: `71d1d993e362be898be955963653eff832a7da0a`
+Exact pre-merge head: `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`
+- Fast CI `33020857429`: success
+- Android `33020857455`: success
+- live mergeability: clean
+- merge با `expected_head_sha`
+- main جدید: `509817c344d014579e28f62d64ff8465b722f3b9`
 
-Pre-merge:
-- CI `33017606387`: success
-- Android `33017606312`: success
+نتیجه:
+- حذف روی همان Repository/Storage موجود
+- write path crash-recoverable reuse شده
+- حذف داخل Edit flow موجود
+- Search/Type/Date بعد از حذف حفظ می‌شوند
+- schema/storage/model موازی ساخته نشده
 
-Post-main:
-- CI `33017911498`: success
-- Android `33017911496`: success
+Post-main Fast CI + Android برای `509817c...` در حال Verify هستند؛ تا هر دو Green نشوند post-main proof کامل نیست.
 
-## Product فعال — PR #61 / Issue #57
-`feat(timeline): delete items with confirmation`
+## Product فعال — PR #63 / Issue #59
+`feat(timeline): allow undo after item deletion`
 
-Branch: `feature/delete-timeline-item-final`  
-Current exact head: `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`
+PR از حالت stacked روی #61 به `main` جدید Retarget شده و همچنان فقط ۵ فایل تغییر دارد.
 
-پیاده‌سازی واقعی:
-- `deleteById` روی همان `TimelineRepository`
-- delete JSON از همان مسیر crash-recoverable استفاده می‌کند
-- `DeleteTimelineItem` use case کوچک
-- wiring واقعی در production
-- حذف داخل همان Edit dialog با confirmation فارسی
-- reload با حفظ Search/Type/Date state
-- تست Application + Widget + real temp-file persistence
-- حذف ID ناموجود write staging ایجاد نمی‌کند
+Current head: `5d651814147289ae3b410d5f023eb777fb91f53e`
+Status: Draft
 
-## سابقه Validation
-- PR #58: CI دو Fake Repository ناقص را پیدا کرد؛ اصلاح شدند.
-- Head میانی #58 Fast CI + Android Green شد، ولی بعد تست نهایی حفظ فیلترها Head را تغییر داد؛ Green قدیمی دیگر معتبر نیست.
-- PR #60 برای validation تازه ساخته شد اما GitHub raw PR API در `mergeable_state: unknown` ماند و Run جدید ثبت نشد.
-- PR #61 همان final tree را با history تمیز مستقیم روی main حمل می‌کند. آخرین Head با یک Contents API commit عادی هم synchronize شده است.
+پیاده‌سازی:
+- `RestoreTimelineItem` کوچک با reuse `findById + upsert`
+- اگر همان ID دوباره وجود داشته باشد restore انجام نمی‌شود تا داده جدید overwrite نشود
+- action فارسی `بازگردانی` بعد از حذف
+- همان TimelineItem در حافظه برگردانده می‌شود؛ history storage/soft-delete نداریم
+- Search/Type/Date state حفظ می‌شود
+- تست Application و Widget برای metadata و فیلترها اضافه شده
 
-Merge #61 تا exact-head Fast CI + Android Green و live mergeability true ممنوع است.
+بعد از Green شدن post-main #61، یک تست Widget conflict-path نهایی اضافه می‌شود تا synchronize طبیعی #63 ساخته شود؛ سپس exact-head CI + Android لازم است.
 
 ## Automation — Issue #62
-مشکل delayed PR merge-ref/workflow registration جداگانه ثبت شده است.
-Workflowها روی main صحیح‌اند و Actions globally فعال است؛ PR #50 در همین بازه CI موفق گرفته است.
+مشکل delayed PR merge-ref/workflow registration باز است. #61 در نهایت سالم Gate گرفت؛ برای بستن #62 باید یک PR بعدی مثل #63 بدون carrier churn به‌طور قابل‌تکرار Gate بگیرد.
 
-Connector فعلی workflow dispatch مستقیم ندارد. Gate دور زده نمی‌شود.
-
-## Next Product — Issue #59
-Undo حذف آماده صف است و باید از `upsert(...)` موجود استفاده کند؛ soft-delete/Storage/Schema جدید ممنوع.
-Branch محصول #59 فقط بعد از settle شدن #61 ساخته شود.
+Gate دور زده نمی‌شود و historical Green به Head جدید نسبت داده نمی‌شود.
 
 ## Docs — PR #50
-PR #50 replacement و Draft است. محتوا هم‌زمان refresh می‌شود؛ قبل از Merge باید روی final main واقعاً Sync، Fresh Audit و exact-head validate شود.
+Docs هم‌زمان به‌روز می‌شوند و PR #50 فعلاً Draft است. Merge Docs فقط بعد از پایان موج Product و sync واقعی روی main پایدار.
 
 ## Ruleset — Issue #19
-Required Status Check هنوز در Ruleset وجود ندارد و Connector Ruleset write ندارد.
+Required Status Check هنوز از طریق Connector قابل‌نوشتن/اثبات نیست.
 
-تا رفع واقعی:
+قانون Merge:
 `exact-head CI Green + Android Green + live mergeability + expected-head lock + post-main proof`
 
 ## اصل سرعت
@@ -80,15 +66,15 @@ Required Status Check هنوز در Ruleset وجود ندارد و Connector Rul
 - Core/Data
 - CI/Automation/Docs
 
-Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، automation، تست واقعی و docs هم‌زمان می‌آید؛ نه از دورزدن Gate.
+Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، تست واقعی، automation و docs هم‌زمان می‌آید؛ نه از کاهش کنترل کیفیت.
 
 ## ادامه
-1. PR #61 Head و workflow registration را Fresh بخوان.
-2. فقط exact-head CI/Android فعلی معتبر است.
-3. اگر Green + mergeable شد با expected-head lock Merge کن.
-4. main را post-merge Verify کن.
-5. #59 را از main جدید شروع کن و #50 را هم‌زمان Final Sync کن.
-6. #62 و #19 را تا رفع واقعی باز نگه دار.
+1. post-main #61 را Green verify کن.
+2. conflict-path test نهایی #63 را اضافه کن.
+3. exact-head CI + Android #63 را بگیر.
+4. اگر Green + mergeable بود با expected-head lock Merge کن.
+5. main جدید را دوباره Verify کن.
+6. سپس PR #50 را Final Sync کن.
 
 ## Trigger
 `ادامه یادنگار`
