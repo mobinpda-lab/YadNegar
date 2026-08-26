@@ -10,29 +10,22 @@ Fresh-audit GitHub before every write, merge, SHA/status claim, or progress clai
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current main SHA: `71d1d993e362be898be955963653eff832a7da0a`
+Current verified main SHA: `71d1d993e362be898be955963653eff832a7da0a`
 
-Main provides one shared Timeline stack:
+Main has one shared Timeline stack:
 - Quick Capture → real JSON persistence → Timeline → View/Edit
-- Note/Event/Call/Idea/Activity on one `TimelineItem`
-- Search + Type + Date Range retrieval
+- Note/Event/Call/Idea/Activity
+- Search + Type + Date Range
 - optional Event/Activity occurredAt capture
-- Timeline card registration/occurrence time context through `timelineAt`
-- Event/Activity edit can replace or clear occurredAt
-- Edit can correct Timeline item type through the same `EditTimelineItem`
+- card registration/occurrence time through `timelineAt`
+- edit/clear occurredAt
+- edit Timeline item type via the same `EditTimelineItem`
 - crash-recoverable JSON persistence
-- Fast CI + Android APK build/verify/upload automation
+- Fast CI + Android APK build/verify/upload
 
 No duplicate Timeline Model / Repository / Storage / App Shell exists.
 
 ## Recently Integrated
-### PR #54 / Issue #53 — occurredAt Edit
-Merged safely as `740c290f8c2c3104dbca6518ee8c3de54b9abc51`.
-- pre-merge CI `33016928847`: success
-- pre-merge Android `33016928837`: success
-- post-main CI `33017214825`: success
-- post-main Android `33017214826`: success
-
 ### PR #56 / Issue #55 — Timeline Type Edit
 Merged safely as current main `71d1d993e362be898be955963653eff832a7da0a` using expected-head lock.
 
@@ -43,78 +36,82 @@ Exact PR head: `ff59496fd12c098a5ebce7cd60dc301bb0fb8724`
 - post-main CI `33017911498`: success
 - post-main Android `33017911496`: success
 
-Integrated behavior:
-- same `EditTimelineItem` extended; no parallel edit use case
-- type can be corrected among Note/Event/Call/Idea/Activity
-- changing Event/Activity to Note/Call/Idea clears hidden occurredAt
-- changing to Event/Activity reuses existing occurredAt controls
-
-Issue #55 is completed.
-
-## Active Product PR — #58 / Issue #57
-PR #58: `feat(timeline): delete items with confirmation`  
-Branch: `feature/delete-timeline-item`  
-Current exact head: `fd1e252b114f207ac6bf38080f1ccc1b749c0557`  
+## Active Product — PR #61 / Issue #57
+PR #61: `feat(timeline): delete items with confirmation`  
+Branch: `feature/delete-timeline-item-final`  
+Current exact head: `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`  
 Base: current main `71d1d993e362be898be955963653eff832a7da0a`
 
-Implementation:
+Final product behavior:
 - `deleteById` added to the existing `TimelineRepository`
-- `JsonFileTimelineRepository` reuses the same crash-recoverable `_readAll → _writeAll` path
+- `JsonFileTimelineRepository` reuses the existing crash-safe `_readAll → _writeAll` path
 - no schema bump, no second storage, no soft-delete foundation
 - small `DeleteTimelineItem` application use case
-- production wiring uses the same shared repository
-- deletion is inside the existing Edit dialog with explicit Persian confirmation
-- successful deletion reloads through the existing Timeline/filter state path
-- application, real temp-file persistence, and widget tests added
+- production wiring uses the shared repository
+- delete is inside the existing Edit dialog with explicit Persian confirmation
+- successful delete reloads through the existing Search/Type/Date state path
 
-Validation history:
-- head `660edf9...`: Android Green; CI found exactly two old test fakes missing `deleteById`
-- both fakes were fixed on later head and Fast CI became Green
-- code review then found a missing proof for the Issue #57 requirement that active Search/Type/Date filters survive deletion reload
-- current head `fd1e252...` adds a combined widget test proving Search + Type + Date state is preserved after deletion
-- because current head changed, all earlier Green evidence is historical only
-- close/reopen was used once to safely retrigger standard PR automation when synchronize did not immediately register a new run
+Coverage:
+- application delete normalization/success/missing/invalid-id
+- real temp-file persistent delete + no stale `.tmp`/`.bak`
+- deleted id absent after repository reload
+- missing-id delete does not stage a write
+- widget confirmation/cancel/success
+- combined proof that Search + Type + Date state survives delete reload
+- all legacy repository test doubles satisfy the expanded contract
 
-Do not merge #58 until fresh exact-head CI + Android runs exist on `fd1e252...`, both succeed, and live mergeability is re-read.
+## Validation History / Automation Incident
+PR #58 originally carried the slice. CI found exactly two old test doubles missing `deleteById`; both were fixed. Later exact-head Fast CI and Android were Green on an intermediate head, but a final filter-state regression test changed the head, so that evidence became historical only.
+
+PR #60 then carried the exact final tree for fresh validation, but raw GitHub PR API remained `mergeable_state: unknown` and no new `pull_request` workflow run registered.
+
+PR #61 carries the same reviewed final tree squashed directly onto current main as a clean commit history. A normal Contents API test commit was added to stimulate a fresh synchronize event. Historical Green remains invalid for the new head.
+
+Do not merge #61 until current exact-head `YadNegar CI` and `YadNegar Android Build` both succeed and live mergeability is true.
+
+## Automation — Issue #62
+Issue #62 tracks delayed PR merge-ref/workflow registration.
+Fresh evidence:
+- workflow definitions on main are valid and target PRs to main
+- Actions is globally active; docs PR #50 received a successful PR CI run in the same period
+- affected delete carriers intermittently remain `mergeable_state: unknown` without exact-head workflow registration
+- no workflow-dispatch action is exposed by the current GitHub connector
+
+Gate must not be bypassed. No local/fake evidence substitutes for GitHub exact-head gates.
 
 ## Next Product — Issue #59
 `feat(timeline): allow undo after item deletion`
 
-Fresh audit found no existing Undo path or open duplicate issue.
-Planned scope reuses existing `upsert(...)` to restore the just-deleted item from memory after a Snackbar action.
+Fresh audit found no duplicate Undo path. Planned implementation reuses existing `upsert(...)` to restore the just-deleted in-memory item through a Persian Snackbar action. No soft-delete/tombstone/new storage/schema foundation.
 
-No soft-delete/tombstone/new storage/schema foundation is planned. Do not create a product branch until #58 settles on main.
+Do not create the #59 product branch until #61 settles on verified main.
 
 ## Documentation Lane — PR #50
-PR #43 is closed stale history.
-PR #50 remains the replacement documentation PR and intentionally stays Draft while #58 is active.
-
-Before docs merge it must be synchronized onto the final product main, freshly audited, exact-head validated, then merged safely.
+PR #50 remains Draft while product state is moving. It is updated in parallel, but before merge its branch must be structurally synchronized onto final main, freshly audited and exact-head validated.
 
 ## Ruleset — Issue #19
-Fresh Ruleset audit still shows `main-protection` active with PR/deletion/non-fast-forward rules but no required-status-check rule.
-Connector discovery still exposes Ruleset read only; no proven write action exists.
+`main-protection` remains active with PR/deletion/non-fast-forward rules but no required-status-check rule. Current connector exposes Ruleset read only.
 
 Operational merge contract:
 `exact current head + Green exact-head CI + Green exact-head Android + live mergeability + expected_head_sha lock + post-main proof`
 
 ## Parallel Speed Rules
-- verified software in hours through coordinated independent lanes
-- implementation, CI automation and docs move in parallel
-- a running/failing Build must not stop independent work
+- verified useful software in hours through coordinated independent lanes
+- implementation, CI/automation and docs move simultaneously
+- one blocked lane does not stop independent work
 - reuse before rebuild
 - no duplicate foundations
-- no fake test/build/persistence evidence
+- no fake build/test/persistence evidence
 - no stale merge evidence
 
 ## Next Actions
-1. Verify fresh exact-head CI + Android for PR #58 head `fd1e252...`.
-2. Fix only a real failing surface if a gate fails.
-3. If both Green, final-read #58 head + mergeability and merge with expected-head lock.
-4. Validate resulting main with Fast CI + Android proof.
-5. Start #59 only from the verified new main.
-6. Final-sync PR #50 onto stable main and merge docs only after exact-head validation.
-7. Keep #19 open until Ruleset enforcement is genuinely writable and verified.
+1. Fresh-read exact-head workflow registration and mergeability for PR #61 head `b10f3d2...`.
+2. If GitHub registers gates, inspect exact-head CI + Android and fix only real failures.
+3. Merge only after both Green + live mergeability true, using expected-head lock.
+4. Validate resulting main with push CI + Android proof.
+5. Start Issue #59 from that verified main while final-syncing PR #50.
+6. Keep #62 open until PR workflow registration is reproducibly healthy.
+7. Keep #19 open until required-status enforcement is genuinely writable and verified.
 
 ## Trigger
 `ادامه یادنگار`
