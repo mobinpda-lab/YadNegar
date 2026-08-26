@@ -9,88 +9,98 @@ Canonical operating package: `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`.
 Default branch: `main`  
 Current verified main: `1b31899d69d3f1fa98520dcc82a9251a7026cc09`
 
-## Current Product State
-Vertical Slice اصلی کامل و روی main یکپارچه است:
+## Product State
+Vertical Slice اصلی روی main کامل است:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-روی main اکنون وجود دارد:
-- Flutter/Dart + Persian RTL foundation
-- unified Fast CI
-- Timeline Domain / Repository / real JSON persistence
+Main اکنون شامل:
+- Flutter/Dart + Persian RTL
+- Timeline Domain / Repository / JSON persistence
 - QuickCapture / LoadTimeline / EditTimelineItem
-- real Quick Capture persist/reload/render
+- real capture/persist/reload/render
 - production-safe app-support persistence
 - real item View/Edit
-- canonical project docs
-- Fast CI coverage for `platform/**`
-- real committed Android project foundation
+- canonical docs
+- Fast CI برای active lanes شامل `platform/**`
+- committed Android project foundation
 - permanent real APK Build Gate
 
-## Android Build — Integrated
-PR #31 final head: `e53572b0a4a24d810de22120de88069ba6ee49c9`.
+## Full Build Gate — DONE
+PR #31 final head `e53572b0a4a24d810de22120de88069ba6ee49c9`:
+- Fast CI Run `33000840296`: success
+- Android Build Run `33000840285`: success
+- artifact `yadnegar-debug-apk` id `9618635116`
 
-Before merge:
-- `YadNegar CI` Run `33000840296`: success
-- `YadNegar Android Build` Run `33000840285`: success
+Merged main:
+`1b31899d69d3f1fa98520dcc82a9251a7026cc09`
 
-Real artifact from permanent gate:
-- `yadnegar-debug-apk`
-- id `9618635116`
-- 66,096,363 bytes
-- digest `sha256:3c48a6dac7b24dfe89a8d3aabeedd7e06cd3227d55ba08abbc54e149458a0728`
+Post-merge exact main proof:
+- Fast CI Run `33001323525`: success
+- Android Build Run `33001323462`: success
+- APK Build / Verify / Upload all success
+- artifact id `9618821948`
+- size `66096365` bytes
+- digest `sha256:6976da5fcdc8958c70d7b9b73df71053c4b47f6b6eb158793751e20754ec4604`
 
-PR #31 merged as:
-`1b31899d69d3f1fa98520dcc82a9251a7026cc09`.
-Issue #28 completed.
-
-Permanent Android Build now has read-only permissions and no self-generation/self-commit behavior.
-
-Post-merge main launched both Fast CI and Android Build for exact main SHA. Check live completion before closing Issue #6.
-
-## Fast CI
-PR #30 final head `366e1c9be2461e0aa3a7bfbc9be4931a0e1846f3`; Run `32998392710` success; merged `006e6aae...`.
-`platform/**` is now covered by the existing Fast Gate; no duplicate Fast workflow.
+Issue #28 and Issue #6 are completed.
 
 Fast Gate:
-`flutter pub get → flutter analyze → flutter test`.
+`flutter pub get → flutter analyze → flutter test`
 
 Android Gate:
-`flutter pub get → flutter build apk --debug → verify → upload artifact`.
+`flutter pub get → flutter build apk --debug → verify → upload artifact`
 
-## Current Product Lane — PR #34
-Issue #33 starts Wave 4 Feature Expansion.
-
-PR #34: `feat(timeline): choose type during Quick Capture`
-Head: `3e2713225a068b62b7c66fbe6cc3c1cb6290fdf3`.
+## Product Lane — PR #34
+Issue #33: choose Timeline item type during Quick Capture.
+Head: `d0d206fd765dc5aa19963a971ac7c1eb4b9830ca`.
 
 Implemented:
-- type selection in Quick Capture
-- Note/Event/Call/Idea/Activity reuse existing `TimelineItemType`
+- Persian type selector
+- Note/Event/Call/Idea/Activity from existing `TimelineItemType`
 - Note remains default
 - selected type persists through existing QuickCapture contract
-- edit dialog uses actual type label
-- widget tests for Idea capture and Note default
+- edit title reflects actual type
+- widget tests for Idea + default Note
 
-This lane must be revalidated against Android-enabled main before merge so the new permanent APK Build Gate also covers the product change.
+Validation at this handoff:
+- `YadNegar CI` Run `33001576158`: success
+- `YadNegar Android Build` Run `33001576065`: running
+
+Do not merge until Android Build is exact-head Green, artifact exists, and live mergeability is safe.
+
+## Retrieval Lane — PR #36
+Issue #35: Search/Filter application foundation.
+Head: `d56df46ce85f2ba7e96d9b98bc9fd53db2d138ca`.
+
+Independent work:
+- SearchTimeline application use case
+- text query + optional type filter
+- order preservation + unmodifiable snapshot
+- unit tests
+- no Search UI / DB / Repository / Storage duplication
+
+Both Fast CI and Android Build are running. Keep lane independent from #34; synchronize only if main changes materially before merge.
 
 ## Docs Lane — PR #32
-Current State and Handoff are synchronized in parallel.
-After final post-merge main Build evidence, update once more, validate exact head, then merge.
+Current State + Handoff are synced with:
+- Android Full Build proof
+- Issue #6 completion
+- PR #34 live product expansion
+- PR #36 live retrieval foundation
 
-## CI / Ruleset
-Issue #6 now represents final promotion/confirmation of proven Android Full Build Gate.
+Before merging docs: one final GitHub reality check + exact-head docs CI Green.
 
-Ruleset `main-protection` id `20952887` still lacks required `YadNegar CI / quality` at platform level.
+## Ruleset
+`main-protection` id `20952887` still does not platform-require `YadNegar CI / quality`.
 Issue #19 remains open because current connector has no Ruleset write action.
 
 ## Continue
-1. Check post-merge main Fast CI + Android Build for SHA `1b31899d...`.
-2. Close Issue #6 only if both main paths are actually Green.
-3. Revalidate PR #34 against current main and Android Build Gate; fix only real failures.
-4. Merge PR #34 only exact-head Green + safe mergeability.
-5. Final-sync/validate/merge docs PR #32.
-6. Continue Wave 4 independent feature lanes after typed capture.
-7. Keep Issue #19 open until real Ruleset write capability exists.
+1. Check exact-head Android Build/artifact + mergeability for PR #34; merge only fully Green.
+2. Check both exact-head gates for PR #36; merge independently when safe.
+3. Validate main after integrations.
+4. Continue non-conflicting Wave 4 / Wave 5 lanes.
+5. Final-sync and merge PR #32.
+6. Keep Issue #19 open until real Ruleset write capability exists.
 
 ## Automation Reality
 Separate hourly YadNegar continuation automation exists but is currently disabled. GitHub CI automation is active.
