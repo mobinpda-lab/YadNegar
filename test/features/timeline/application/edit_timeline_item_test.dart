@@ -65,6 +65,35 @@ void main() {
     expect(updated.type, original.type);
   });
 
+  test('can replace type while preserving id and createdAt', () async {
+    final occurredAt = DateTime.utc(2026, 8, 28, 8, 45);
+
+    final updated = await editTimelineItem.update(
+      id: original.id,
+      text: original.text,
+      type: TimelineItemType.activity,
+      replaceOccurredAt: true,
+      occurredAt: occurredAt,
+    );
+
+    expect(updated.id, original.id);
+    expect(updated.type, TimelineItemType.activity);
+    expect(updated.createdAt, original.createdAt);
+    expect(updated.occurredAt, occurredAt);
+  });
+
+  test('changing to a type without occurredAt clears hidden occurredAt', () async {
+    final updated = await editTimelineItem.update(
+      id: original.id,
+      text: original.text,
+      type: TimelineItemType.note,
+    );
+
+    expect(updated.type, TimelineItemType.note);
+    expect(updated.occurredAt, isNull);
+    expect(updated.createdAt, original.createdAt);
+  });
+
   test('rejects empty text before writing', () async {
     await expectLater(
       editTimelineItem.updateText(id: original.id, text: '   '),
