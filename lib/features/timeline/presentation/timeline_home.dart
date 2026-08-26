@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yadnegar/features/timeline/application/delete_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
@@ -35,12 +36,14 @@ class _EditTimelineDraft {
     required this.replaceOccurredAt,
     this.replacementType,
     this.occurredAt,
+    this.deleteRequested = false,
   });
 
   final String text;
   final TimelineItemType? replacementType;
   final bool replaceOccurredAt;
   final DateTime? occurredAt;
+  final bool deleteRequested;
 }
 
 class TimelineHome extends StatefulWidget {
@@ -49,6 +52,7 @@ class TimelineHome extends StatefulWidget {
     required this.quickCapture,
     required this.loadTimeline,
     this.editTimelineItem,
+    this.deleteTimelineItem,
     this.searchTimeline,
     this.filterTimelineByDateRange,
     this.dateRangePicker,
@@ -58,6 +62,7 @@ class TimelineHome extends StatefulWidget {
   final QuickCapture quickCapture;
   final LoadTimeline loadTimeline;
   final EditTimelineItem? editTimelineItem;
+  final DeleteTimelineItem? deleteTimelineItem;
   final SearchTimeline? searchTimeline;
   final FilterTimelineByDateRange? filterTimelineByDateRange;
   final TimelineDateRangePicker? dateRangePicker;
@@ -497,6 +502,45 @@ class _TimelineHomeState extends State<TimelineHome> {
               ],
             ),
             actions: [
+              if (widget.deleteTimelineItem != null)
+                TextButton(
+                  key: const Key('timeline-edit-delete'),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: dialogContext,
+                      builder: (confirmContext) => AlertDialog(
+                        title: const Text('حذف این مورد؟'),
+                        content: const Text(
+                          'این مورد از یادنگار حذف می‌شود. این کار قابل بازگشت نیست.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(confirmContext).pop(false),
+                            child: const Text('انصراف'),
+                          ),
+                          FilledButton(
+                            key: const Key('timeline-delete-confirm'),
+                            onPressed: () => Navigator.of(confirmContext).pop(true),
+                            child: const Text('حذف'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed != true || !dialogContext.mounted) {
+                      return;
+                    }
+                    Navigator.of(dialogContext).pop(
+                      _EditTimelineDraft(
+                        text: draft,
+                        replacementType: selectedType == item.type ? null : selectedType,
+                        replaceOccurredAt: supportsOccurredAt,
+                        occurredAt: occurredAt,
+                        deleteRequested: true,
+                      ),
+                    );
+                  },
+                  child: const Text('حذف'),
+                ),
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text('انصراف'),
@@ -520,6 +564,40 @@ class _TimelineHomeState extends State<TimelineHome> {
     );
 
     if (editDraft == null) {
+      return;
+    }
+
+    if (editDraft.deleteRequested) {
+      final deleteTimelineItem = widget.deleteTimelineItem;
+      if (deleteTimelineItem == null) {
+        return;
+      }
+      try {
+        final deleted = await deleteTimelineItem.delete(id: item.id);
+        if (!mounted) {
+          return;
+        }
+        if (!deleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('مورد برای حذف پیدا نشد.')),
+          );
+          return;
+        }
+        await _reload();
+        if (!mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('مورد حذف شد.')),
+        );
+      } catch (_) {
+        if (!mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حذف مورد انجام نشد.')),
+        );
+      }
       return;
     }
 
