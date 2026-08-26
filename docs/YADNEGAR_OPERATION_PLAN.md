@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 2.1 — Retrieval Integrated + Next Capture Slice
+## نسخه 2.1 — Retrieval Integrated + occurredAt Capture Active
 
 **تاریخ مبنا:** 2026-08-27  
 **وضعیت:** Current execution plan  
@@ -16,8 +16,7 @@ YadNegar یک Flutter MVP واقعی با Timeline یکپارچه، Persistence 
 
 سرعت از موازی‌سازی Laneهای مستقل و جلوگیری از دوباره‌کاری می‌آید؛ نه از حذف Gate.
 
-## 2. وضعیت Verify‌شده فعلی
-### main
+## 2. وضعیت Verify‌شده main
 Current integrated product head:
 `453a77a9e662f705bed8f899a769b425927bebb4`
 
@@ -40,12 +39,9 @@ Main شامل:
 
 No duplicate Model/Repository/Storage/AppShell exists.
 
-### Current post-merge validation
-On main `453a77a...`:
-- Fast CI Run `33015057876`: running at this snapshot
-- Android Build Run `33015057863`: running at this snapshot
-
-Fresh-read before updating these conclusions.
+Current-main proof after PR #47:
+- Fast CI Run `33015057876`: success
+- Android Build Run `33015057863`: success
 
 ## 3. Completed Waves
 ### Wave 0 — Governance / Reality Baseline
@@ -68,12 +64,7 @@ Fresh-read before updating these conclusions.
 ### Wave 4 — Typed Product Expansion
 **COMPLETED FOR CURRENT SCOPE**
 
-Shared `TimelineItemType` supports:
-- Note
-- Event
-- Call
-- Idea
-- Activity
+Shared `TimelineItemType` supports Note/Event/Call/Idea/Activity.
 
 ### Wave 5 — Retrieval & Reliability
 **COMPLETED FOR CURRENT MVP SCOPE**
@@ -87,64 +78,67 @@ Integrated:
 - crash-recoverable JSON persistence
 - CI duplicate-trigger fix
 
-Recent integration evidence:
-- PR #42 / Issue #41: persistence reliability completed
-- PR #47 / Issue #46: date-range UI completed
+Recent completed items:
+- PR #42 / Issue #41 — persistence reliability
+- PR #47 / Issue #46 — date-range retrieval UI
 
-## 4. Active Wave — Capture Semantics
-### Issue #48
-`feat(capture): expose occurredAt for Event and Activity`
+## 4. Active Product Slice — PR #49 / Issue #48
+`feat(capture): add optional occurredAt for Event and Activity`
 
-Fresh audit shows no new foundation is needed:
-- `TimelineItem.occurredAt` exists
-- `TimelineItem.timelineAt` already prefers occurredAt over createdAt
-- `QuickCapture.capture(occurredAt: ...)` exists
+Exact PR head at this snapshot:
+`20597e134e08dcb4a6b1c910ed8d38cdbd99ee6b`
 
-The product gap is only UI/composition.
+Fresh code audit showed the foundation already existed:
+- `TimelineItem.occurredAt`
+- `TimelineItem.timelineAt`
+- `QuickCapture.capture(occurredAt: ...)`
 
-### Intended slice
-For Event/Activity Quick Capture:
-- optional Persian/RTL date/time selection
-- pass chosen value to the existing `QuickCapture` use case
-- default capture remains fast and optional
-- Note/Call/Idea current behavior remains stable
-- no new repository/storage/model/schema
-- widget tests for with/without occurredAt
+Implementation scope is UI/composition only:
+- optional Persian/RTL date + time for Event/Activity
+- pass selected value to existing `QuickCapture`
+- Note/Call/Idea keep current fast capture behavior
+- clear selected occurredAt
+- clear hidden occurredAt draft when switching to unsupported type
+- focused widget regression coverage
 
-Implementation should begin from current main after the active docs synchronization is safely settled, because the previous retrieval slice touched the same Timeline UI surface.
+No Timeline model, use case, Repository, Storage, Schema, or dependency was added.
+
+Validation at this snapshot:
+- `YadNegar CI` Run `33015406333`: success
+- `YadNegar Android Build` Run `33015406042`: in progress
+- live mergeability last verified: true
+
+Merge only after Android is Green, then re-read exact head + mergeability and use expected-head lock.
 
 ## 5. Parallel Execution Model
 ### Lane A — Core / Data Reliability
-Current state:
-- shared Timeline Domain stable
-- JSON persistence real and crash-recoverable
-- no DB migration justified yet
+Stable:
+- shared Timeline Domain
+- real schema-versioned JSON persistence
+- crash recovery
 
-Next work only when evidence requires it:
-- migration/recovery hardening
-- query optimization
-- indexing/pagination/DB migration
+Do not add DB/indexing/pagination without real scale/performance evidence.
 
 ### Lane B — Product / UX
-Current next owner:
-- Issue #48 occurredAt capture UI
+Active:
+- PR #49 occurredAt capture UI
 
-After #48, choose the next gap from a fresh product/code audit. Do not prebuild speculative foundations.
+After integration, choose the next gap from fresh code/issue audit. A likely area to audit is whether Timeline cards expose the existing `timelineAt` meaningfully, but do not create work until duplicate/open-issue checks are completed.
 
 ### Lane C — CI / Documentation / Governance
-Current:
-- post-merge validation on main `453a77a...`
-- clean docs replacement branch `docs/current-state-after-reliability`
-- stale PR #43 must be superseded/closed
+Active:
+- Draft PR #50 replaces stale PR #43
+- PR #43 was closed without merge
+- #50 tracks current main + active #49 and must be final-synced after #49 settles
 - Issue #19 remains Ruleset gap
 
 ## 6. PR / Merge Contract
 Every product PR:
 - one clear primary goal
 - reuse existing contracts before creating anything
-- relevant focused tests
+- focused relevant tests
 - exact-head `YadNegar CI` Green
-- Android Build exact-head Green when product/build surface changes
+- Android Build exact-head Green for product/build surfaces
 - live head and mergeability re-read immediately before merge
 - merge with `expected_head_sha` where supported
 - post-merge main validation
@@ -152,28 +146,25 @@ Every product PR:
 If main advances after branch creation, synchronize first and rerun gates.
 
 ## 7. Retrieval Contract
-Current MVP contract is integrated:
-- repository snapshot
-- `SearchTimeline` for query/type
-- `FilterTimelineByDateRange` for start-inclusive/end-exclusive range
-- UI composes date results with search/type results
+Integrated MVP:
+- `SearchTimeline` handles query/type
+- `FilterTimelineByDateRange` handles start-inclusive/end-exclusive date boundary
+- UI composes Date + Text + Type without a duplicate storage path
 
-UI end-date semantics:
-- selected end day is user-inclusive
-- application receives next-day exclusive boundary
+UI selected end day is inclusive by converting it to next-day exclusive Application boundary.
 
-Optimization such as a unified `QueryTimeline` is optional only when real read/latency evidence justifies it. It is not a blocker for current product work.
+A unified `QueryTimeline` optimization is optional only when real read/latency evidence justifies it.
 
 ## 8. Persistence Contract
 JSON persistence is:
 - real
-- stored in application support directory
+- application-support based
 - schema-versioned
 - crash-recoverable with `.tmp`/`.bak`
-- test-covered with real temporary files/directories
+- test-covered with real temp files/directories
 - replaceable
 
-Do not add a DB for appearance. Require real evidence such as query volume, transaction needs, migration needs, or performance limits.
+Do not add a DB for appearance.
 
 ## 9. CI / Android Automation
 Fast Gate:
@@ -182,18 +173,18 @@ Fast Gate:
 Android Gate:
 `flutter pub get → flutter build apk --debug → verify APK → upload artifact`
 
-CI trigger model after PR #45:
-- feature work validates via PR to `main`
-- push quality remains on `main`
-- avoid duplicate push + PR quality runs for the same feature SHA
+After PR #45:
+- feature work validates through PR to main
+- push quality remains on main
+- duplicate feature push + PR quality runs are avoided
 
 ## 10. Ruleset Reality
-Active `main-protection` ruleset id `20952887` requires Pull Requests and protects deletion/non-fast-forward, but does not currently contain a required-status-check rule.
+Active `main-protection` id `20952887` requires Pull Requests and protects deletion/non-fast-forward, but does not currently contain a required-status-check rule.
 
 Issue #19 owns this gap.
 
-Until real Ruleset write capability is available and verified:
-`exact-head Green gates + live mergeability + expected-head merge lock` is mandatory operational enforcement.
+Until real Ruleset write capability is available and proven:
+`exact-head Green gates + live mergeability + expected-head merge lock` is mandatory.
 
 ## 11. Documentation Contract
 Canonical governance:
@@ -208,17 +199,13 @@ Current state:
 Handoff:
 `docs/AI_HANDOFF_CURRENT_FA.md`
 
-PR #43 is stale. Replacement branch:
-`docs/current-state-after-reliability`
-
-Do not merge stale snapshots merely to close documentation work.
+PR #43 is closed stale history. Draft PR #50 is its clean replacement and must be final-synced after active product integration before merge.
 
 ## 12. Current Work Queue
 ### Active
-1. Finish post-merge Fast + Android validation on `453a77a...`.
-2. Open/validate clean docs replacement PR; close stale #43 as superseded.
-3. Issue #48 occurredAt Event/Activity capture UI.
-4. Issue #19 Ruleset required-status gap remains blocked by actual write capability.
+1. PR #49 / Issue #48 — occurredAt Event/Activity Quick Capture UI.
+2. Draft PR #50 — documentation reconciliation; final sync after #49.
+3. Issue #19 — required CI status in Ruleset; blocked by actual write capability.
 
 ### Recently Completed
 - PR #44 — typography
@@ -227,10 +214,10 @@ Do not merge stale snapshots merely to close documentation work.
 - PR #47 / Issue #46 — date-range retrieval UI
 
 ## 13. Definition of Done
-A product slice is Done when applicable:
+Product slice:
 `Working capability + tests + exact-head CI + Android proof + safe merge + post-main validation + docs impact`
 
-A docs slice is Done when:
+Docs slice:
 `Fresh GitHub reconciliation + exact-head validation + non-stale merge`
 
 ## 14. Work Queue Hygiene
@@ -251,11 +238,11 @@ Every continuation:
 - App Shell دوم
 - Timeline Model دوم
 - Repository/Storage موازی
-- query/date logic duplicate در UI
+- query/date/capture logic duplicate در UI
 - fake persistence/build/test
 - merge با stale evidence
 - ادعای required status check بدون Ruleset proof
-- توقف Laneهای مستقل به خاطر یک Build در حال اجرا
+- توقف Lane مستقل به خاطر Build در حال اجرا
 - نگه داشتن سند عملیاتی stale
 - درصد پیشرفت ساختگی
 
