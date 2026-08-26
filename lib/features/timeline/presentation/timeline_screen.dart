@@ -39,6 +39,7 @@ class TimelineScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: onQuickCapture,
+        tooltip: 'ثبت سریع',
         icon: const Icon(Icons.add),
         label: const Text('ثبت سریع'),
       ),
