@@ -10,6 +10,7 @@ void main() {
     expect(find.text('یادنگار'), findsOneWidget);
     expect(emptyState, findsOneWidget);
     expect(find.text('ثبت سریع'), findsOneWidget);
+    expect(find.byTooltip('ثبت سریع'), findsOneWidget);
     expect(
       Directionality.of(tester.element(emptyState)),
       TextDirection.rtl,
