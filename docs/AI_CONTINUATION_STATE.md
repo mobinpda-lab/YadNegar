@@ -76,8 +76,16 @@ Operational merge contract remains:
 `exact current head + Green exact-head CI + Green exact-head Android + live mergeability + expected_head_sha lock + post-main proof`
 
 ## Documentation — PR #50
-PR #50 is the active documentation reconciliation lane. Final scope includes current-state docs plus stale README refresh.
-Before merge, branch must be structurally synchronized onto current verified main `dcdefb3...`, then exact-head validation is required.
+PR #50 is the final documentation reconciliation lane.
+
+Structural sync is complete: its branch contains current verified main `dcdefb3...` as a parent, so product code is not stale.
+Live diff against main is exactly four documentation files:
+- `README.md`
+- `docs/AI_CONTINUATION_STATE.md`
+- `docs/AI_HANDOFF_CURRENT_FA.md`
+- `docs/YADNEGAR_OPERATION_PLAN.md`
+
+Before docs merge, require exact-head `YadNegar CI` success and live mergeability + expected-head lock. Android is not expected for this docs-only diff because Android workflow path filters exclude README/docs.
 
 ## Next Product — Issue #64
 `feat(export): copy Timeline export to clipboard`
@@ -101,9 +109,9 @@ Issue #64 is open. Product branch starts only after final docs synchronization.
 - no stale merge evidence
 
 ## Next Actions
-1. Final-sync PR #50 structurally onto main `dcdefb3...`.
-2. Validate docs exact head and merge safely.
-3. Start Issue #64 from the verified main after docs settle.
+1. Get exact-head Fast CI for final PR #50 docs head.
+2. If Green, re-read live head/mergeability and merge #50 with expected-head lock.
+3. Start Issue #64 from the verified resulting main.
 4. Keep Issue #19 open until required status enforcement is genuinely writable and verified.
 5. Reopen #62 only if workflow-registration symptoms recur.
 
