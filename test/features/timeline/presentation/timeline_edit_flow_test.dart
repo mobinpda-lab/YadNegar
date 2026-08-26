@@ -182,6 +182,103 @@ void main() {
     expect(find.textContaining('زمان ثبت: 2026/08/26 - 18:00'), findsOneWidget);
   });
 
+  testWidgets('Note can change to Event and select occurredAt', (tester) async {
+    final createdAt = DateTime(2026, 8, 26, 18);
+    final occurredAt = DateTime(2026, 8, 29, 14, 20);
+    final repository = _MemoryTimelineRepository(
+      TimelineItem(
+        id: 'note-to-event',
+        type: TimelineItemType.note,
+        text: 'قرار مهم',
+        createdAt: createdAt,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: TimelineHome(
+            quickCapture: QuickCapture(
+              repository: repository,
+              clock: () => createdAt,
+              idGenerator: () => 'capture-unused',
+            ),
+            loadTimeline: LoadTimeline(repository: repository),
+            editTimelineItem: EditTimelineItem(repository: repository),
+            occurredAtPicker: (context, initialDateTime) async => occurredAt,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('timeline-item-note-to-event')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-edit-type')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('رویداد').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('timeline-edit-occurred-at')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('timeline-edit-occurred-at')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-edit-save')));
+    await tester.pumpAndSettle();
+
+    final updated = await repository.findById('note-to-event');
+    expect(updated, isNotNull);
+    expect(updated!.type, TimelineItemType.event);
+    expect(updated.occurredAt, occurredAt);
+    expect(find.text('رویداد'), findsOneWidget);
+  });
+
+  testWidgets('Event changing to Idea clears occurredAt', (tester) async {
+    final createdAt = DateTime(2026, 8, 26, 18);
+    final occurredAt = DateTime(2026, 8, 27, 9);
+    final repository = _MemoryTimelineRepository(
+      TimelineItem(
+        id: 'event-to-idea',
+        type: TimelineItemType.event,
+        text: 'ایده محصول',
+        createdAt: createdAt,
+        occurredAt: occurredAt,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TimelineHome(
+          quickCapture: QuickCapture(
+            repository: repository,
+            clock: () => createdAt,
+            idGenerator: () => 'capture-unused',
+          ),
+          loadTimeline: LoadTimeline(repository: repository),
+          editTimelineItem: EditTimelineItem(repository: repository),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('timeline-item-event-to-idea')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-edit-type')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ایده').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('timeline-edit-occurred-at')), findsNothing);
+    await tester.tap(find.byKey(const Key('timeline-edit-save')));
+    await tester.pumpAndSettle();
+
+    final updated = await repository.findById('event-to-idea');
+    expect(updated, isNotNull);
+    expect(updated!.type, TimelineItemType.idea);
+    expect(updated.occurredAt, isNull);
+    expect(find.textContaining('زمان ثبت: 2026/08/26 - 18:00'), findsOneWidget);
+  });
+
   testWidgets('empty edit keeps item unchanged and shows feedback', (tester) async {
     final createdAt = DateTime.utc(2026, 8, 26, 18);
     final repository = _MemoryTimelineRepository(
