@@ -11,6 +11,9 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
   final File file;
 
+  File get _temporaryFile => File('${file.path}.tmp');
+  File get _backupFile => File('${file.path}.bak');
+
   @override
   Future<void> upsert(TimelineItem item) async {
     final items = await _readAll();
@@ -45,11 +48,54 @@ class JsonFileTimelineRepository implements TimelineRepository {
   }
 
   Future<List<TimelineItem>> _readAll() async {
+    await _recoverMissingPrimary();
+
     if (!await file.exists()) {
       return <TimelineItem>[];
     }
 
-    final raw = await file.readAsString();
+    try {
+      final items = await _readItemsFrom(file);
+      await _cleanupStagingFiles();
+      return items;
+    } on FormatException {
+      if (!await _backupFile.exists()) {
+        rethrow;
+      }
+
+      final backupItems = await _readItemsFrom(_backupFile);
+      await file.delete();
+      await _backupFile.rename(file.path);
+      await _tryDelete(_temporaryFile);
+      return backupItems;
+    }
+  }
+
+  Future<void> _recoverMissingPrimary() async {
+    if (await file.exists()) {
+      return;
+    }
+
+    if (await _backupFile.exists()) {
+      await _backupFile.rename(file.path);
+      await _tryDelete(_temporaryFile);
+      return;
+    }
+
+    if (!await _temporaryFile.exists()) {
+      return;
+    }
+
+    try {
+      await _readItemsFrom(_temporaryFile);
+      await _temporaryFile.rename(file.path);
+    } on FormatException {
+      await _tryDelete(_temporaryFile);
+    }
+  }
+
+  Future<List<TimelineItem>> _readItemsFrom(File source) async {
+    final raw = await source.readAsString();
     if (raw.trim().isEmpty) {
       return <TimelineItem>[];
     }
@@ -83,7 +129,44 @@ class JsonFileTimelineRepository implements TimelineRepository {
     };
 
     const encoder = JsonEncoder.withIndent('  ');
-    await file.writeAsString(encoder.convert(payload), flush: true);
+    final encoded = encoder.convert(payload);
+
+    await _tryDelete(_temporaryFile);
+    await _temporaryFile.writeAsString(encoded, flush: true);
+
+    // Validate the staged payload before moving the current primary aside.
+    await _readItemsFrom(_temporaryFile);
+
+    await _tryDelete(_backupFile);
+    if (await file.exists()) {
+      await file.rename(_backupFile.path);
+    }
+
+    try {
+      await _temporaryFile.rename(file.path);
+    } catch (_) {
+      if (!await file.exists() && await _backupFile.exists()) {
+        await _backupFile.rename(file.path);
+      }
+      rethrow;
+    }
+
+    await _tryDelete(_backupFile);
+  }
+
+  Future<void> _cleanupStagingFiles() async {
+    await _tryDelete(_temporaryFile);
+    await _tryDelete(_backupFile);
+  }
+
+  Future<void> _tryDelete(File candidate) async {
+    try {
+      if (await candidate.exists()) {
+        await candidate.delete();
+      }
+    } on FileSystemException {
+      // Staging cleanup is best-effort. A later read can safely retry it.
+    }
   }
 
   TimelineItem _itemFromJson(dynamic value) {
