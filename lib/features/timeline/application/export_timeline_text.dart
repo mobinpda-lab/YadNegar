@@ -1,18 +1,15 @@
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
-import 'package:yadnegar/features/timeline/domain/timeline_repository.dart';
 
 class ExportTimelineText {
-  const ExportTimelineText({required this.repository});
+  const ExportTimelineText();
 
-  final TimelineRepository repository;
-
-  Future<String> export() async {
-    final items = await repository.listNewestFirst();
-    if (items.isEmpty) {
+  String export(Iterable<TimelineItem> items) {
+    final visibleItems = items.toList(growable: false);
+    if (visibleItems.isEmpty) {
       return '';
     }
 
-    final sections = items.map(_formatItem).join('\n\n---\n\n');
+    final sections = visibleItems.map(_formatItem).join('\n\n---\n\n');
     return 'یادنگار — خروجی Timeline\n\n$sections';
   }
 
