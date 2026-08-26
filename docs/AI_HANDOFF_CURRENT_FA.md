@@ -4,13 +4,13 @@
 GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
 Repository: `mobinpda-lab/YadNegar`  
-Current main: `71d1d993e362be898be955963653eff832a7da0a`
+Current verified main: `71d1d993e362be898be955963653eff832a7da0a`
 
-## وضعیت واقعی محصول
+## وضعیت محصول روی main
 یک Timeline مشترک داریم:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-روی main:
+قابلیت‌ها:
 - Note/Event/Call/Idea/Activity
 - Search + Type + Date Range
 - Event/Activity occurredAt capture
@@ -21,58 +21,55 @@ Current main: `71d1d993e362be898be955963653eff832a7da0a`
 - Fast CI + Android APK Build/Verify/Upload واقعی
 
 ## PR #56 / Issue #55 — تکمیل شد
-Merged main:
-`71d1d993e362be898be955963653eff832a7da0a`
-
-Exact PR head:
-`ff59496fd12c098a5ebce7cd60dc301bb0fb8724`
+Merged main: `71d1d993e362be898be955963653eff832a7da0a`
 
 Pre-merge:
 - CI `33017606387`: success
 - Android `33017606312`: success
-- live mergeability: true
 
 Post-main:
 - CI `33017911498`: success
 - Android `33017911496`: success
 
-نتیجه:
-- type از همان `EditTimelineItem` قابل اصلاح است
-- تغییر Event/Activity به نوع بدون occurredAt، مقدار پنهان را پاک می‌کند
-- مسیر Edit موازی ساخته نشده است
-
-## Product فعال — PR #58 / Issue #57
+## Product فعال — PR #61 / Issue #57
 `feat(timeline): delete items with confirmation`
 
-Branch: `feature/delete-timeline-item`  
-Current exact head: `58bce967c3d28fcd70d117ab114ee4d24625166f`
+Branch: `feature/delete-timeline-item-final`  
+Current exact head: `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`
 
 پیاده‌سازی واقعی:
 - `deleteById` روی همان `TimelineRepository`
-- JSON delete از همان `_readAll → _writeAll` crash-recoverable استفاده می‌کند
-- `DeleteTimelineItem` application use case کوچک
+- delete JSON از همان مسیر crash-recoverable استفاده می‌کند
+- `DeleteTimelineItem` use case کوچک
 - wiring واقعی در production
-- حذف داخل همان Edit dialog با تأیید صریح فارسی
-- پس از حذف Timeline با state/filter موجود reload می‌شود
-- تست Application + Widget + temp-file persistence
+- حذف داخل همان Edit dialog با confirmation فارسی
+- reload با حفظ Search/Type/Date state
+- تست Application + Widget + real temp-file persistence
+- حذف ID ناموجود write staging ایجاد نمی‌کند
 
-Validation history:
-- Head قبلی Android Green شد
-- Fast CI فقط به‌علت دو Fake Repository قدیمی Fail شد
-- CI دقیقاً `timeline_edit_flow_test.dart` و `timeline_search_flow_test.dart` را مشخص کرد
-- هر دو Fake روی Head فعلی اصلاح شده‌اند
+## سابقه Validation
+- PR #58: CI دو Fake Repository ناقص را پیدا کرد؛ اصلاح شدند.
+- Head میانی #58 Fast CI + Android Green شد، ولی بعد تست نهایی حفظ فیلترها Head را تغییر داد؛ Green قدیمی دیگر معتبر نیست.
+- PR #60 برای validation تازه ساخته شد اما GitHub raw PR API در `mergeable_state: unknown` ماند و Run جدید ثبت نشد.
+- PR #61 همان final tree را با history تمیز مستقیم روی main حمل می‌کند. آخرین Head با یک Contents API commit عادی هم synchronize شده است.
 
-تا Fast CI و Android واقعی روی **همین Head فعلی** Green نشوند Merge ممنوع است.
+Merge #61 تا exact-head Fast CI + Android Green و live mergeability true ممنوع است.
+
+## Automation — Issue #62
+مشکل delayed PR merge-ref/workflow registration جداگانه ثبت شده است.
+Workflowها روی main صحیح‌اند و Actions globally فعال است؛ PR #50 در همین بازه CI موفق گرفته است.
+
+Connector فعلی workflow dispatch مستقیم ندارد. Gate دور زده نمی‌شود.
+
+## Next Product — Issue #59
+Undo حذف آماده صف است و باید از `upsert(...)` موجود استفاده کند؛ soft-delete/Storage/Schema جدید ممنوع.
+Branch محصول #59 فقط بعد از settle شدن #61 ساخته شود.
 
 ## Docs — PR #50
-PR #43 stale بسته شده است.
-PR #50 replacement و فعلاً Draft است تا Product فعال جلو برود.
+PR #50 replacement و Draft است. محتوا هم‌زمان refresh می‌شود؛ قبل از Merge باید روی final main واقعاً Sync، Fresh Audit و exact-head validate شود.
 
-قبل از Merge Docs:
-`Final main sync → Fresh Audit → exact-head validation → safe merge`
-
-## Automation — Issue #19
-Ruleset زنده Required Status Check ندارد و Connector Ruleset write واقعی ارائه نمی‌دهد.
+## Ruleset — Issue #19
+Required Status Check هنوز در Ruleset وجود ندارد و Connector Ruleset write ندارد.
 
 تا رفع واقعی:
 `exact-head CI Green + Android Green + live mergeability + expected-head lock + post-main proof`
@@ -83,15 +80,15 @@ Ruleset زنده Required Status Check ندارد و Connector Ruleset write و�
 - Core/Data
 - CI/Automation/Docs
 
-Fail یا Build در یک Lane، Lane مستقل دیگر را متوقف نمی‌کند. سرعت از reuse، PR کوچک، تست واقعی، automation و مستندسازی هم‌زمان می‌آید.
+Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، automation، تست واقعی و docs هم‌زمان می‌آید؛ نه از دورزدن Gate.
 
 ## ادامه
-1. exact-head Gateهای #58 را Fresh Verify کن.
-2. خطای واقعی را فقط روی همان سطح اصلاح کن؛ historical Green معتبر نیست.
-3. اگر هر دو Green شدند، Head/Mergeability را دوباره بخوان و با expected-head lock Merge کن.
-4. main را بعد از Merge با CI + Android Verify کن.
-5. #50 را روی main نهایی Sync و سپس امن Merge کن.
-6. Gap بعدی را فقط با Fresh Audit انتخاب کن.
+1. PR #61 Head و workflow registration را Fresh بخوان.
+2. فقط exact-head CI/Android فعلی معتبر است.
+3. اگر Green + mergeable شد با expected-head lock Merge کن.
+4. main را post-merge Verify کن.
+5. #59 را از main جدید شروع کن و #50 را هم‌زمان Final Sync کن.
+6. #62 و #19 را تا رفع واقعی باز نگه دار.
 
 ## Trigger
 `ادامه یادنگار`
