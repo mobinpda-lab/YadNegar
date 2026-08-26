@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 
 class TimelineScreen extends StatelessWidget {
   const TimelineScreen({
     super.key,
+    this.items = const <TimelineItem>[],
+    this.isLoading = false,
+    this.errorMessage,
     this.onQuickCapture,
   });
 
+  final List<TimelineItem> items;
+  final bool isLoading;
+  final String? errorMessage;
   final VoidCallback? onQuickCapture;
 
   @override
@@ -15,7 +22,39 @@ class TimelineScreen extends StatelessWidget {
         title: const Text('یادنگار'),
         centerTitle: false,
       ),
-      body: const Center(
+      body: _buildBody(),
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('quick-capture-action'),
+        onPressed: onQuickCapture,
+        tooltip: 'ثبت سریع',
+        icon: const Icon(Icons.add),
+        label: const Text('ثبت سریع'),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(key: Key('timeline-loading')),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            errorMessage!,
+            key: const Key('timeline-error'),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    if (items.isEmpty) {
+      return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Column(
@@ -37,14 +76,35 @@ class TimelineScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('quick-capture-action'),
-        onPressed: onQuickCapture,
-        tooltip: 'ثبت سریع',
-        icon: const Icon(Icons.add),
-        label: const Text('ثبت سریع'),
-      ),
+      );
+    }
+
+    return ListView.separated(
+      key: const Key('timeline-list'),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+      itemCount: items.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return Card(
+          key: Key('timeline-item-${item.id}'),
+          child: ListTile(
+            leading: const Icon(Icons.notes),
+            title: Text(item.text),
+            subtitle: Text(_typeLabel(item.type)),
+          ),
+        );
+      },
     );
+  }
+
+  String _typeLabel(TimelineItemType type) {
+    return switch (type) {
+      TimelineItemType.note => 'یادداشت',
+      TimelineItemType.event => 'رویداد',
+      TimelineItemType.call => 'تماس',
+      TimelineItemType.idea => 'ایده',
+      TimelineItemType.activity => 'فعالیت',
+    };
   }
 }
