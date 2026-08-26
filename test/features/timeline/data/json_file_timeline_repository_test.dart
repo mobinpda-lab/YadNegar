@@ -79,12 +79,15 @@ void main() {
     expect(await reloadedRepository.findById('note-1'), isNull);
   });
 
-  test('delete returns false when id does not exist', () async {
+  test('delete returns false when id does not exist without staging a write', () async {
     await repository.upsert(buildItem());
 
     final deleted = await repository.deleteById('missing');
 
     expect(deleted, isFalse);
+    expect(await storageFile.exists(), isTrue);
+    expect(await temporaryFile.exists(), isFalse);
+    expect(await backupFile.exists(), isFalse);
     final items = await repository.listNewestFirst();
     expect(items.single.id, 'note-1');
   });
