@@ -46,9 +46,9 @@ Pre-merge:
 - Android `33016928837`: success
 - live mergeability before merge: true
 
-Post-merge current-main proof at this snapshot:
+Post-merge current-main proof:
 - CI `33017214825`: success
-- Android `33017214826`: in progress
+- Android `33017214826`: success, including APK build + verify + upload
 
 Integrated behavior:
 - same `EditTimelineItem` extended; `updateText` remains compatible
@@ -72,16 +72,27 @@ Scope:
 - application/widget regression tests
 - no Model/Repository/Storage/Schema/dependency change
 
-Automation note at this snapshot:
-- PR is open
-- no check runs were yet registered for the latest head after the initial opened/synchronize events
-- do not treat it as Green until exact-head CI + Android runs actually exist and succeed
+Exact-head gates at this snapshot:
+- CI `33017606387`: success
+- Android `33017606312`: in progress
+
+Do not merge until Android succeeds and a final live head + mergeability read proves the same head is safe.
+
+## Next Product Gap — Issue #57
+`feat(timeline): delete an item with confirmation`
+
+Fresh audit confirmed:
+- current Repository has no delete contract
+- current JSON Repository can reuse the same crash-recoverable `_readAll → _writeAll` path
+- no duplicate delete work was found
+
+Implementation waits for #56 to settle before touching TimelineHome, but Core/Data design is already scoped without a second Repository/Storage or schema change.
 
 ## Documentation Lane — PR #50
 Stale PR #43 was closed without merge.
 PR #50 is the replacement documentation PR.
 
-Branch `docs/current-state-after-reliability` is synchronized onto current main `740c290...` and tracks active #56. It stays Draft while product work is moving so it does not merge stale.
+Branch `docs/current-state-after-reliability` is synchronized onto current main `740c290...` and tracks active #56 plus queued #57. It stays Draft while product work is moving so it does not merge stale.
 
 ## Ruleset — Issue #19
 Fresh Ruleset audit still shows `main-protection` active for main with deletion/non-fast-forward/PR rules, but no required-status-check rule.
@@ -101,13 +112,11 @@ Operational merge contract remains:
 - no stale merge evidence
 
 ## Next Actions
-1. Finish post-main Android proof for #54.
-2. Ensure #56 receives real exact-head CI + Android runs; investigate/trigger safely if they remain absent.
-3. Merge #56 only after both gates are Green plus live head/mergeability read and expected-head lock.
-4. Validate resulting main.
-5. Final-sync/refresh PR #50 and safely merge documentation when product snapshot is stable.
-6. Continue fresh gap audit in a non-conflicting lane.
-7. Keep #19 open until Ruleset enforcement is genuinely writable and verified.
+1. Finish exact-head Android validation for #56.
+2. If Green, final-read #56 head/mergeability and merge with expected-head lock.
+3. Validate resulting main while starting #57 from that latest main in a non-conflicting lane.
+4. Keep PR #50 synchronized and refresh final evidence before any docs merge.
+5. Keep #19 open until Ruleset enforcement is genuinely writable and verified.
 
 ## Trigger
 `ادامه یادنگار`
