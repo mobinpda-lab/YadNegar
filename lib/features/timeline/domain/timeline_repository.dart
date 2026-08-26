@@ -6,4 +6,6 @@ abstract interface class TimelineRepository {
   Future<TimelineItem?> findById(String id);
 
   Future<List<TimelineItem>> listNewestFirst();
+
+  Future<bool> deleteById(String id);
 }
