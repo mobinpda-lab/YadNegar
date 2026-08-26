@@ -1,127 +1,93 @@
 # YadNegar — Live AI Handoff
 
-## Source of Truth
-GitHub Reality مقدم است. قبل از هر Write/Merge وضعیت زنده را Audit کن.
-Canonical operating package: `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`.
-Active operation plan: `docs/YADNEGAR_OPERATION_PLAN.md` v2.0.
+## مرجع حقیقت
+GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
-## Repository
-`mobinpda-lab/YadNegar`  
-Default branch: `main`  
-Current verified main: `866a61b8ba8d26666d4d0436d36f402478af25b3`
+Repository: `mobinpda-lab/YadNegar`  
+Current verified main: `dcdefb3155322b5d49972b196786e569bc541267`
 
-## Product State
-Vertical Slice اصلی کامل است:
-`Quick Capture → Persist → Timeline → View/Edit`
+## وضعیت واقعی محصول
+Flow اصلی:
+`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo`
 
-Main additionally has typed Quick Capture:
-- یادداشت
-- رویداد
-- تماس
-- ایده
-- فعالیت
+روی main:
+- Note/Event/Call/Idea/Activity روی یک TimelineItem
+- فارسی و RTL
+- JSON persistence واقعی و crash-recoverable
+- Search + Type + Date Range
+- occurredAt capture/edit
+- اصلاح Type از همان Edit flow
+- حذف با confirmation فارسی
+- Undo حذف با جلوگیری از overwrite آیتم جدیدتر
+- Fast CI + Android APK Build/Verify/Upload واقعی
 
-همه از `TimelineItemType` واحد استفاده می‌کنند؛ هیچ Model/Repository/Storage موازی ساخته نشده است.
+Foundation موازی Model/Repository/Storage/AppShell وجود ندارد.
 
-## CI / Android — Fully Proven
-Fast Gate:
-`flutter pub get → flutter analyze → flutter test`
+## PR #61 / Issue #57 — تکمیل شد
+Safe Delete روی main ادغام شد.
+- exact head: `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`
+- CI `33020857429`: success
+- Android `33020857455`: success
+- mergeability clean
+- expected-head lock
+- merged main: `509817c344d014579e28f62d64ff8465b722f3b9`
+- post-main CI `33023724452`: success
+- post-main Android `33023724492`: success
 
-Android Gate:
-`flutter pub get → flutter build apk --debug → verify → upload artifact`
+## PR #63 / Issue #59 — تکمیل شد
+Undo حذف روی main ادغام شد.
+- exact head: `373a1b8cf18016d27e01297abc70ff6034ef6d2c`
+- CI `33023943769`: success
+- Android `33023943767`: success
+- mergeability clean
+- expected-head lock
+- current main: `dcdefb3155322b5d49972b196786e569bc541267`
+- post-main CI `33024326747`: success
+- post-main Android `33024326787`: success با build/verify/upload APK
 
-Issue #6 و #28 completed هستند.
+Undo همان TimelineItem حذف‌شده را با metadata اصلی برمی‌گرداند، اما اگر ID توسط داده جدیدتر دوباره استفاده شده باشد overwrite نمی‌کند.
 
-Main `1b31899d...` Full Build proof:
-- Fast `33001323525`: success
-- Android `33001323462`: success
-- APK artifact `9618821948`
+Issue #59 بسته شده است.
 
-## Typed Quick Capture — Integrated
-PR #34 final head `d0d206fd765dc5aa19963a971ac7c1eb4b9830ca`:
-- Fast `33001576158`: success
-- Android `33001576065`: success
-- artifact `9618919403`
+## Automation
+### Issue #62 — بسته شد
+مشکل intermittent ثبت workflow/merge-ref بدون دورزدن Gate بررسی شد. PR #63 روی synchronize عادی هر دو Workflow را روی exact head دریافت کرد؛ incident بازیابی‌شده و بسته شده است.
 
-Merged as current main:
-`866a61b8ba8d26666d4d0436d36f402478af25b3`.
-Issue #33 completed.
+### Issue #19 — باز است
+Ruleset فعلی PR را الزام می‌کند، ولی required status check ندارد و Connector Ruleset write ارائه نمی‌دهد.
 
-Post-merge main:
-- Fast `33002034902`: success
-- Android `33002034898`: success
-- APK artifact `9619095963`
-- digest `sha256:468baac70018672d1de564c5d90271cef8bdb4d73d1f042d76728e4825613ae0`
+قانون Merge عملیاتی:
+`exact-head CI Green + Android Green + live mergeability + expected-head lock + post-main proof`
 
-## PR #36 — Search Application Foundation
-Issue #35.
-Current head:
-`c5547185b8501f029b70958882b69ddb460b3f31`.
+## Docs — PR #50
+README قدیمی نیز در Lane Docs اصلاح شده است.
+PR #50 باید به‌صورت ساختاری روی main فعلی `dcdefb3...` Sync شود، exact-head validate شود و سپس امن Merge شود.
 
-Implemented:
-- SearchTimeline
-- text query
-- optional Timeline type filter
-- combined query/type
-- repository order preservation
-- immutable result
-- unit tests
+## Product بعدی — Issue #64
+`feat(export): copy Timeline export to clipboard`
 
-Branch was deliberately synchronized to current main after #34. GitHub auto-closed the zero-diff PR during reset; the same #36 was reopened after Search commits were reapplied. Do not create a duplicate PR.
+سند جامع Wave 6 را Reminder / Backup / Export تعریف می‌کند. Audit نشان داد هیچ implementation موجودی برای این سه وجود ندارد.
 
-Current evidence:
-- push Fast CI `33002127769`: success
-- reopened PR Fast `33002697220`: running
-- reopened PR Android `33002697213`: running
+Export به Clipboard انتخاب شده چون:
+- user-facing و قابل‌استفاده است
+- Repository موجود را reuse می‌کند
+- Flutter Clipboard داخلی کافی است
+- dependency/permission/schema/storage جدید نمی‌خواهد
+- Backup/Restore و Reminder را داخل یک PR قاطی نمی‌کند
 
-Merge only after both exact-head gates are success + APK artifact + live mergeability true.
+Branch #64 فقط بعد از نهایی‌شدن Docs ساخته شود.
 
-## Search UI — Stacked Branch
-Issue #37.
-Branch: `feature/timeline-search-ui`.
-Current head:
-`59a9958a21cb0536a8f39257d7e2e6b374c68150`.
+## اصل سرعت
+Laneهای Product/Core/Automation/Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
 
-Already implemented in parallel:
-- RTL Persian search field
-- Timeline type filter
-- clear/reset
-- no-results state
-- SearchTimeline injection in production
-- current filter retained on reload after capture/edit
-- async stale-result protection
-- widget tests for search/filter/clear/empty
-
-Fast CI Run `33002653180` is validating the branch.
-This is intentionally not yet a PR to main because it depends on PR #36. After #36 merges, synchronize this branch to main and open a main PR so Fast CI + Android Build both execute.
-
-## Docs — PR #32
-Docs branch is actively synchronized in parallel and now includes:
-- Full Build proof
-- typed capture integration
-- PR #36 state
-- Search UI stacked state
-- Operation Plan v2.0
-
-Before docs merge: final live audit + exact-head docs CI Green.
-
-## Ruleset
-`main-protection` id `20952887` still does not platform-require `YadNegar CI / quality`.
-Issue #19 remains open because current connector has no Ruleset write action.
-
-## Continue
-1. Check #36 Fast + Android exact-head results; merge only both Green + artifact + safe mergeability.
-2. Check stacked Search UI Fast CI; fix any real failure same branch.
-3. After #36 merge, rebase/synchronize Search UI to main without duplicating work, open PR, require Fast + Android Green.
-4. Validate main after merge.
-5. Final-sync/validate/merge docs #32.
-6. Keep #19 open until actual Ruleset write capability exists.
-
-## Automation Reality
-GitHub CI automation is active. Separate hourly YadNegar continuation automation exists but is currently disabled.
+## ادامه
+1. PR #50 را روی main فعلی structurally sync کن.
+2. exact-head CI آن را Verify و امن Merge کن.
+3. Issue #64 را از main جدید شروع کن.
+4. #19 را تا اعمال واقعی required status check باز نگه دار.
 
 ## Trigger
 `ادامه یادنگار`
 
-## Owner report
+## گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
