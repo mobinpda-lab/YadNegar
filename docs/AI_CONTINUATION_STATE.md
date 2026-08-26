@@ -17,29 +17,26 @@ At the verified main snapshot, the repository root contains only:
 - `.github/`
 - `README.md`
 
-No Flutter foundation was present at repository root at that snapshot:
+No Flutter foundation is merged into `main` yet:
 - no `pubspec.yaml`
 - no `lib/`
 - no `test/`
 
-Therefore Flutter/Clean Architecture is currently a target, not a verified implementation state.
+Therefore Flutter/Clean Architecture remains a target on `main`, not a merged implementation state.
 
-## Verified CI State
+## Verified Main CI State
 Existing workflows on `main`:
 - `.github/workflows/build.yml`
 - `.github/workflows/test.yml`
 
-Both workflows are placeholder workflows using checkout plus an `echo` step.
-The latest visible runs on `main` completed successfully, but this proves only that the placeholder workflows executed successfully. It does **not** prove Flutter analyze/test/build because Flutter project files and real validation steps are not present yet.
+Both are placeholder workflows using checkout plus `echo`. Their successful runs prove only the placeholder path, not Flutter analyze/test/build.
 
-## Current Documentation Work
-Documentation branch:
-`docs/yadnegar-documentation-baseline`
+## Active Pull Requests
+### PR #3 — Canonical documentation baseline
+Branch: `docs/yadnegar-documentation-baseline`
+Status: open / mergeable / non-draft.
 
-Open pull request:
-`#3 — docs: establish YadNegar canonical project documentation`
-
-Current documentation package includes:
+Current package includes:
 - `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md` — canonical governance
 - `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md` — comprehensive project reference
 - `docs/YADNEGAR_ACCELERATED_OPERATION_PLAN_FA.md` — accelerated parallel execution plan
@@ -51,20 +48,49 @@ Current documentation package includes:
 
 The documentation PR is intentionally documentation-only and should remain isolated from application/workflow behavior changes.
 
-## Active Operational Workstreams
-Three real GitHub Issues now define the first parallel wave:
+### PR #2 — Flutter Foundation
+Branch: `feat/foundation-flutter`
+Current head: `e614343a80f9c30e7a171ef7aeb1eaebc852a8be`
+Status: open / draft / mergeable.
 
+Scope:
+- `pubspec.yaml`
+- `lib/main.dart`
+- `test/widget_test.dart`
+- `.github/workflows/flutter-ci.yml`
+
+Verified CI for the exact current head:
+- placeholder `Test` workflow: success
+- `Flutter CI`: success
+- `flutter pub get`: success
+- `flutter analyze`: success
+- `flutter test`: success
+
+The previous RTL widget test failure was corrected by asserting the effective text direction instead of assuming exactly one `Directionality` widget exists.
+
+Important: this Foundation is real and validated on the PR branch, but it is **not yet merged into `main`**.
+
+### PR #1 — PR/CI path validation
+Branch: `docs/parallel-development-status`
+Status: open / draft / mergeable.
+
+Purpose was only to exercise the pull-request CI path using a documentation-only change. It is now a likely superseded validation PR and should be evaluated for closure without merge after the canonical documentation and real Flutter CI path are established.
+
+## Active Operational Issues
 ### Issue #4 — Foundation
 `foundation: initialize minimal Flutter project`
-Critical path for real implementation.
+
+Implementation is already active in PR #2. Issue #4 must track PR #2 rather than starting another Foundation implementation.
 
 ### Issue #5 — UI / RTL
 `ui: define RTL app shell and timeline contract`
-Contract/design can progress in parallel; implementation depends on the Flutter foundation.
+
+Contract/design can progress independently. Implementation should reuse the Foundation from PR #2/main after merge and must not create a competing App Shell foundation.
 
 ### Issue #6 — CI / Automation
 `ci: replace placeholders with Flutter fast and full gates`
-Workflow design can progress in parallel; valid Flutter execution depends on the Flutter foundation.
+
+CI design can progress in parallel. Final consolidation should happen after Foundation is on `main`, so the placeholder workflows can be replaced by real Flutter validation without duplicate gates.
 
 ## Current Product Direction
 YadNegar is intended to be a Persian RTL Flutter application for fast capture and Timeline-oriented review of daily information.
@@ -97,25 +123,19 @@ Three lanes are active by policy:
 - Lane B — UI / Feature
 - Lane C — CI / Automation / Documentation
 
-Independent lanes should run concurrently when their file and contract boundaries do not overlap. A blocked lane must not block unrelated work.
+PR #2 and PR #3 are valid parallel workstreams because their file scopes do not overlap. Issue #5 and Issue #6 may continue on non-conflicting contract/design work while PR #2 is integrated.
 
-## Recommended Next Real Development Action
-After documentation PR #3 is reviewed/merged, the nearest verified implementation gap is Issue #4: Flutter Foundation initialization.
-
-At the same time:
-- Issue #5 may proceed on UI/RTL contract work that does not require Flutter implementation files.
-- Issue #6 may proceed on CI design/preparation, but real Flutter workflow validation must wait for Foundation.
-
-Recommended sequence:
-1. Re-audit live `main` immediately before starting development.
-2. Start Issue #4 from current `main` in a small Foundation branch.
-3. In parallel, prepare non-conflicting Issue #5 and #6 workstreams.
-4. Validate Foundation with `flutter pub get → flutter analyze → flutter test`.
-5. Replace placeholder CI only when the Foundation is real.
-6. Begin Timeline Domain / RTL App Shell / Fast Lane CI as the next coordinated parallel wave.
+## Recommended Next Real Actions
+1. Validate and merge PR #3 documentation baseline when its exact-head CI is successful.
+2. Link Issue #4 to PR #2 and do not create another Foundation branch.
+3. Mark PR #2 ready only after confirming exact-head Flutter CI remains green, then merge it safely.
+4. Re-evaluate PR #1 as superseded validation work and close it if no unique value remains.
+5. After Foundation reaches `main`, execute Issue #6 as a small CI-consolidation PR that removes/replaces placeholder gates rather than adding more parallel workflows.
+6. In parallel, advance Issue #5 contract work and then implement it on top of the merged Foundation.
+7. Start Timeline Domain/Core as the next independent lane once Foundation boundaries are stable.
 
 ## Validation Rule
-No future report may say Flutter CI is green unless the exact commit has actually run the relevant Flutter validation.
+No report may say Flutter CI is green unless the exact commit has actually run the relevant Flutter validation.
 
 Target chain:
 `flutter pub get → flutter analyze → flutter test → flutter build` as applicable.
@@ -131,10 +151,11 @@ Owner reports should stay compact and non-technical:
 The command `ادامه یادنگار` means:
 - re-check live GitHub first
 - read canonical, comprehensive, current-state and operational-plan documents
-- compare docs with current repository reality
+- inspect open PRs and issues before creating new work
+- compare documents with current repository reality
 - identify the nearest real unfinished gap
 - continue safely, using parallel independent lanes where possible
-- validate and document before reporting completion
+- validate exact refs and document before reporting completion
 
 ## Speed Rule
 Useful verified output should be produced in hours rather than days. Speed must come from parallel independent work, small changes, reuse, automation, stale-CI cancellation and fast feedback—not from skipping Audit, tests, architecture review or evidence.
