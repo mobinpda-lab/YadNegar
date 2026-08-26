@@ -7,11 +7,22 @@ import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 void main() {
   late Directory tempDirectory;
   late File storageFile;
+  late File temporaryFile;
+  late File backupFile;
   late JsonFileTimelineRepository repository;
+
+  TimelineItem buildItem({String text = 'اولین یادداشت'}) => TimelineItem(
+        id: 'note-1',
+        type: TimelineItemType.note,
+        text: text,
+        createdAt: DateTime.utc(2026, 8, 26, 10),
+      );
 
   setUp(() async {
     tempDirectory = await Directory.systemTemp.createTemp('yadnegar_timeline_test_');
     storageFile = File('${tempDirectory.path}/timeline.json');
+    temporaryFile = File('${storageFile.path}.tmp');
+    backupFile = File('${storageFile.path}.bak');
     repository = JsonFileTimelineRepository(storageFile);
   });
 
@@ -22,12 +33,7 @@ void main() {
   });
 
   test('persists an item and reloads it from disk', () async {
-    final item = TimelineItem(
-      id: 'note-1',
-      type: TimelineItemType.note,
-      text: 'اولین یادداشت',
-      createdAt: DateTime.utc(2026, 8, 26, 10),
-    );
+    final item = buildItem();
 
     await repository.upsert(item);
 
@@ -40,6 +46,61 @@ void main() {
     expect(stored.text, 'اولین یادداشت');
     expect(stored.createdAt, item.createdAt);
     expect(stored.occurredAt, isNull);
+  });
+
+  test('successful writes leave no staging files behind', () async {
+    await repository.upsert(buildItem());
+
+    expect(await storageFile.exists(), isTrue);
+    expect(await temporaryFile.exists(), isFalse);
+    expect(await backupFile.exists(), isFalse);
+  });
+
+  test('recovers previous primary when interruption leaves only backup', () async {
+    await repository.upsert(buildItem(text: 'نسخه امن'));
+    await storageFile.rename(backupFile.path);
+
+    final recovered = await JsonFileTimelineRepository(storageFile).listNewestFirst();
+
+    expect(recovered.single.text, 'نسخه امن');
+    expect(await storageFile.exists(), isTrue);
+    expect(await backupFile.exists(), isFalse);
+    expect(await temporaryFile.exists(), isFalse);
+  });
+
+  test('falls back to valid backup when primary JSON is corrupted', () async {
+    await repository.upsert(buildItem(text: 'نسخه پشتیبان'));
+    await storageFile.copy(backupFile.path);
+    await storageFile.writeAsString('{broken', flush: true);
+
+    final recovered = await JsonFileTimelineRepository(storageFile).listNewestFirst();
+
+    expect(recovered.single.text, 'نسخه پشتیبان');
+    expect(await backupFile.exists(), isFalse);
+    expect(await temporaryFile.exists(), isFalse);
+  });
+
+  test('promotes a valid staged first-write when primary is missing', () async {
+    await temporaryFile.writeAsString(
+      '{"schemaVersion":1,"items":[{"id":"note-1","type":"note","text":"staged","createdAt":"2026-08-26T10:00:00.000Z","occurredAt":null}]}',
+      flush: true,
+    );
+
+    final recovered = await JsonFileTimelineRepository(storageFile).listNewestFirst();
+
+    expect(recovered.single.text, 'staged');
+    expect(await storageFile.exists(), isTrue);
+    expect(await temporaryFile.exists(), isFalse);
+  });
+
+  test('discards invalid staged first-write instead of promoting it', () async {
+    await temporaryFile.writeAsString('{broken', flush: true);
+
+    final recovered = await JsonFileTimelineRepository(storageFile).listNewestFirst();
+
+    expect(recovered, isEmpty);
+    expect(await storageFile.exists(), isFalse);
+    expect(await temporaryFile.exists(), isFalse);
   });
 
   test('upsert replaces an existing id without creating a duplicate', () async {
