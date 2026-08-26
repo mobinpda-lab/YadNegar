@@ -8,79 +8,72 @@ Active operation plan: `docs/YADNEGAR_OPERATION_PLAN.md` v2.0.
 ## Repository
 `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main: `feee7e92464df470a4ad14b8a5437bf5a7bc8648`
+Current verified main: `369296a0b85862859b75cbbbed401921e7e04cd0`
 
-## Product State
-Vertical Slice اصلی کامل است:
-`Quick Capture → Persist → Timeline → View/Edit`
-
-Main additionally contains:
+## Integrated Product
+- `Quick Capture → Persist → Timeline → View/Edit`
 - typed Quick Capture
-- `SearchTimeline`
-- Persian RTL Search UI + type filter
-- production-safe persistence
+- Search Application + Persian RTL Search UI/type filter
+- date-range retrieval foundation
+- production-safe JSON persistence
 - Android foundation
 - Fast CI + real APK Build Gate
 
 No duplicate Model/Repository/Storage/AppShell exists.
 
-## Search — Integrated
-PR #36 Search Application merged as `324e20104288949972254b2670ee61e1961b3d7a` after exact-head Fast + Android Green.
+## Latest Integrated Retrieval
+PR #38 Search UI merged as `feee7e92464df470a4ad14b8a5437bf5a7bc8648` after exact-head Fast + Android Green and artifact `9619820772`.
 
-PR #38 Search UI final head:
-`7d0228de134f8bac41f63b00f7d4699206d3a913`
+PR #40 Date-range final head:
+`3c162f2c57fe5b1299d14b63d2dd1a8fe538c308`
 
-Evidence:
-- Fast CI `33003778572`: success
-- Android Build `33003778621`: success
-- APK artifact `9619820772`
-- digest `sha256:b2edbad3173ccee08bfb7c8b3a3586f20634b2e9e1ea17503e8a58183f771d57`
+Exact-head evidence:
+- Fast CI `33004335465`: success
+- Android Build `33004335450`: success
+- APK artifact `9620025086`
+- digest `sha256:eab9b743f6ade550e9723419154d549a61f811b914c429e9adedc625975456b9`
 
-PR #38 merged as current verified main:
-`feee7e92464df470a4ad14b8a5437bf5a7bc8648`.
+#40 was merged concurrently by another GitHub flow after both gates were Green. Main is now `369296a0b85862859b75cbbbed401921e7e04cd0`.
 
-## Date-range Retrieval — PR #40 ACTIVE
-Issue #39.
-Branch: `feature/timeline-date-range`.
-Current exact head:
-`3c162f2c57fe5b1299d14b63d2dd1a8fe538c308`.
+## Persistence Reliability — PR #42 ACTIVE
+Issue #41.
+Branch: `persistence/crash-recovery`.
+Exact head: `f0ac1dd678a327e67961ea7cb63e80e1a50dc675`.
 
-This branch was rebuilt directly on current main after #38; old CI evidence must not be reused.
+This branch was restacked on latest main after #40 merged.
 
-Implemented:
-- `FilterTimelineByDateRange`
-- repository-only dependency
-- `timelineAt` semantics
-- inclusive start / exclusive end
-- optional one-sided bounds
-- invalid range rejection
-- preserved ordering
-- unmodifiable output
-- focused unit tests
+Scope:
+- staged `.tmp` write + validation
+- previous primary `.bak`
+- recovery of backup-only interruption
+- fallback from corrupted primary to valid backup
+- valid first-write temp promotion
+- invalid temp discard
+- staging cleanup
+- same JSON schema / same Repository contract
+- focused temp-directory tests
 
-Fresh Fast CI + Android Build are running for the new exact head. Merge only after both Green + exact-head APK artifact + live mergeability safe.
+Arvin was fresh-searched for a reusable persistence write pattern; none relevant was found, so YadNegar foundation was extended directly.
 
-## CI
-Fast Gate:
-`flutter pub get → flutter analyze → flutter test`
+Fresh exact-head gates:
+- Fast CI `33004964100`
+- Android Build `33004964101`
 
-Android Gate:
-`flutter pub get → flutter build apk --debug → verify → upload artifact`
-
-## Reuse From Arvin
-User explicitly allows reuse of Arvin code/patterns where useful.
-Always fresh-audit Arvin first and adapt compatible pieces only; never duplicate YadNegar foundations/contracts blindly.
+Do not merge until both are Green, exact-head APK artifact exists, and live mergeability is safe.
 
 ## Ruleset
-Fresh audit confirms `main-protection` id `20952887` still has no required status check rule. Issue #19 remains open because connector only exposes Ruleset read.
+`main-protection` id `20952887` is active but still lacks required `YadNegar CI / quality` enforcement. Issue #19 remains open because connector has Ruleset read only.
 
 ## Continue
-1. Finish PR #40 fresh exact-head Fast + Android validation.
-2. Verify APK artifact and live mergeability; merge with expected-head lock only if safe.
+1. Inspect PR #42 Fast/Android jobs and fix real failures on same branch.
+2. If Green, verify artifact + live mergeability and merge with expected-head lock.
 3. Validate new main after merge.
-4. Final-sync docs and open/merge docs PR only after exact-head docs CI Green.
-5. Continue Wave 5 grouping/reliability lanes independently.
-6. Keep #19 open until actual Ruleset write capability exists.
+4. Final-sync/open docs PR and merge only with exact-head docs CI Green.
+5. Continue Wave 5 reliability/grouping lanes independently.
+6. Keep #19 open until actual Ruleset write exists.
+
+## Reuse From Arvin
+Allowed when useful: fresh-audit first, adapt only compatible code/patterns, never create duplicate YadNegar foundations.
 
 ## Trigger
 `ادامه یادنگار`
