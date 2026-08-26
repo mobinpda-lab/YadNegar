@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:yadnegar/features/timeline/application/export_timeline_text.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+
+typedef TimelineClipboardWriter = Future<void> Function(String text);
 
 class TimelineScreen extends StatelessWidget {
   const TimelineScreen({
@@ -9,7 +13,7 @@ class TimelineScreen extends StatelessWidget {
     this.errorMessage,
     this.onQuickCapture,
     this.onItemTap,
-    this.onExportTimeline,
+    this.clipboardWriter,
     this.searchController,
     this.selectedFilterType,
     this.hasActiveSearch = false,
@@ -25,7 +29,7 @@ class TimelineScreen extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onQuickCapture;
   final ValueChanged<TimelineItem>? onItemTap;
-  final VoidCallback? onExportTimeline;
+  final TimelineClipboardWriter? clipboardWriter;
   final TextEditingController? searchController;
   final TimelineItemType? selectedFilterType;
   final bool hasActiveSearch;
@@ -42,13 +46,12 @@ class TimelineScreen extends StatelessWidget {
         title: const Text('یادنگار'),
         centerTitle: false,
         actions: [
-          if (onExportTimeline != null)
-            IconButton(
-              key: const Key('timeline-export-action'),
-              tooltip: 'کپی خروجی Timeline',
-              onPressed: onExportTimeline,
-              icon: const Icon(Icons.copy_all_outlined),
-            ),
+          IconButton(
+            key: const Key('timeline-export-action'),
+            tooltip: 'کپی موارد نمایش‌داده‌شده',
+            onPressed: isLoading ? null : () => _copyExport(context),
+            icon: const Icon(Icons.copy_all_outlined),
+          ),
         ],
       ),
       body: _buildPageBody(),
@@ -60,6 +63,38 @@ class TimelineScreen extends StatelessWidget {
         label: const Text('ثبت سریع'),
       ),
     );
+  }
+
+  Future<void> _copyExport(BuildContext context) async {
+    final text = const ExportTimelineText().export(items);
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('موردی برای کپی وجود ندارد.')),
+      );
+      return;
+    }
+
+    try {
+      final writer = clipboardWriter ?? _writeClipboard;
+      await writer(text);
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('خروجی Timeline کپی شد.')),
+      );
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('کپی خروجی انجام نشد.')),
+      );
+    }
+  }
+
+  Future<void> _writeClipboard(String text) {
+    return Clipboard.setData(ClipboardData(text: text));
   }
 
   Widget _buildPageBody() {
