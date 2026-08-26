@@ -1,22 +1,35 @@
-name: Android Foundation Generator
+name: YadNegar Android Build
 
 on:
   push:
     branches:
-      - platform/android-foundation
+      - main
+      - 'platform/**'
     paths:
-      - .github/workflows/android-build.yml
+      - 'lib/**'
+      - 'android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/android-build.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: yadnegar-android-foundation-${{ github.ref }}
+  group: yadnegar-android-build-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
-  generate-and-prove:
+  android-build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -30,17 +43,8 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Generate Android foundation
-        run: flutter create --platforms=android --project-name yadnegar --org com.mobinpda.lab .
-
       - name: Resolve dependencies
         run: flutter pub get
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Test
-        run: flutter test
 
       - name: Build debug APK
         run: flutter build apk --debug
@@ -48,24 +52,10 @@ jobs:
       - name: Verify APK artifact
         run: test -f build/app/outputs/flutter-apk/app-debug.apk
 
-      - name: Upload proof APK
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: yadnegar-android-bootstrap-debug
+          name: yadnegar-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7
-
-      - name: Commit generated platform files
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git status --short
-          if git diff --cached --quiet; then
-            echo "No generated platform changes to commit."
-          else
-            git commit -m "platform(android): generate Flutter Android foundation"
-            git push origin HEAD:platform/android-foundation
-          fi
