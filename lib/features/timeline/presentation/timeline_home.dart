@@ -5,6 +5,13 @@ import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 
+class _QuickCaptureDraft {
+  const _QuickCaptureDraft({required this.text, required this.type});
+
+  final String text;
+  final TimelineItemType type;
+}
+
 class TimelineHome extends StatefulWidget {
   const TimelineHome({
     super.key,
@@ -62,40 +69,77 @@ class _TimelineHomeState extends State<TimelineHome> {
 
   Future<void> _openQuickCapture() async {
     var draft = '';
-    final text = await showDialog<String>(
+    var selectedType = TimelineItemType.note;
+
+    final captureDraft = await showDialog<_QuickCaptureDraft>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('ثبت سریع'),
-        content: TextField(
-          key: const Key('quick-capture-input'),
-          autofocus: true,
-          minLines: 1,
-          maxLines: 4,
-          onChanged: (value) => draft = value,
-          decoration: const InputDecoration(
-            hintText: 'چه چیزی را می‌خواهید به خاطر بسپارید؟',
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('ثبت سریع'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('نوع مورد'),
+              const SizedBox(height: 4),
+              DropdownButton<TimelineItemType>(
+                key: const Key('quick-capture-type'),
+                value: selectedType,
+                isExpanded: true,
+                items: TimelineItemType.values
+                    .map(
+                      (type) => DropdownMenuItem<TimelineItemType>(
+                        value: type,
+                        child: Text(_typeLabel(type)),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (type) {
+                  if (type == null) {
+                    return;
+                  }
+                  setDialogState(() => selectedType = type);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('quick-capture-input'),
+                autofocus: true,
+                minLines: 1,
+                maxLines: 4,
+                onChanged: (value) => draft = value,
+                decoration: const InputDecoration(
+                  hintText: 'چه چیزی را می‌خواهید به خاطر بسپارید؟',
+                ),
+              ),
+            ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('انصراف'),
+            ),
+            FilledButton(
+              key: const Key('quick-capture-save'),
+              onPressed: () => Navigator.of(dialogContext).pop(
+                _QuickCaptureDraft(text: draft, type: selectedType),
+              ),
+              child: const Text('ثبت'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('انصراف'),
-          ),
-          FilledButton(
-            key: const Key('quick-capture-save'),
-            onPressed: () => Navigator.of(dialogContext).pop(draft),
-            child: const Text('ثبت'),
-          ),
-        ],
       ),
     );
 
-    if (text == null) {
+    if (captureDraft == null) {
       return;
     }
 
     try {
-      await widget.quickCapture.capture(text: text);
+      await widget.quickCapture.capture(
+        text: captureDraft.text,
+        type: captureDraft.type,
+      );
       await _reload();
     } on ArgumentError {
       if (!mounted) {
@@ -124,7 +168,7 @@ class _TimelineHomeState extends State<TimelineHome> {
     final text = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('ویرایش یادداشت'),
+        title: Text('ویرایش ${_typeLabel(item.type)}'),
         content: TextFormField(
           key: const Key('timeline-edit-input'),
           initialValue: item.text,
@@ -172,6 +216,16 @@ class _TimelineHomeState extends State<TimelineHome> {
         const SnackBar(content: Text('ویرایش مورد انجام نشد.')),
       );
     }
+  }
+
+  String _typeLabel(TimelineItemType type) {
+    return switch (type) {
+      TimelineItemType.note => 'یادداشت',
+      TimelineItemType.event => 'رویداد',
+      TimelineItemType.call => 'تماس',
+      TimelineItemType.idea => 'ایده',
+      TimelineItemType.activity => 'فعالیت',
+    };
   }
 
   @override
