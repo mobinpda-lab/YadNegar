@@ -35,6 +35,14 @@ void main() {
     expect(repository.upsertedItems, <TimelineItem>[item]);
   });
 
+  test('defaults capture type to note for the fastest path', () async {
+    final item = await quickCapture.capture(text: 'یادداشت سریع');
+
+    expect(item.type, TimelineItemType.note);
+    expect(item.text, 'یادداشت سریع');
+    expect(repository.upsertedItems.single, same(item));
+  });
+
   test('uses the injected clock when occurredAt is omitted', () async {
     final item = await quickCapture.capture(
       type: TimelineItemType.note,
