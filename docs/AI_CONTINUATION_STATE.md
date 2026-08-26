@@ -10,89 +10,94 @@ Always fresh-audit GitHub before any write, merge, SHA/status claim, or progress
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main SHA: `379f58caf34f2206556246beb94e27a2c85ece78`
+Current verified main SHA: `453a77a9e662f705bed8f899a769b425927bebb4`
 
-Current main includes the shared Timeline vertical slice, typed Quick Capture, Search + Type retrieval UI/application, date-range application foundation, Vazirmatn typography with optional private licensed IRANSansX, deduplicated CI triggers, and crash-recoverable JSON persistence.
+Current main contains one shared Timeline stack with:
+- Quick Capture → real JSON persistence → Timeline → View/Edit
+- `TimelineItemType` for Note/Event/Call/Idea/Activity
+- `SearchTimeline` + Persian/RTL text/type retrieval UI
+- `FilterTimelineByDateRange` + Persian/RTL date-range UI
+- Vazirmatn typography with optional private licensed IRANSansX
+- deduplicated CI triggers
+- crash-recoverable JSON writes/recovery
 
 No second Timeline Model / Repository / Storage / App Shell exists.
 
 ## Recent Integrated Work
 ### PR #44 — Typography
 Merged.
-- bundled open-source Vazirmatn UI + Farsi Digits
-- private licensed IRANSansX remains optional for private builds
-- proprietary IRANSansX binaries are not committed to the public repository
+- open-source Vazirmatn UI + Farsi Digits bundled
+- licensed IRANSansX remains optional for private builds
+- proprietary IRANSansX binaries are not committed publicly
 
 ### PR #45 — CI deduplication
 Merged as `aaff41d1e287372e441ea6809bf61d06b49df44c`.
-- `push` quality trigger is limited to `main`
-- feature PRs validate through `pull_request -> main`
-- prevents duplicate push/PR quality runs for the same feature SHA
+- feature PR quality runs use `pull_request -> main`
+- branch `push` quality trigger is no longer duplicated for feature work
+- `push` remains for `main`
 
 ### PR #42 / Issue #41 — Crash-recoverable JSON persistence
-Merged safely as current main `379f58caf34f2206556246beb94e27a2c85ece78` using exact-head lock.
+Merged safely as `379f58caf34f2206556246beb94e27a2c85ece78` using exact-head lock.
 
-Exact PR head before merge:
+Exact PR head:
 `692c8519d6fc22c20671494ea5304f97babe935d`
 
-Exact-head validation:
+Pre-merge validation:
 - `YadNegar CI` Run `33012747019`: success
 - `YadNegar Android Build` Run `33012747020`: success
 
-Post-merge main proof on `379f58c...`:
+Post-merge main proof:
 - `YadNegar CI` Run `33014440255`: success
 - `YadNegar Android Build` Run `33014440247`: success
 
-Issue #41 is closed.
+Issue #41 is completed.
 
-Persistence now uses the existing JSON repository with staged `.tmp`, `.bak`, validation/recovery, flush, restore-on-replacement-failure and real temporary-directory tests. Schema/model/repository contracts were not duplicated.
+### PR #47 / Issue #46 — Timeline Date-range UI
+Merged safely as current main `453a77a9e662f705bed8f899a769b425927bebb4` using expected-head lock.
 
-## Active Product PR — #47 Date-range UI
-PR #47: `feat(retrieval): add Timeline date-range filters`  
-Issue: #46  
-Branch: `feature/timeline-date-range-ui`  
-Current exact head: `10f6d1dc0e288f4a46552a54ad7bfa808c9ccd7e`  
-Base: current main `379f58caf34f2206556246beb94e27a2c85ece78`  
-Live mergeability last verified: true
+Exact PR head:
+`10f6d1dc0e288f4a46552a54ad7bfa808c9ccd7e`
 
-Implementation:
+Pre-merge exact-head validation:
+- `YadNegar CI` Run `33014650334`: success
+- `YadNegar Android Build` Run `33014650363`: success
+- live mergeability immediately before merge: true
+
+Feature behavior:
 - reuses existing `FilterTimelineByDateRange`
 - reuses existing `SearchTimeline`
 - reuses the same production `TimelineRepository`
-- Persian/RTL date-range control
 - UI selected end day is inclusive while application boundary remains end-exclusive
-- Text + Type + Date compose without a second query/storage path
+- Text + Type + Date filters compose without a duplicate query/storage path
 - clear/reset covers all retrieval filters
+- filtered empty-result state covers date-only filtering
 
-Widget coverage includes:
-- date-only filtering across multiple days
-- selected end-day inclusion
-- date + text
-- date + type
-- clear/reset
-- date-only empty-result state
-- existing search/type regression tests
+Widget coverage includes multi-day filtering, selected end-day inclusion, date + text, date + type, clear/reset, date-only empty state, and existing search/type regression behavior.
 
-Exact-head validation at this snapshot:
-- `YadNegar CI` Run `33014650334`: success
-- `YadNegar Android Build` Run `33014650363`: in progress
+Issue #46 is completed.
 
-Do not merge #47 until Android Build on the same exact head is success and live head/mergeability are re-read immediately before merge.
+Post-merge validation on current main:
+- `YadNegar CI` Run `33015057876`: running at this snapshot
+- `YadNegar Android Build` Run `33015057863`: running at this snapshot
+
+Do not convert these post-merge runs to `success` in documentation until a fresh read confirms completion.
 
 ## Next Verified Product Gap — Issue #48
 Issue #48: `feat(capture): expose occurredAt for Event and Activity`.
 
-Fresh code audit proves the foundation already exists:
+Fresh code audit proves the reusable foundation already exists:
 - `TimelineItem` has `DateTime? occurredAt`
 - `timelineAt => occurredAt ?? createdAt`
 - `QuickCapture.capture(...)` already accepts optional `occurredAt`
 
-The missing piece is UI composition: Quick Capture currently captures text + type only. After #47 is integrated, expose optional date/time for Event/Activity without creating a new model, repository, storage path, or capture use case.
+The remaining gap is UI/composition only: Quick Capture currently captures text + type and does not expose the existing occurredAt capability.
+
+Next slice should add optional Persian/RTL date/time selection for Event/Activity and pass it to the existing `QuickCapture` use case. Do not create another Timeline model, capture use case, repository, storage path, or schema solely for this feature.
 
 ## Documentation Reality
-PR #43 is stale and must not be merged as-is. It describes old main/PR states.
+PR #43 is stale and must not be merged as-is. It describes old main and old product/PR states.
 
-A clean documentation synchronization branch now supersedes that stale snapshot. Final docs must be re-synced once #47 reaches its terminal merged/not-merged state.
+Branch `docs/current-state-after-reliability` is the clean replacement and is synchronized to current main. It must be exact-head validated before merge; once the replacement PR exists, close #43 as superseded.
 
 ## Ruleset Reality — Issue #19
 Active ruleset `main-protection` id `20952887`:
@@ -100,7 +105,7 @@ Active ruleset `main-protection` id `20952887`:
 - protects deletion and non-fast-forward updates
 - currently has no required-status-check rule
 
-Issue #19 remains open. Current connector exposes Ruleset read but not a Ruleset write action.
+Issue #19 remains open. Current connector exposes Ruleset read but no Ruleset write action.
 
 Operational merge contract until that gap is truly fixed:
 `Exact current PR head + Green exact-head gates + live mergeability + expected_head_sha merge lock`
@@ -110,22 +115,21 @@ Never claim Required Status Check is configured unless a fresh Ruleset read prov
 ## Architecture Rules
 - Flutter / Dart
 - Clean Architecture direction
-- Feature-based structure
+- feature-based structure
 - Persian RTL-first
 - reuse before rebuild
 - no duplicate App Shell / Timeline Model / Repository / Storage
 - UI consumes application contracts instead of duplicating query/data logic
-- JSON persistence is a real replaceable MVP, not fake persistence
+- JSON persistence is real and replaceable, not fake persistence
 - no fake build/test evidence
 - independent lanes continue when another lane is blocked
 
 ## Next Real Actions
-1. Finish exact-head Android validation for PR #47.
-2. Re-read PR #47 head + mergeability and merge only if both exact-head gates are Green.
-3. Validate new main with real CI/Android evidence.
-4. Close/supersede stale docs PR #43 and merge a clean docs synchronization after exact-head validation.
-5. Start Issue #48 from the new main; reuse existing `occurredAt` contracts.
-6. Keep Issue #19 open until a real Ruleset write capability exists.
+1. Finish post-merge CI + Android validation on current main `453a77a...`.
+2. Finalize and open the clean documentation synchronization PR; close stale #43 as superseded.
+3. Exact-head validate and safely merge the docs PR.
+4. Start Issue #48 from current main and reuse existing `occurredAt` contracts.
+5. Keep Issue #19 open until a real Ruleset write capability exists.
 
 ## Trigger
 `ادامه یادنگار`
