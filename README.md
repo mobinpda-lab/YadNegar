@@ -1,18 +1,32 @@
-# YadNegar
+# YadNegar / یادنگار
 
-Personal Memory Assistant and Knowledge Organizer.
+اپلیکیشن فارسی و RTL برای ثبت سریع یادداشت‌ها، رویدادها، تماس‌ها، ایده‌ها و فعالیت‌های روزانه با رویکرد Timeline.
 
-## Status
-Foundation phase started.
+## وضعیت فعلی
+پروژه در مرحله Documentation / Foundation planning است.
 
-## Architecture Target
-- Flutter
+در Snapshot تأییدشده 2026-08-26، Flutter Foundation هنوز در `main` ایجاد نشده بود؛ بنابراین وجود Flutter/Clean Architecture در این Repository فعلاً هدف معماری است، نه وضعیت پیاده‌سازی‌شده.
+
+## معماری هدف
+- Flutter / Dart
 - Clean Architecture
-- Feature Based Structure
-- RTL Persian UI
+- Feature-Based Architecture
+- Persian RTL-first UI
+- Timeline-oriented product experience
 
-## Development Rules
-- Review before change
-- Small reversible commits
-- Document all changes
-- Run tests before merge
+## مستندات اصلی
+- `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md` — مرجع Canonical عملیات و توسعه
+- `docs/AI_CONTINUATION_STATE.md` — وضعیت جاری و نقطه ادامه
+- `docs/AI_HANDOFF_CURRENT_FA.md` — Handoff فشرده برای Session جدید
+- `PROJECT_DOCUMENTATION_FA.md` — مستند فنی و محصولی
+- `docs/YADNEGAR_DEVELOPMENT_PROTOCOL.md` — ارجاع سازگاری به Canonical document
+
+## اصل توسعه
+`Audit → Understand → Plan → Parallelize → Execute → Validate → Document → Report`
+
+GitHub مرجع اصلی واقعیت پروژه است. تغییرات باید کوچک، قابل Rollback و دارای Evidence باشند و کارهای مستقل تا حد امن به‌صورت موازی انجام شوند.
+
+## ادامه پروژه
+Trigger استاندارد:
+
+`ادامه یادنگار`
