@@ -30,6 +30,21 @@ class JsonFileTimelineRepository implements TimelineRepository {
   }
 
   @override
+  Future<bool> deleteById(String id) async {
+    final items = await _readAll();
+    final previousLength = items.length;
+    items.removeWhere((item) => item.id == id);
+
+    if (items.length == previousLength) {
+      return false;
+    }
+
+    _sortNewestFirst(items);
+    await _writeAll(items);
+    return true;
+  }
+
+  @override
   Future<TimelineItem?> findById(String id) async {
     final items = await _readAll();
     for (final item in items) {

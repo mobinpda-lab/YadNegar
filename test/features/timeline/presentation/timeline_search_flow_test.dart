@@ -14,6 +14,16 @@ class _MemoryTimelineRepository implements TimelineRepository {
   final List<TimelineItem> items;
 
   @override
+  Future<bool> deleteById(String id) async {
+    final index = items.indexWhere((item) => item.id == id);
+    if (index == -1) {
+      return false;
+    }
+    items.removeAt(index);
+    return true;
+  }
+
+  @override
   Future<TimelineItem?> findById(String id) async {
     for (final item in items) {
       if (item.id == id) {

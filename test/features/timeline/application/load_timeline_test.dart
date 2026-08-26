@@ -55,6 +55,9 @@ class _RecordingTimelineRepository implements TimelineRepository {
   int listRequests = 0;
 
   @override
+  Future<bool> deleteById(String id) async => false;
+
+  @override
   Future<List<TimelineItem>> listNewestFirst() async {
     listRequests += 1;
     return List<TimelineItem>.of(items);
