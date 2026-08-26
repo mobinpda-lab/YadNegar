@@ -36,6 +36,35 @@ void main() {
     expect(repository.upsertedItems, <TimelineItem>[updated]);
   });
 
+  test('can replace occurredAt without changing identity metadata', () async {
+    final occurredAt = DateTime.utc(2026, 8, 27, 9, 15);
+
+    final updated = await editTimelineItem.update(
+      id: original.id,
+      text: 'متن جدید',
+      replaceOccurredAt: true,
+      occurredAt: occurredAt,
+    );
+
+    expect(updated.id, original.id);
+    expect(updated.type, original.type);
+    expect(updated.createdAt, original.createdAt);
+    expect(updated.occurredAt, occurredAt);
+  });
+
+  test('can explicitly clear occurredAt', () async {
+    final updated = await editTimelineItem.update(
+      id: original.id,
+      text: original.text,
+      replaceOccurredAt: true,
+      occurredAt: null,
+    );
+
+    expect(updated.occurredAt, isNull);
+    expect(updated.createdAt, original.createdAt);
+    expect(updated.type, original.type);
+  });
+
   test('rejects empty text before writing', () async {
     await expectLater(
       editTimelineItem.updateText(id: original.id, text: '   '),

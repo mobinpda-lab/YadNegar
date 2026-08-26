@@ -29,6 +29,18 @@ class _QuickCaptureDraft {
   final DateTime? occurredAt;
 }
 
+class _EditTimelineDraft {
+  const _EditTimelineDraft({
+    required this.text,
+    required this.replaceOccurredAt,
+    this.occurredAt,
+  });
+
+  final String text;
+  final bool replaceOccurredAt;
+  final DateTime? occurredAt;
+}
+
 class TimelineHome extends StatefulWidget {
   const TimelineHome({
     super.key,
@@ -399,41 +411,92 @@ class _TimelineHomeState extends State<TimelineHome> {
     }
 
     var draft = item.text;
-    final text = await showDialog<String>(
+    var occurredAt = item.occurredAt;
+    final supportsOccurredAt = _supportsOccurredAt(item.type);
+
+    final editDraft = await showDialog<_EditTimelineDraft>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('ویرایش ${_typeLabel(item.type)}'),
-        content: TextFormField(
-          key: const Key('timeline-edit-input'),
-          initialValue: item.text,
-          autofocus: true,
-          minLines: 1,
-          maxLines: 6,
-          onChanged: (value) => draft = value,
-          decoration: const InputDecoration(
-            labelText: 'متن',
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('ویرایش ${_typeLabel(item.type)}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                key: const Key('timeline-edit-input'),
+                initialValue: item.text,
+                autofocus: true,
+                minLines: 1,
+                maxLines: 6,
+                onChanged: (value) => draft = value,
+                decoration: const InputDecoration(
+                  labelText: 'متن',
+                ),
+              ),
+              if (supportsOccurredAt) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  key: const Key('timeline-edit-occurred-at'),
+                  onPressed: () async {
+                    final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
+                    final value = await picker(
+                      dialogContext,
+                      occurredAt ?? item.createdAt,
+                    );
+                    if (value == null || !dialogContext.mounted) {
+                      return;
+                    }
+                    setDialogState(() => occurredAt = value);
+                  },
+                  icon: const Icon(Icons.event),
+                  label: Text(
+                    occurredAt == null
+                        ? 'تاریخ و زمان (اختیاری)'
+                        : _formatDateTime(occurredAt!),
+                  ),
+                ),
+                if (occurredAt != null)
+                  TextButton(
+                    key: const Key('timeline-edit-occurred-at-clear'),
+                    onPressed: () => setDialogState(() => occurredAt = null),
+                    child: const Text('پاک کردن تاریخ و زمان'),
+                  ),
+              ],
+            ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('انصراف'),
+            ),
+            FilledButton(
+              key: const Key('timeline-edit-save'),
+              onPressed: () => Navigator.of(dialogContext).pop(
+                _EditTimelineDraft(
+                  text: draft,
+                  replaceOccurredAt: supportsOccurredAt,
+                  occurredAt: occurredAt,
+                ),
+              ),
+              child: const Text('ذخیره'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('انصراف'),
-          ),
-          FilledButton(
-            key: const Key('timeline-edit-save'),
-            onPressed: () => Navigator.of(dialogContext).pop(draft),
-            child: const Text('ذخیره'),
-          ),
-        ],
       ),
     );
 
-    if (text == null) {
+    if (editDraft == null) {
       return;
     }
 
     try {
-      await editTimelineItem.updateText(id: item.id, text: text);
+      await editTimelineItem.update(
+        id: item.id,
+        text: editDraft.text,
+        replaceOccurredAt: editDraft.replaceOccurredAt,
+        occurredAt: editDraft.occurredAt,
+      );
       await _reload();
     } on ArgumentError {
       if (!mounted) {
