@@ -3,9 +3,16 @@
 اپلیکیشن فارسی و RTL برای ثبت سریع یادداشت‌ها، رویدادها، تماس‌ها، ایده‌ها و فعالیت‌های روزانه با رویکرد Timeline.
 
 ## وضعیت فعلی
-پروژه در مرحله Documentation / Foundation integration است.
+Flutter Foundation واقعی در `main` Merge شده است.
 
-در Snapshot تأییدشده `main` در 2026-08-26، Flutter Foundation هنوز Merge نشده بود؛ اما Foundation واقعی در PR #2 ایجاد شده و برای Head دقیق آن Flutter Analyze/Test موفق شده است. تا زمان Merge شدن PR #2، Foundation هنوز وضعیت `main` محسوب نمی‌شود.
+Snapshot تأییدشده 2026-08-26:
+- `main`: `c632570a8d09fffecc3ae27e9747f417888b9c5f`
+- Flutter/Dart foundation: موجود
+- RTL shell پایه: موجود
+- baseline widget test: موجود
+- CI consolidation: در PR #7
+- RTL Timeline shell: در PR #8
+- Canonical documentation baseline: در PR #3
 
 ## معماری هدف
 - Flutter / Dart
@@ -31,6 +38,11 @@ GitHub مرجع اصلی واقعیت پروژه است. تغییرات باید
 
 ## اصل سرعت
 هدف تولید نرم‌افزار واقعی در چند ساعت به‌جای چند روز است؛ با کار موازی هماهنگ، GitHub Automation، بازخورد سریع، کنترل کیفیت و مستندسازی همزمان.
+
+## موج جاری
+- Lane A: Foundation تثبیت شده؛ Timeline/Core contract مرحله بعد است.
+- Lane B: RTL Timeline shell در PR #8.
+- Lane C: CI consolidation در PR #7 و مستندات Canonical در PR #3.
 
 ## ادامه پروژه
 Trigger استاندارد:
