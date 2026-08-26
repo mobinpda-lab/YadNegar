@@ -10,6 +10,7 @@ on:
       - 'ui/**'
       - 'core/**'
       - 'persistence/**'
+      - 'platform/**'
       - 'docs/**'
   pull_request:
     branches: [main]
