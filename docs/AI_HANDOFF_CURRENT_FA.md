@@ -3,77 +3,122 @@
 ## Source of Truth
 GitHub Reality مقدم است. قبل از هر Write/Merge وضعیت زنده را Audit کن.
 Canonical operating package: `docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`.
+Active operation plan: `docs/YADNEGAR_OPERATION_PLAN.md` v2.0.
 
 ## Repository
 `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main: `89c349d304b0f1b1f57e518b7739723e21facc0b`  
-Commit: `feat(timeline): add real View/Edit flow`
+Current verified main: `866a61b8ba8d26666d4d0436d36f402478af25b3`
 
-## Current Product State
-Vertical Slice هدف فعلی کامل و روی main یکپارچه است:
+## Product State
+Vertical Slice اصلی کامل است:
 `Quick Capture → Persist → Timeline → View/Edit`
 
-روی main اکنون وجود دارد:
-- Flutter/Dart + Persian RTL foundation
-- single Fast CI
-- Timeline Domain
-- TimelineRepository + real JSON disk persistence
-- QuickCapture
-- LoadTimeline
-- EditTimelineItem
-- Timeline UI
-- Quick Capture real persist/reload/render
-- production-safe app-support persistence bootstrap
-- item tap/edit/persist/reload/render
+Main additionally has typed Quick Capture:
+- یادداشت
+- رویداد
+- تماس
+- ایده
+- فعالیت
 
-## Recent Exact Evidence
-PR #23 final head `a4bc2ffe...`; run `32996798616` success; merged `329ad83c...`; Issue #22 completed.
-PR #26 final head `84b4a93b...`; run `32997146108` success; merged `e2564db5...`; Issue #24 completed.
-PR #27 final head `60a9fe96...`; run `32997724347` success; merged/current main `89c349d3...`; Issue #25 completed.
+همه از `TimelineItemType` واحد استفاده می‌کنند؛ هیچ Model/Repository/Storage موازی ساخته نشده است.
 
-For each run, Resolve dependencies, Analyze and Test succeeded.
+## CI / Android — Fully Proven
+Fast Gate:
+`flutter pub get → flutter analyze → flutter test`
 
-## View/Edit Integration Detail
-Parallel development initially caused a real merge conflict after production bootstrap merged. The same View/Edit branch was reconciled with fresh main through a real merge commit; no duplicate PR was created. Mergeability was rechecked true before expected-head locked merge.
+Android Gate:
+`flutter pub get → flutter build apk --debug → verify → upload artifact`
 
-Production composition now shares the same repository between QuickCapture, LoadTimeline and EditTimelineItem.
+Issue #6 و #28 completed هستند.
 
-## Production Persistence
-`main()` uses `getApplicationSupportDirectory()` with compatible `path_provider ^2.1.5` and one `JsonFileTimelineRepository`.
-No `Directory.systemTemp` / `Directory.current` fake production persistence.
-Platform plugin remains at composition root.
+Main `1b31899d...` Full Build proof:
+- Fast `33001323525`: success
+- Android `33001323462`: success
+- APK artifact `9618821948`
 
-## Docs — PR #3
-Canonical docs branch is receiving the final post-View/Edit sync now. Merge only after exact-final-head CI Green and safe mergeability.
+## Typed Quick Capture — Integrated
+PR #34 final head `d0d206fd765dc5aa19963a971ac7c1eb4b9830ca`:
+- Fast `33001576158`: success
+- Android `33001576065`: success
+- artifact `9618919403`
 
-## CI / Ruleset
-Fast Gate: `flutter pub get → flutter analyze → flutter test`.
-GitHub CI automation is active with PR/push validation, cache, concurrency and stale-run cancellation.
+Merged as current main:
+`866a61b8ba8d26666d4d0436d36f402478af25b3`.
+Issue #33 completed.
 
-Ruleset `main-protection` id `20952887` still lacks platform-required `YadNegar CI / quality`.
-Issue #19 remains open. Current connector has no Ruleset write action, so no fake hardening claim.
+Post-merge main:
+- Fast `33002034902`: success
+- Android `33002034898`: success
+- APK artifact `9619095963`
+- digest `sha256:468baac70018672d1de564c5d90271cef8bdb4d73d1f042d76728e4825613ae0`
 
-## Next Platform Wave
-Issue #28 owns real Android foundation + APK validation.
-Repository still has no committed Android platform project on main, therefore no APK/full build success is claimed yet.
+## PR #36 — Search Application Foundation
+Issue #35.
+Current head:
+`c5547185b8501f029b70958882b69ddb460b3f31`.
 
-Required sequence:
-1. create Android platform foundation in a real Flutter 3.35 environment.
-2. commit generated platform files.
-3. execute real Android build.
-4. verify APK artifact.
-5. only then extend Issue #6 to a Full Build Gate.
+Implemented:
+- SearchTimeline
+- text query
+- optional Timeline type filter
+- combined query/type
+- repository order preservation
+- immutable result
+- unit tests
 
-## Automation Reality
-Separate hourly YadNegar continuation automation exists but is currently disabled. GitHub CI automation itself is active.
+Branch was deliberately synchronized to current main after #34. GitHub auto-closed the zero-diff PR during reset; the same #36 was reopened after Search commits were reapplied. Do not create a duplicate PR.
+
+Current evidence:
+- push Fast CI `33002127769`: success
+- reopened PR Fast `33002697220`: running
+- reopened PR Android `33002697213`: running
+
+Merge only after both exact-head gates are success + APK artifact + live mergeability true.
+
+## Search UI — Stacked Branch
+Issue #37.
+Branch: `feature/timeline-search-ui`.
+Current head:
+`59a9958a21cb0536a8f39257d7e2e6b374c68150`.
+
+Already implemented in parallel:
+- RTL Persian search field
+- Timeline type filter
+- clear/reset
+- no-results state
+- SearchTimeline injection in production
+- current filter retained on reload after capture/edit
+- async stale-result protection
+- widget tests for search/filter/clear/empty
+
+Fast CI Run `33002653180` is validating the branch.
+This is intentionally not yet a PR to main because it depends on PR #36. After #36 merges, synchronize this branch to main and open a main PR so Fast CI + Android Build both execute.
+
+## Docs — PR #32
+Docs branch is actively synchronized in parallel and now includes:
+- Full Build proof
+- typed capture integration
+- PR #36 state
+- Search UI stacked state
+- Operation Plan v2.0
+
+Before docs merge: final live audit + exact-head docs CI Green.
+
+## Ruleset
+`main-protection` id `20952887` still does not platform-require `YadNegar CI / quality`.
+Issue #19 remains open because current connector has no Ruleset write action.
 
 ## Continue
-1. Check exact-head CI and mergeability for final docs PR #3; merge if safe.
-2. Fresh-audit main after docs merge.
-3. Start Issue #28 Android platform lane.
-4. Produce real APK evidence before Full Build Gate.
-5. Keep Issue #19 blocked only on real Ruleset write capability.
+1. Check #36 Fast + Android exact-head results; merge only both Green + artifact + safe mergeability.
+2. Check stacked Search UI Fast CI; fix any real failure same branch.
+3. After #36 merge, rebase/synchronize Search UI to main without duplicating work, open PR, require Fast + Android Green.
+4. Validate main after merge.
+5. Final-sync/validate/merge docs #32.
+6. Keep #19 open until actual Ruleset write capability exists.
+
+## Automation Reality
+GitHub CI automation is active. Separate hourly YadNegar continuation automation exists but is currently disabled.
 
 ## Trigger
 `ادامه یادنگار`
