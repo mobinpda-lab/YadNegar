@@ -58,17 +58,17 @@ class _TimelineHomeState extends State<TimelineHome> {
   }
 
   Future<void> _openQuickCapture() async {
-    final controller = TextEditingController();
+    var draft = '';
     final text = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('ثبت سریع'),
         content: TextField(
           key: const Key('quick-capture-input'),
-          controller: controller,
           autofocus: true,
           minLines: 1,
           maxLines: 4,
+          onChanged: (value) => draft = value,
           decoration: const InputDecoration(
             hintText: 'چه چیزی را می‌خواهید به خاطر بسپارید؟',
           ),
@@ -80,13 +80,12 @@ class _TimelineHomeState extends State<TimelineHome> {
           ),
           FilledButton(
             key: const Key('quick-capture-save'),
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            onPressed: () => Navigator.of(dialogContext).pop(draft),
             child: const Text('ثبت'),
           ),
         ],
       ),
     );
-    controller.dispose();
 
     if (text == null) {
       return;
