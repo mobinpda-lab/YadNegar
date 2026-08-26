@@ -10,10 +10,11 @@ Always fresh-audit GitHub before any write or merge.
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main SHA: `006e6aae3d4f4ddab988bb0fd9ce5dd968b10ab2`  
-Latest integrated change: Fast CI now validates `platform/**` development branches.
+Current verified main SHA: `1b31899d69d3f1fa98520dcc82a9251a7026cc09`  
+Latest integrated change: committed Android platform foundation + permanent Android APK Build Gate.
 
-Canonical documentation itself is already integrated on main through merge `1765e66123f18e023b8179839333e328e783361c`.
+Canonical documentation is already integrated on main through merge `1765e66123f18e023b8179839333e328e783361c`.
+Fast CI platform branch coverage is integrated through PR #30 / merge `006e6aae3d4f4ddab988bb0fd9ce5dd968b10ab2`.
 
 ## Integrated Product Vertical Slice
 Target: `Quick Capture → Persist → Timeline → View/Edit`
@@ -37,81 +38,100 @@ Final exact head `a4bc2ffe6803017bc6d1279e4b63954c372d4d00`; Run `32996798616` s
 ### PR #26 — Production Persistence Bootstrap
 Final exact head `84b4a93be3c52e716be7f4399297ec49091630a8`; Run `32997146108` success; merged as `e2564db524bfcec17770adc28704c1925efcefc8`; Issue #24 completed.
 
-Production uses `getApplicationSupportDirectory()` + one shared `JsonFileTimelineRepository`; no temp/current-directory fake durability.
-
 ### PR #27 — View/Edit
 Final exact head `60a9fe96335fed35e8b2cf4aaadaeed24088a8ea`; Run `32997724347` success; merged as `89c349d304b0f1b1f57e518b7739723e21facc0b`; Issue #25 completed.
 
 ### PR #3 — Canonical Documentation
-Final docs validation succeeded and PR #3 merged as `1765e66123f18e023b8179839333e328e783361c`.
-Canonical operating package, comprehensive docs, continuation state and handoff are therefore on main.
+Merged as `1765e66123f18e023b8179839333e328e783361c` after exact-head Green CI.
 
 ### PR #30 — Platform Fast-CI Coverage
-Final exact head `366e1c9be2461e0aa3a7bfbc9be4931a0e1846f3`; Run `32998392710` success; merged as current main `006e6aae3d4f4ddab988bb0fd9ce5dd968b10ab2`.
-Existing `YadNegar CI` now includes `platform/**` push validation; no duplicate Fast workflow was created. Issue #29 completed by this PR.
+Final exact head `366e1c9be2461e0aa3a7bfbc9be4931a0e1846f3`; Run `32998392710` success; merged as `006e6aae3d4f4ddab988bb0fd9ce5dd968b10ab2`.
+Existing `YadNegar CI` now includes `platform/**` push validation. Issue #29 completed.
 
-## Android Foundation — Real Evidence Exists
-Issue #28 started an independent platform lane: `platform/android-foundation`.
+## Android Foundation — INTEGRATED
+Issue #28 is completed.
 
-A temporary bootstrap workflow ran in a real Flutter `3.35.0` environment and produced committed Android project files.
-
-Run `32998085012` completed **success** with all real steps successful:
-- Checkout
-- Flutter setup
-- Generate Android foundation
+Bootstrap proof run `32998085012` succeeded in Flutter `3.35.0` with:
+- Android foundation generation
 - `flutter pub get`
 - `flutter analyze`
 - `flutter test`
 - `flutter build apk --debug`
-- APK file verification
+- APK verification
 - artifact upload
-- commit generated platform files
+- generated platform commit `c23721dc68c622f2fa54d74b477a3b3efe143d3b`
 
-Generated Android foundation commit:
-`c23721dc68c622f2fa54d74b477a3b3efe143d3b`.
+Bootstrap proof artifact:
+- id `9617520192`
+- name `yadnegar-android-bootstrap-debug`
+- digest `sha256:5f3481dc4a9ffa756fabd03ff2b49f5874bd1bf8578d291ae2176fb295cf21a3`
 
-Real APK proof artifact:
-- name: `yadnegar-android-bootstrap-debug`
-- artifact id: `9617520192`
-- size: `66096367` bytes
-- digest: `sha256:5f3481dc4a9ffa756fabd03ff2b49f5874bd1bf8578d291ae2176fb295cf21a3`
-- expires: 2026-09-02
+### PR #31 — Permanent Android Build Gate
+Final exact head: `e53572b0a4a24d810de22120de88069ba6ee49c9`.
 
-This is valid build evidence for the bootstrap run. Android foundation is not considered integrated on main until PR #31 merges.
+Exact-head gates before merge:
+- `YadNegar CI` Run `33000840296`: success
+- `YadNegar Android Build` Run `33000840285`: success
 
-## PR #31 — Android Foundation + Permanent Build Gate
-Active PR: `platform(android): add real Android foundation and APK build gate`.
-Current exact head: `e53572b0a4a24d810de22120de88069ba6ee49c9`.
+Permanent Build proof artifact:
+- id `9618635116`
+- name `yadnegar-debug-apk`
+- size `66096363` bytes
+- digest `sha256:3c48a6dac7b24dfe89a8d3aabeedd7e06cd3227d55ba08abbc54e149458a0728`
+- expires 2026-09-02
 
-Scope:
-- committed Android Flutter project foundation
+PR #31 merged with expected-head lock as current main:
+`1b31899d69d3f1fa98520dcc82a9251a7026cc09`.
+
+Integrated Android state:
+- real committed Android Flutter project foundation
 - `pubspec.lock`
-- Flutter-generated project metadata/config where required
-- permanent `YadNegar Android Build` workflow
-- read-only `contents` permission
-- no self-commit/generation behavior in permanent gate
-- real `flutter build apk --debug`
-- APK existence verification
+- permanent `YadNegar Android Build`
+- `permissions: contents: read`
+- no generator/self-commit behavior
+- debug APK build
+- APK file verification
 - APK artifact upload
 
-PR #31 must only merge when both exact-head gates are successful:
-1. `YadNegar CI` — dependency resolution / analyze / test
-2. `YadNegar Android Build` — real APK build / verify / artifact
-
-At the current audit both workflows have been created for exact head `e53572b0...`; do not claim final PR #31 validation until they complete.
+Post-merge main launched both `YadNegar CI` and `YadNegar Android Build` for exact main SHA `1b31899d...`; final post-merge result must be checked live before calling Issue #6 fully complete.
 
 ## CI / Automation
 Fast Gate:
 `flutter pub get → flutter analyze → flutter test`.
 
-Integrated automation:
+Android Build Gate:
+`flutter pub get → flutter build apk --debug → verify APK → upload artifact`.
+
+Automation integrated:
 - PR validation
-- active development branch push validation including `platform/**`
+- active branch push validation including `platform/**`
 - Flutter cache
 - concurrency + stale-run cancellation
 - read-only workflow permissions
+- permanent real APK artifact path
 
-Android Build Gate candidate is PR #31. It is intentionally separate from the Fast Gate because APK compilation is a slower validation path.
+Issue #6 now owns final post-merge confirmation/promotion of this proven Build Gate.
+
+## Wave 4 Product Expansion — ACTIVE
+Issue #33 / PR #34 starts feature expansion without changing shared architecture.
+
+PR #34: `feat(timeline): choose type during Quick Capture`
+Current head: `3e2713225a068b62b7c66fbe6cc3c1cb6290fdf3`.
+
+Implemented:
+- Quick Capture type selector
+- existing `TimelineItemType` values reused: note/event/call/idea/activity
+- default remains note
+- selected type passes to existing `QuickCapture.capture(type: ...)`
+- edit dialog uses actual item type label
+- widget coverage for Idea capture and Note default
+
+No new Model/Repository/Storage is introduced.
+PR #34 must be validated against the new Android-enabled main before final merge.
+
+## Documentation Lane
+PR #32 `docs: sync Android build and automation evidence` is the active docs synchronization lane.
+It should receive one final update after post-merge main Build results and then exact-head CI before merge.
 
 ## Ruleset Reality
 Active ruleset `main-protection` id `20952887`:
@@ -119,15 +139,14 @@ Active ruleset `main-protection` id `20952887`:
 - protects deletion/non-fast-forward
 - does not yet platform-require `YadNegar CI / quality`
 
-Issue #19 owns this gap. Current connector supports Ruleset reads but not mutation; never claim this rule was applied without a real write.
+Issue #19 owns this gap. Current connector supports Ruleset reads but not mutation; never claim a write that did not happen.
 
 ## Important Issues
-- #6 — promote proven Android build into the final Full Build Gate policy after PR #31 integration.
+- #6 — final post-merge promotion/confirmation of real Android Full Build Gate.
 - #19 — required CI status check in main Ruleset when actual write capability exists.
-- #28 — Android foundation + real APK validation; active through PR #31.
-- #29 — platform branch Fast CI coverage; completed through PR #30.
-
-Completed implementation issues include #4, #5, #9, #11, #13, #15, #17, #20, #22, #24, #25 and #29.
+- #28 — completed through PR #31.
+- #29 — completed through PR #30.
+- #33 — active Quick Capture type expansion through PR #34.
 
 ## Architecture Rules
 - Flutter / Dart
@@ -140,19 +159,18 @@ Completed implementation issues include #4, #5, #9, #11, #13, #15, #17, #20, #22
 - platform path plugin stays in composition root
 - no fake build/persistence claims
 - JSON storage remains a real replaceable MVP
-- platform build files must be committed; generated-only CI state is not integration
+- platform build files are committed and validated
 
 ## Automation Reality Outside GitHub
 A separate YadNegar hourly continuation automation exists in the account but is currently disabled. Do not describe it as active.
 
 ## Next Real Actions
-1. Inspect exact-head `YadNegar CI` and `YadNegar Android Build` for PR #31.
-2. If a real failure exists, fix only that lane and revalidate the new exact head.
-3. Merge PR #31 only when both gates are Green and mergeability is safe.
-4. Validate post-merge main Android build evidence.
-5. Update Issue #6 from future-build placeholder to proven Full Build Gate work.
-6. Keep docs/handoff synchronized in parallel.
-7. Keep Issue #19 open until a real Ruleset write path exists.
+1. Inspect post-merge `YadNegar CI` and `YadNegar Android Build` for main `1b31899d...`.
+2. Close/complete Issue #6 only if post-merge main Build evidence is Green.
+3. Revalidate PR #34 against Android-enabled main and run both appropriate gates before merge.
+4. Continue Wave 4 feature expansion after typed Quick Capture integration.
+5. Final-sync and merge docs PR #32 with exact-head Green CI.
+6. Keep Issue #19 open until real Ruleset write capability exists.
 
 ## Trigger
 `ادامه یادنگار`
