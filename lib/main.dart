@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:yadnegar/features/timeline/application/delete_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
@@ -11,6 +12,8 @@ import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.dart';
+import 'package:yadnegar/features/timeline/data/json_timeline_backup_service.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_home.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 import 'package:yadnegar/theme/app_fonts.dart';
@@ -25,25 +28,40 @@ Future<void> main() async {
   final repository = JsonFileTimelineRepository(
     File('${supportDirectory.path}/timeline.json'),
   );
+  final backupService = JsonTimelineBackupService(
+    repository: repository,
+    clock: DateTime.now,
+  );
 
   runApp(
     YadNegarApp(
       fontFamily: hasLicensedIranSansX
           ? AppFonts.iranSansXFamily
           : AppFonts.vazirmatnFamily,
-      home: TimelineHome(
-        quickCapture: QuickCapture(
-          repository: repository,
-          clock: DateTime.now,
-          idGenerator: _generateTimelineId,
-        ),
-        loadTimeline: LoadTimeline(repository: repository),
-        editTimelineItem: EditTimelineItem(repository: repository),
-        deleteTimelineItem: DeleteTimelineItem(repository: repository),
-        restoreTimelineItem: RestoreTimelineItem(repository: repository),
-        searchTimeline: SearchTimeline(repository: repository),
-        filterTimelineByDateRange: FilterTimelineByDateRange(
-          repository: repository,
+      home: TimelineBackupScope(
+        backupAction: () async {
+          final temporaryDirectory = await getTemporaryDirectory();
+          final snapshot = await backupService.createSnapshot(temporaryDirectory);
+          await Share.shareXFiles(
+            <XFile>[XFile(snapshot.path)],
+            subject: 'پشتیبان یادنگار',
+            text: 'فایل پشتیبان یادنگار',
+          );
+        },
+        child: TimelineHome(
+          quickCapture: QuickCapture(
+            repository: repository,
+            clock: DateTime.now,
+            idGenerator: _generateTimelineId,
+          ),
+          loadTimeline: LoadTimeline(repository: repository),
+          editTimelineItem: EditTimelineItem(repository: repository),
+          deleteTimelineItem: DeleteTimelineItem(repository: repository),
+          restoreTimelineItem: RestoreTimelineItem(repository: repository),
+          searchTimeline: SearchTimeline(repository: repository),
+          filterTimelineByDateRange: FilterTimelineByDateRange(
+            repository: repository,
+          ),
         ),
       ),
     ),
