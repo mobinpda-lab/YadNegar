@@ -23,6 +23,7 @@ class TimelineScreen extends StatelessWidget {
     this.onClearSearch,
     this.dateRangeLabel,
     this.onDateRangeTap,
+    this.onRestoreSnapshot,
   });
 
   final List<TimelineItem> items;
@@ -39,6 +40,7 @@ class TimelineScreen extends StatelessWidget {
   final VoidCallback? onClearSearch;
   final String? dateRangeLabel;
   final VoidCallback? onDateRangeTap;
+  final VoidCallback? onRestoreSnapshot;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +68,13 @@ class TimelineScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
+          if (onRestoreSnapshot != null)
+            IconButton(
+              key: const Key('timeline-restore-action'),
+              tooltip: 'بازیابی پشتیبان',
+              onPressed: isLoading ? null : onRestoreSnapshot,
+              icon: const Icon(Icons.restore_page_outlined),
+            ),
           if (backupScope != null)
             IconButton(
               key: const Key('timeline-backup-action'),

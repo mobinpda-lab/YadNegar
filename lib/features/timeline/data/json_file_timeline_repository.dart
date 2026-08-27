@@ -4,6 +4,16 @@ import 'dart:io';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_repository.dart';
 
+class UnsupportedTimelineStorageSchemaException extends FormatException {
+  UnsupportedTimelineStorageSchemaException(Object? version)
+      : super('Unsupported Timeline storage schema version: $version.');
+}
+
+class DuplicateTimelineItemIdException extends FormatException {
+  DuplicateTimelineItemIdException(String id)
+      : super('Duplicate Timeline item id: $id.');
+}
+
 class JsonFileTimelineRepository implements TimelineRepository {
   JsonFileTimelineRepository(this.file);
 
@@ -70,6 +80,24 @@ class JsonFileTimelineRepository implements TimelineRepository {
     return utf8.encode(_encodeItems(items));
   }
 
+  Future<void> restoreValidatedSnapshotBytes(List<int> bytes) async {
+    final raw = utf8.decode(bytes, allowMalformed: false);
+    if (raw.trim().isEmpty) {
+      throw const FormatException('Timeline backup cannot be empty.');
+    }
+
+    final items = _decodeItems(raw);
+    final seenIds = <String>{};
+    for (final item in items) {
+      if (!seenIds.add(item.id)) {
+        throw DuplicateTimelineItemIdException(item.id);
+      }
+    }
+
+    _sortNewestFirst(items);
+    await _writeAll(items);
+  }
+
   Future<List<TimelineItem>> _readAll() async {
     await _recoverMissingPrimary();
 
@@ -122,7 +150,10 @@ class JsonFileTimelineRepository implements TimelineRepository {
     if (raw.trim().isEmpty) {
       return <TimelineItem>[];
     }
+    return _decodeItems(raw);
+  }
 
+  List<TimelineItem> _decodeItems(String raw) {
     final decoded = jsonDecode(raw);
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('Timeline storage root must be a JSON object.');
@@ -130,9 +161,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
     final version = decoded['schemaVersion'];
     if (version != schemaVersion) {
-      throw FormatException(
-        'Unsupported Timeline storage schema version: $version.',
-      );
+      throw UnsupportedTimelineStorageSchemaException(version);
     }
 
     final rawItems = decoded['items'];

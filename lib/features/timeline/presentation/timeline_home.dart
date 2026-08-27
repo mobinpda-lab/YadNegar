@@ -8,6 +8,7 @@ import 'package:yadnegar/features/timeline/application/restore_timeline_item.dar
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restore_action.dart';
 
 typedef TimelineDateRangePicker = Future<DateTimeRange?> Function(
   BuildContext context,
@@ -55,6 +56,7 @@ class TimelineHome extends StatefulWidget {
     this.editTimelineItem,
     this.deleteTimelineItem,
     this.restoreTimelineItem,
+    this.restoreTimelineSnapshot,
     this.searchTimeline,
     this.filterTimelineByDateRange,
     this.dateRangePicker,
@@ -66,6 +68,7 @@ class TimelineHome extends StatefulWidget {
   final EditTimelineItem? editTimelineItem;
   final DeleteTimelineItem? deleteTimelineItem;
   final RestoreTimelineItem? restoreTimelineItem;
+  final TimelineSnapshotRestoreAction? restoreTimelineSnapshot;
   final SearchTimeline? searchTimeline;
   final FilterTimelineByDateRange? filterTimelineByDateRange;
   final TimelineDateRangePicker? dateRangePicker;
@@ -281,6 +284,81 @@ class _TimelineHomeState extends State<TimelineHome> {
     _dateStart = null;
     _dateEndExclusive = null;
     _reload();
+  }
+
+  Future<void> _openSnapshotRestore() async {
+    final restoreTimelineSnapshot = widget.restoreTimelineSnapshot;
+    if (restoreTimelineSnapshot == null) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('بازیابی فایل پشتیبان؟'),
+        content: const Text(
+          'اطلاعات فعلی یادنگار با محتوای فایل پشتیبان جایگزین می‌شود. فایل پیش از جایگزینی اعتبارسنجی خواهد شد.',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('timeline-restore-cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('انصراف'),
+          ),
+          FilledButton(
+            key: const Key('timeline-restore-confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('انتخاب و بازیابی'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    try {
+      final result = await restoreTimelineSnapshot();
+      if (!mounted) {
+        return;
+      }
+
+      switch (result) {
+        case TimelineSnapshotRestoreResult.cancelled:
+          return;
+        case TimelineSnapshotRestoreResult.restored:
+          await _reload();
+          if (!mounted) {
+            return;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فایل پشتیبان با موفقیت بازیابی شد.')),
+          );
+          return;
+        case TimelineSnapshotRestoreResult.invalidBackup:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فایل پشتیبان معتبر نیست.')),
+          );
+          return;
+        case TimelineSnapshotRestoreResult.unsupportedSchema:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('نسخه این فایل پشتیبان پشتیبانی نمی‌شود.')),
+          );
+          return;
+        case TimelineSnapshotRestoreResult.duplicateId:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فایل پشتیبان شامل شناسه‌های تکراری است.')),
+          );
+          return;
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('بازیابی فایل پشتیبان انجام نشد.')),
+      );
+    }
   }
 
   Future<void> _openQuickCapture() async {
@@ -698,6 +776,8 @@ class _TimelineHomeState extends State<TimelineHome> {
       dateRangeLabel: _dateRangeLabel,
       onDateRangeTap:
           widget.filterTimelineByDateRange == null ? null : _openDateRangeFilter,
+      onRestoreSnapshot:
+          widget.restoreTimelineSnapshot == null ? null : _openSnapshotRestore,
     );
   }
 }
