@@ -13,6 +13,7 @@ class TimelineItem {
     required this.text,
     required this.createdAt,
     this.occurredAt,
+    this.reminderAt,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class TimelineItem {
   final String text;
   final DateTime createdAt;
   final DateTime? occurredAt;
+  final DateTime? reminderAt;
 
   DateTime get timelineAt => occurredAt ?? createdAt;
 }

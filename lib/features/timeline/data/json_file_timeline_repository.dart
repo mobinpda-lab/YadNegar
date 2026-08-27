@@ -17,7 +17,8 @@ class DuplicateTimelineItemIdException extends FormatException {
 class JsonFileTimelineRepository implements TimelineRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
+  static const int legacySchemaVersion = 1;
 
   final File file;
 
@@ -160,7 +161,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
 
     final version = decoded['schemaVersion'];
-    if (version != schemaVersion) {
+    if (version != schemaVersion && version != legacySchemaVersion) {
       throw UnsupportedTimelineStorageSchemaException(version);
     }
 
@@ -169,7 +170,11 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw const FormatException('Timeline storage items must be a JSON list.');
     }
 
-    return rawItems.map<TimelineItem>(_itemFromJson).toList(growable: true);
+    return rawItems
+        .map<TimelineItem>(
+          (value) => _itemFromJson(value, sourceSchemaVersion: version as int),
+        )
+        .toList(growable: true);
   }
 
   Future<void> _writeAll(List<TimelineItem> items) async {
@@ -223,7 +228,10 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
   }
 
-  TimelineItem _itemFromJson(dynamic value) {
+  TimelineItem _itemFromJson(
+    dynamic value, {
+    required int sourceSchemaVersion,
+  }) {
     if (value is! Map<String, dynamic>) {
       throw const FormatException('Timeline item must be a JSON object.');
     }
@@ -244,17 +252,10 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw FormatException('Unknown Timeline item type: $typeName.');
     }
 
-    DateTime? occurredAt;
-    final rawOccurredAt = value['occurredAt'];
-    if (rawOccurredAt != null) {
-      if (rawOccurredAt is! String) {
-        throw const FormatException('occurredAt must be an ISO-8601 string.');
-      }
-      occurredAt = DateTime.tryParse(rawOccurredAt);
-      if (occurredAt == null) {
-        throw FormatException('Invalid occurredAt value: $rawOccurredAt.');
-      }
-    }
+    final occurredAt = _optionalDateTime(value, 'occurredAt');
+    final reminderAt = sourceSchemaVersion >= schemaVersion
+        ? _optionalDateTime(value, 'reminderAt')
+        : null;
 
     return TimelineItem(
       id: id,
@@ -262,6 +263,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       text: text,
       createdAt: createdAt,
       occurredAt: occurredAt,
+      reminderAt: reminderAt,
     );
   }
 
@@ -272,6 +274,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       'text': item.text,
       'createdAt': item.createdAt.toIso8601String(),
       'occurredAt': item.occurredAt?.toIso8601String(),
+      'reminderAt': item.reminderAt?.toIso8601String(),
     };
   }
 
@@ -288,6 +291,21 @@ class JsonFileTimelineRepository implements TimelineRepository {
     final value = DateTime.tryParse(raw);
     if (value == null) {
       throw FormatException('$key must be a valid ISO-8601 value.');
+    }
+    return value;
+  }
+
+  DateTime? _optionalDateTime(Map<String, dynamic> json, String key) {
+    final raw = json[key];
+    if (raw == null) {
+      return null;
+    }
+    if (raw is! String) {
+      throw FormatException('$key must be an ISO-8601 string.');
+    }
+    final value = DateTime.tryParse(raw);
+    if (value == null) {
+      throw FormatException('Invalid $key value: $raw.');
     }
     return value;
   }
