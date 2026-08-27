@@ -46,8 +46,25 @@ class TimelineScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('یادنگار'),
-        centerTitle: false,
+        toolbarHeight: 88,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'بسم الله الرحمن الرحیم',
+              key: const Key('home-bismillah'),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            const Text('یادنگار'),
+          ],
+        ),
+        centerTitle: true,
         actions: [
           if (backupScope != null)
             IconButton(
