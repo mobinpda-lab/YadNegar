@@ -5,61 +5,60 @@ GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعی
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current product main: `9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
+Current product main: `885b988d996e7daf8e79e82ebe25b2d55e14f95a`
 
 ## کجا هستیم
-موج Reminder تکرارشونده، نمایش وضعیت Reminder و فیلتر «همه / دارای یادآور / بدون یادآور» کامل شده‌اند. اکنون PR #106 نیز پنج نوع Timeline را با آیکن‌های متفاوت روی `main` قابل‌تشخیص کرده و post-main Fast CI/Android آن کامل سبز است.
+Foundation اصلی Timeline/Reminder پایدار است. موج #108 / PR #109 نیز ادغام شده و اکنون کارت‌ها، فیلتر نوع، ثبت سریع و ویرایش همگی از یک mapping مشترک برای عنوان فارسی و آیکن نوع Timeline استفاده می‌کنند. pre-merge و post-main Fast CI/Android برای همین SHA کامل سبز هستند.
 
-## Reminder Foundation — Completed
-Parent #93 بسته شده است.
+## موج‌های تکمیل‌شده
+- Recurring Reminder — parent #93: تکمیل
+- Reminder Status — #99 / PR #100: تکمیل
+- Reminder Presence Filter — #102 / PR #103 + docs #105: تکمیل
+- Timeline Type Card Icons — #104 / PR #106 + docs #107: تکمیل
 
-- PR #96 / Issue #94: recurrence contract `none / daily / weekly` + schema v3 + backward-compatible v1/v2 reads
-- PR #97 / Issue #95: daily/weekly device-local scheduling + Persian UX + timezone-safe reconciliation
-- بدون Repository/Storage/Scheduler موازی و بدون exact-alarm permission
+#104 پس از docs PR #107 و post-main Fast CI `33098163806` بسته شد.
 
-## Reminder Status — #99 / PR #100
-محصول و مستندات نهایی ادغام و Verify شده‌اند. Issue #99 بسته است.
-
-## Reminder Presence Filter — #102 / PR #103
-Product main:
-`3428c1798a43fd39fadd5f47673d1bd0366583ca`
-
-Docs main after PR #105:
-`4d6dc18021b5d327b3a55972288df2b2a4d1c197`
-
-Docs post-main Fast CI `33095853727`: success. Issue #102 بسته است.
-
-## Timeline Type Icons — #104 / PR #106
+## Timeline Type Selector Icons — #108 / PR #109
 Final product head:
-`042491caadb405a31473b51986c263a6f9ba5d5c`
+`e6195dc11eebbed7db9b83fcefc7bf52c7bd9268`
 
 Merged main:
-`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
+`885b988d996e7daf8e79e82ebe25b2d55e14f95a`
 
 رفتار نهایی:
-- یادداشت => note outline
-- رویداد => event outline
-- تماس => call outline
-- ایده => lightbulb outline
-- فعالیت => check-circle outline
+- یادداشت => note outline + `یادداشت`
+- رویداد => event outline + `رویداد`
+- تماس => call outline + `تماس`
+- ایده => lightbulb outline + `ایده`
+- فعالیت => check-circle outline + `فعالیت`
 
-نوع فارسی آیتم، زمان Timeline، وضعیت Reminder و فیلتر Reminder قبلی بدون تغییر مانده‌اند.
+همین metadata مشترک در چهار محل reuse می‌شود:
+- کارت Timeline
+- فیلتر نوع
+- Quick Capture
+- Edit
 
-Scope واقعی فقط دو فایل بود:
+Mappingهای خصوصی/تکراری قبلی حذف شدند.
+
+Scope واقعی فقط چهار فایل Presentation/Test بود:
+- `lib/features/timeline/presentation/timeline_home.dart`
+- `lib/features/timeline/presentation/timeline_item_type_presentation.dart`
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_type_icon_test.dart`
+- `test/features/timeline/presentation/timeline_type_selector_icon_test.dart`
 
-Pre-merge exact-head:
-- Fast CI `33095681567`: success
-- Android `33095681514`: success across full chain
+Pre-merge exact-head روی `e6195dc1...`:
+- Fast CI `33099191968`: success
+- Android `33099192004`: success full chain
+- live mergeability=true
+- exact expected-head merge: success
 
-Post-main exact SHA:
-- Fast CI `33096491732`: success
-- Android `33096491859`: success
+Post-main روی `885b988d...`:
+- Fast CI `33103519511`: success
+- Android `33103519546`: success full chain
 - Build/Candidate: success
 - emulator Smoke/Recovery: success
 - Release Readiness: success
-- Release Draft: success
+- deterministic Release Draft: success
 - Approval/Rollback evidence: success
 
 ## وضعیت واقعی محصول
@@ -83,18 +82,19 @@ Compatibility: v1/v2 reads فعال است.
 قانون عملی Merge:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-## مستندات فعال #104
-Branch: `docs/timeline-type-icons-live`
+## مستندات فعال #108
+Branch: `docs/timeline-type-selector-icons-live`
 
-هدف: ثبت outcome واقعی #104/#106 و post-main Green در چهار سند live/canonical.
+این Branch قبل از Merge محصول ساخته شد اما دست‌نخورده ماند؛ پس از Merge، بدون Force به exact main `885b988d...` Fast-forward شد و فقط اکنون با Evidence واقعی به‌روزرسانی می‌شود.
 
 Gate Docs:
-1. exact docs head
-2. Fast CI Green همان Head
-3. live mergeability=true
-4. exact expected-head merge
-5. post-main Fast CI
-6. سپس Close #104
+1. Fresh compare = فقط چهار سند canonical
+2. exact docs head
+3. Fast CI Green همان Head
+4. live mergeability=true
+5. exact expected-head merge
+6. post-main Fast CI
+7. سپس Close #108
 
 ## اصل Maximum Parallel
 - Product / Release / Automation / Docs تا حد امن موازی
@@ -105,11 +105,19 @@ Gate Docs:
 - Evidence stale/fake ممنوع
 - مستندسازی هم‌زمان
 
+## صف فعلی
+- #108: فقط مستندات نهایی و proof باقی مانده است.
+- #19: محدودیت Ruleset Write؛ باز می‌ماند.
+- Issue محصول جدیدی از قبل در صف نیست.
+
+پس از بسته‌شدن #108، Slice بعدی فقط با Fresh Audit کد/UX و اثبات نیاز واقعی کوچک و reuse-first انتخاب می‌شود.
+
 ## ادامه
-1. Docs #104 را exact-head Verify و Merge کن.
-2. post-main Fast CI مستندات را Verify کن و #104 را Completed ببند.
-3. Queue واقعی را Fresh Audit کن و فقط بعد از اثبات Scope مستقل Slice بعدی را انتخاب کن.
-4. #19 تا Ruleset Write واقعی باز بماند.
+1. چهار سند #108 را Fresh compare کن.
+2. PR Docs را باز کن و exact-head Fast CI بگیر.
+3. با mergeability زنده + expected-head ادغام کن.
+4. post-main Fast CI را Verify و #108 را Completed ببند.
+5. سپس Queue واقعی و کد را Fresh Audit کن.
 
 ## Trigger
 `ادامه یادنگار`
