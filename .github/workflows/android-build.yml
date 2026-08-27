@@ -86,15 +86,44 @@ jobs:
 
       - name: Verify release-candidate artifact and emit evidence
         shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           apk="build/app/outputs/flutter-apk/app-release.apk"
           test -s "$apk"
           mkdir -p build/release-candidate
-          sha256sum "$apk" | tee build/release-candidate/SHA256SUMS.txt
+
+          apk_sha=$(sha256sum "$apk" | awk '{print $1}')
+          printf '%s  %s\n' "$apk_sha" "$apk" | tee build/release-candidate/SHA256SUMS.txt
+
           bytes=$(stat -c %s "$apk")
-          printf 'bytes=%s\n' "$bytes" | tee build/release-candidate/ARTIFACT_INFO.txt
-          printf 'signing=debug-key-release-mode-not-production-signed\n' | tee -a build/release-candidate/ARTIFACT_INFO.txt
+          version=$(awk '$1 == "version:" {print $2; exit}' pubspec.yaml)
+          application_id=$(awk -F'"' '/applicationId = / {print $2; exit}' android/app/build.gradle.kts)
+          signing='debug-key-release-mode-not-production-signed'
+
+          test -n "$version"
+          test -n "$application_id"
+          test -n "${SOURCE_SHA:-}"
+          test -n "${GITHUB_SHA:-}"
+
+          {
+            printf 'bytes=%s\n' "$bytes"
+            printf 'signing=%s\n' "$signing"
+          } | tee build/release-candidate/ARTIFACT_INFO.txt
+
+          {
+            printf 'format=yadnegar-release-manifest-v1\n'
+            printf 'artifact=app-release.apk\n'
+            printf 'version=%s\n' "$version"
+            printf 'application_id=%s\n' "$application_id"
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'validation_sha=%s\n' "$GITHUB_SHA"
+            printf 'apk_sha256=%s\n' "$apk_sha"
+            printf 'bytes=%s\n' "$bytes"
+            printf 'signing=%s\n' "$signing"
+            printf 'release_class=release-mode-candidate-not-production-signed\n'
+          } | tee build/release-candidate/RELEASE_MANIFEST.txt
 
       - name: Upload release-candidate APK and evidence
         uses: actions/upload-artifact@v4
@@ -104,6 +133,7 @@ jobs:
             build/app/outputs/flutter-apk/app-release.apk
             build/release-candidate/SHA256SUMS.txt
             build/release-candidate/ARTIFACT_INFO.txt
+            build/release-candidate/RELEASE_MANIFEST.txt
           if-no-files-found: error
           retention-days: 14
 
