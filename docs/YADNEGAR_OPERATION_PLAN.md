@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 3.6 — Wave 7 Verified / Release Governance Active
+## نسخه 3.7 — Release Manifest Verified / Readiness Gate Active
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -20,22 +20,33 @@ Block یک Lane، Lane مستقل را متوقف نمی‌کند.
 
 ## 2. main فعلی
 Verified main:
-`9ffa1041c3205a35d0aa0744236e9e4dcbb28333`
+`a29fe46ba9c9c50be107e36b6c618ddc1a0c6e95`
 
-این main شامل Release Candidate gate و Android Emulator/Recovery gate است.
+این main شامل:
+- Release Candidate gate
+- deterministic SHA/size evidence
+- Android Emulator/Recovery gate
+- deterministic `RELEASE_MANIFEST.txt`
+است.
 
-PR #83 final head:
-`60d1f21ce3574e3b6c04478351136acf35e9e8e7`
+### آخرین Integration — PR #85 / Issue #84
+Final PR head:
+`2a456003899ec24ab310a86f5f521c68a97fb483`
 
-Pre-merge proof:
-- CI `33069328808`: success
-- Android `33069328907`: success
+Pre-merge:
+- CI `33070804473`: success
+- Android `33070804465`: success
+- Build: success
+- Manifest: success
+- Smoke/Recovery: success
+
+Post-main روی `a29fe46...`:
+- CI `33071541211`: success
+- Android `33071541182`: success
 - android-build: success
 - android-smoke-recovery: success
 
-Post-main:
-- CI `33070027775`: success
-- Android `33070027900`: در زمان این commit هنوز active؛ Fresh-read نهایی الزامی است
+Issue #84 completed است.
 
 ## 3. Product Foundation — Stable
 Main شامل:
@@ -55,75 +66,87 @@ Main شامل:
 
 هیچ Model / Repository / Storage / AppShell / Reminder DB موازی وجود ندارد.
 
-## 4. Wave 7 — Verified Complete
-Contract:
-`E2E + build + artifact + smoke + recovery`
+## 4. Release Foundation — Verified
+Verified chain:
+`Fast CI → Debug APK → Release Candidate → SHA/size → Release Manifest → Emulator Smoke → Real Storage Recovery`
 
-Completed:
-- PR #81 / Issue #80 — deterministic Android Release Candidate artifact gate
-- PR #83 / Issue #82 — Android emulator startup + real storage recovery proof
+Manifest اطلاعات زیر را به‌صورت deterministic ثبت می‌کند:
+- app version
+- application id
+- exact source SHA
+- validation SHA
+- APK SHA-256
+- byte size
+- signing state
+- release class
 
 Current release mode هنوز debug-signed است و Production-signed نیست.
 
 ## 5. Release Governance — Active
-سند جامع Release Governance را بعد از Release Candidate چنین تعریف می‌کند:
-`version/tag + exact SHA + validation evidence + release notes + rollback/recovery`
-
-### Active Slice — Issue #84 / PR #85
-`release: add deterministic release manifest evidence`
+### Active Slice — Issue #87 / PR #88
+`release: aggregate candidate readiness evidence`
 
 Branch:
-`release/deterministic-release-manifest`
+`release/candidate-readiness-evidence`
 
-Initial head:
-`cb8bd2d23dfc06bdb8f8ab20869dabb8edbfd340`
+Exact head هنگام این بروزرسانی:
+`32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
 
 Scope:
 - reuse همان Android workflow
-- حفظ Debug APK، Candidate و Smoke/Recovery
-- افزودن `RELEASE_MANIFEST.txt`
-- ثبت version از `pubspec.yaml`
-- ثبت application id
-- ثبت exact source SHA
-- ثبت APK SHA-256 و size
-- ثبت signing state صریح
+- حفظ Build/Manifest/Smoke/Recovery
+- افزودن dependent job به نام `release-readiness`
+- دانلود exact-run Candidate evidence
+- دانلود exact-run Smoke/Recovery evidence
+- تطبیق Manifest با source Head SHA
+- Verify کردن startup/recovery/storage marker/staging cleanup
+- تولید `RELEASE_READINESS.txt`
+- گزارش صریح Production signing blocker
+
+Validation فعلی:
+- Fast CI `33073336472`: success
+- Android `33073336417`: active هنگام این revision؛ Fresh-read الزامی است
 
 Out of scope:
 - keystore/secret واقعی
 - Production signing
 - Play Store publish
 - tag/release mutation
+- Product/Core behavior change
 
 ## 6. Automation / Docs
 ### Automation
 Issue #19 باز است.
 
-Ruleset `main-protection`:
+Ruleset فعلی:
 - PR required
 - deletion blocked
 - non-fast-forward blocked
-- required status checks هنوز Platform-level تنظیم نشده‌اند
+- required status checks هنوز Platform-level enforce نشده‌اند
 
-Fresh tool audit در 2026-08-27 فقط Ruleset Read دارد، نه Write.
+Connected tooling در Fresh audit فعلی Ruleset Write ارائه نمی‌کند.
 
 ### Documentation
-Active docs branch:
+Active docs PR:
+`#86 — docs: sync Wave 7 completion and release governance`
+
+Branch:
 `docs/release-wave7-final`
 
-هدف:
+چهار سند اجرایی با GitHub Reality هم‌زمان Sync می‌شوند:
 - Current State
 - Persian Handoff
 - Operation Plan
-را با Wave 7 و Release Governance هم‌تراز کند.
+- Canonical Governance
 
 Docs-only PR فقط بعد از exact-head Fast CI و Fresh mergeability Merge شود.
 
 ## 7. Merge Contract
 ### Product / Release
 1. exact current head
-2. Fast CI Green
-3. Android Build Green
-4. relevant build/artifact/smoke jobs Green
+2. Fast CI Green همان Head
+3. Android Build Green همان Head
+4. relevant artifact/smoke/recovery/readiness jobs Green
 5. live mergeability=true
 6. merge با `expected_head_sha`
 7. post-main proof
@@ -150,13 +173,13 @@ Historical Green برای Head جدید معتبر نیست.
 
 ## 9. Queue
 ### Active
-1. PR #85 — deterministic Release Manifest evidence
-2. docs/release-wave7-final — canonical current-state sync
-3. Issue #19 — Ruleset enforcement gap
+1. PR #88 / Issue #87 — aggregate Candidate readiness evidence
+2. PR #86 — concurrent canonical/current-state documentation sync
+3. Issue #19 — required-status enforcement gap
 
 ### Next
 4. post-main proof برای هر Merge
-5. Release Notes/Version/Tag governance فقط با Evidence واقعی
+5. Release Notes/Version/Tag governance فقط با Evidence واقعی و بدون Publish خودکار
 6. Production signing در Slice امنیتی جدا بعد از تعیین مالکیت keystore/credentials
 
 ## 10. اصل سرعت
