@@ -13,6 +13,7 @@ on:
       - 'pubspec.lock'
       - '.github/workflows/android-build.yml'
       - '.github/scripts/android-smoke-recovery.sh'
+      - '.github/scripts/release-draft.sh'
   pull_request:
     branches: [main]
     paths:
@@ -23,6 +24,7 @@ on:
       - 'pubspec.lock'
       - '.github/workflows/android-build.yml'
       - '.github/scripts/android-smoke-recovery.sh'
+      - '.github/scripts/release-draft.sh'
   workflow_dispatch:
 
 permissions:
@@ -250,5 +252,42 @@ jobs:
         with:
           name: yadnegar-release-readiness
           path: build/release-readiness/RELEASE_READINESS.txt
+          if-no-files-found: error
+          retention-days: 14
+
+  release-draft:
+    needs:
+      - release-readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download exact-run candidate evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-android-release-candidate
+          path: build/release-draft/candidate
+
+      - name: Download exact-run release readiness evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-release-readiness
+          path: build/release-draft/readiness
+
+      - name: Generate deterministic version and release-notes draft
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: bash .github/scripts/release-draft.sh
+
+      - name: Upload release draft evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-release-draft
+          path: |
+            build/release-draft/output/RELEASE_VERSION.txt
+            build/release-draft/output/RELEASE_NOTES_DRAFT.md
           if-no-files-found: error
           retention-days: 14
