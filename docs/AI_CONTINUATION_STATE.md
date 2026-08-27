@@ -32,7 +32,9 @@ Merge used exact `expected_head_sha` and produced main:
 
 Post-main proof on this exact main:
 - YadNegar CI `33074363600`: success
-- YadNegar Android Build `33074363581`: active at this documentation revision; final Android/Readiness Green must be fresh-read before any claim
+- YadNegar Android Build `33074363581`: active at this documentation revision
+- exact `android-build` job `98524595734`: success, including debug APK and release-candidate APK build/upload
+- exact `android-smoke-recovery` job `98526444578`: in progress; downstream readiness must be fresh-read before any final post-main Green claim
 
 Issue #87 is closed/completed.
 
@@ -98,7 +100,7 @@ Purpose:
 
 Validation at this revision:
 - YadNegar CI `33074488110`: success
-- YadNegar Android Build `33074488158`: active; full Build → Smoke/Recovery → Readiness → Release Draft chain must be fresh-read before merge
+- YadNegar Android Build `33074488158`: in progress; full Build → Smoke/Recovery → Readiness → Release Draft chain must be fresh-read before merge
 
 PR #90 is mergeable at the latest fresh read, but merge is forbidden until both #88 post-main Android proof and all exact-head #90 gates are Green.
 
@@ -129,7 +131,7 @@ Until real platform enforcement is writable, operational merge safety remains:
 - docs move concurrently with implementation
 
 ## Next Actions
-1. Fresh-read post-main Android run `33074363581` for main `8656564b...`; require Build + Smoke/Recovery + Readiness Green.
+1. Fresh-read completion of post-main Android run `33074363581` for main `8656564b...`; require Smoke/Recovery + Readiness Green after already-verified APK build success.
 2. Validate PR #90 exact head `f3aab864...`: Fast CI + Android Build + Smoke/Recovery + Readiness + Release Draft Green.
 3. Merge #90 only after both previous conditions plus fresh head/mergeability and exact `expected_head_sha`.
 4. Verify #90 post-main.
