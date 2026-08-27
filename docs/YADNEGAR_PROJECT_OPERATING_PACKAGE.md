@@ -1,291 +1,281 @@
-# YADNEGAR PROJECT OPERATING PACKAGE v1.0
+# YADNEGAR PROJECT OPERATING PACKAGE v1.1
 ## مرجع عملیاتی واحد پروژه یادنگار
 
 **Project:** YadNegar / یادنگار  
 **Repository:** `mobinpda-lab/YadNegar`  
 **Default Branch:** `main`  
-**Technology Target:** Flutter / Dart  
-**Architecture Target:** Clean Architecture + Feature-Based Architecture + RTL Persian UI  
+**Technology:** Flutter / Dart  
+**Architecture:** Feature-based + Clean boundaries + Persian RTL-first UI  
 **Reality Authority:** GitHub Repository State  
-**Status:** Canonical operational reference
+**Status:** Canonical Governance
 
 ## 0. اصول غیرقابل مذاکره
-1. GitHub مرجع عملیاتی حقیقت برای کد، Branch، Commit، PR، Workflow، CI و مستندات است.
-2. این سند مرجع فعال قواعد توسعه یادنگار است. Snapshotها و گزارش‌های گفتگو جایگزین Audit واقعی Repository نیستند.
-3. هدف، تولید نرم‌افزار سالم و قابل‌استفاده در ساعت‌ها به‌جای روزهاست؛ سرعت از موازی‌سازی، حذف انتظار و جلوگیری از دوباره‌کاری می‌آید، نه از حذف کنترل کیفیت.
-4. کارهای مستقل به‌صورت موازی انجام می‌شوند؛ کار سریالی فقط در صورت وجود وابستگی واقعی مجاز است.
-5. هیچ تغییر، تست، Build، Workflow یا Commit موفق تلقی نمی‌شود مگر مدرک مستقیم از همان Ref/Commit وجود داشته باشد.
-6. قابلیت یا ساختار موجود قبل از ایجاد نمونه جدید بررسی می‌شود. Model، Repository، Storage، Workflow یا Foundation موازی بدون دلیل معماری ایجاد نمی‌شود.
-7. تغییرات کوچک، قابل Review و قابل Rollback باشند.
-8. توسعه عادی و پرریسک مستقیماً روی `main` انجام نشود؛ Branch/PR مسیر پیش‌فرض است.
-9. معماری فقط پس از Audit و بررسی اثر تغییر می‌کند.
-10. مستندات بخش مهندسی پروژه‌اند و باید همراه تغییرات مهم به‌روز شوند.
+1. GitHub مرجع عملیاتی حقیقت برای کد، Branch، Commit، PR، Workflow، CI، Build و مستندات است.
+2. هر Session مهم با Fresh Audit شروع می‌شود؛ حافظه و Conversation جای Audit را نمی‌گیرند.
+3. هدف، نرم‌افزار سالم در ساعت‌ها به‌جای روزهاست. سرعت از موازی‌سازی، Automation، reuse و حذف انتظار می‌آید؛ نه از حذف Gate.
+4. Laneهای مستقل باید همزمان حرکت کنند. Block یک Lane نباید Lane مستقل دیگر را متوقف کند.
+5. Evidence فقط برای Ref/SHA دقیق معتبر است. Green تاریخی برای Head جدید معتبر نیست.
+6. قبل از ساخت هر Model/Repository/Storage/AppShell/Workflow/Foundation، نمونه موجود Audit و reuse شود.
+7. Fake Build/Test/Persistence/Release Evidence ممنوع است.
+8. تغییرات پرریسک مستقیماً روی `main` انجام نشوند؛ Branch/PR مسیر پیش‌فرض است.
+9. تغییرات کوچک، قابل Review و قابل Rollback باشند.
+10. مستندات همزمان با Implementation جلو بروند و سند اجرایی رقیب ساخته نشود.
 
-## 1. مدل مرجع حقیقت
-ترتیب اعتبار منابع:
+## 1. ترتیب مرجع حقیقت
+`GitHub Reality > approved architecture decisions > this canonical package > current execution docs > conversation memory`
 
-`GitHub Reality > ADR/Architecture Decision Approved > این سند Canonical > مستندات جاری و اجرایی > حافظه/گفتگو`
+در اختلاف منابع:
+`Verify GitHub → identify discrepancy → repair current docs → preserve material history`
 
-اگر دو منبع اختلاف داشتند:
-`Verify GitHub → مشخص‌کردن اختلاف → اصلاح سند جاری → حفظ سوابق تاریخی`
+## 2. Trigger «ادامه یادنگار»
+این عبارت دستور اجرایی است:
+1. main/PR/Issue/Workflow زنده Audit شود.
+2. Canonical + Current State خوانده شود.
+3. نزدیک‌ترین Gap واقعی انتخاب شود.
+4. Work به Laneهای مستقل شکسته شود.
+5. reuse قبل از rebuild اعمال شود.
+6. Implementation واقعی روی GitHub انجام شود.
+7. exact-head Validation گرفته شود.
+8. Merge فقط با Gate امن انجام شود.
+9. post-main proof گرفته شود.
+10. Docs همزمان sync و گزارش مالک کوتاه ارائه شود.
 
-## 2. پروتکل شروع و ادامه کار
-هر Session یا ادامه‌ی مهم با این چرخه آغاز می‌شود:
+## 3. مدل کار موازی
+### Lane A — Core / Data
+- Domain contracts
+- Timeline model/repository
+- Persistence, schema, migration, recovery
+- architecture boundaries
 
-`Observe → Audit → Understand → Plan → Parallelize → Execute → Validate → Document → Report`
+### Lane B — Product / UX
+- Persian RTL
+- Timeline / Quick Capture
+- Search/Filter/Edit/Delete/Undo
+- Backup/Restore/Reminder UX
 
-پیش از تغییر باید بررسی شود:
-- دسترسی واقعی GitHub: Read / Write / Actions
-- Repository و Branch واقعی
-- HEAD فعلی `main`
-- Commitهای اخیر
-- PRهای باز و Head دقیق آن‌ها
-- Workflow و نتیجه CI برای Ref دقیق
-- ساختار واقعی پروژه و فایل‌های موجود
-- معماری و مستندات فعال
-- کارهای در حال انجام و ریسک تداخل
-- پیش‌نیازها و روش Validation
+### Lane C — Release / Platform
+- Android build/release candidate
+- artifact evidence
+- smoke/E2E/recovery
+- release governance/signing only after explicit audit
 
-شروع از حافظه بدون Audit ممنوع است.
-
-## 3. Trigger «ادامه یادنگار»
-عبارت `ادامه یادنگار` یک دستور اجرایی است.
-
-با دریافت آن:
-1. GitHub زنده بررسی شود.
-2. این سند و Current State خوانده شود.
-3. نزدیک‌ترین Gap واقعی و ناتمام از Repository انتخاب شود.
-4. کارهای مستقل تا حد امن موازی شوند.
-5. تغییر کم‌ریسک و مشخص در Branch مناسب اجرا شود.
-6. Analyze/Test/Build/Workflow حسب مورد بررسی شود.
-7. نتیجه با مدرک گزارش و وضعیت جاری مستند شود.
-
-این Trigger اجازه حدس، حذف تست، بازنویسی مخرب یا تغییر معماری بدون Audit را نمی‌دهد.
-
-## 4. مدل توسعه موازی
-سه Workstream اصلی پروژه:
-
-### Lane A — Core / Domain / Foundation
-مسئولیت:
-- Foundation پروژه Flutter
-- Domain entities/value objects
-- Repository contracts
-- Business rules
-- Storage abstractions
-- Shared utilities
-- Architecture boundaries
-
-### Lane B — UI / Feature
-مسئولیت:
-- RTL فارسی
-- App Shell و Navigation
-- Timeline
-- Quick Capture
-- صفحات و Featureهای کاربردی
-- Accessibility و UX روزمره
-
-### Lane C — CI / Automation / Documentation
-مسئولیت:
+### Lane D — CI / Automation / Documentation
 - GitHub Actions
 - Analyze/Test/Build
-- Automation
-- Quality gates
-- مستندسازی
-- Current-state و Handoff records
+- stale-run cancellation
+- evidence capture
+- Current State / Handoff / Operation Plan
 
-اگر دو Lane روی Foundation یا فایل مشترک تداخل ندارند، باید همزمان پیش بروند. یک Lane مسدود نباید Lane مستقل دیگر را متوقف کند.
+Rule:
+`Detect overlap → assign ownership → execute independently → validate → integrate`
 
-## 5. مرزهای موازی‌سازی
-پیش از اجرای همزمان بررسی شود:
-- فایل‌های مشترک
-- Interface/Contract مشترک
-- مدل داده و Migration
-- Storage و Persistence
-- App Shell/Navigation foundation
-- Workflowهای مشترک
-- Branch/PRهای فعال
+## 4. Definition of Ready
+Task زمانی Ready است که:
+- objective و value روشن باشد
+- existing implementation Audit شده باشد
+- scope/out-of-scope مشخص باشد
+- dependency و integration point معلوم باشد
+- validation و evidence تعریف شده باشد
+- parallel-safety معلوم باشد
 
-قاعده:
-`Detect Conflict → Assign Ownership → Execute Without Overlap → Validate → Integrate`
+ابهام کوچک نباید پروژه را متوقف کند؛ ابهام معماری/داده/امنیت قبل از تغییر پرریسک باید حل شود.
 
-## 6. مسیرهای تغییر
-### Fast Path
-برای تغییر کوچک و کم‌ریسک:
-`Audit → Change → Focused Validation → Evidence → PR/Review → Merge`
+## 5. Definition of Done
+`Working Change + Tests/Validation + Exact Evidence + Documentation + Safe Integration`
 
-### Parallel Feature Path
-برای چند کار مستقل:
-`Decompose → Define Boundaries → Execute Concurrently → Validate Independently → Integrate → Review`
+نوشتن فایل یا سبزشدن Placeholder به‌تنهایی Done نیست.
 
-### Foundation Path
-برای معماری، Storage، Migration، Security یا تغییرات Cross-Feature:
-`Audit → Impact Review → Design/ADR if needed → Implement → Recovery/Migration Plan → Validate → CI → Review → Document`
+## 6. معماری و Reuse Contract
+Current implementation یک Timeline foundation مشترک دارد:
+- one `TimelineItem`
+- one `TimelineRepository` contract
+- one crash-recoverable JSON storage
+- one App Shell / Timeline flow
+- one schema-versioned parser/serializer path
 
-همیشه سریع‌ترین مسیر امن انتخاب شود، نه سریع‌ترین مسیر بدون کنترل.
+Feature جدید نباید Foundation موازی ایجاد کند مگر Audit و ADR واقعی آن را لازم کند.
 
-## 7. Definition of Ready
-کار زمانی Ready است که موارد زیر روشن باشند:
-- خروجی موردنیاز
-- دلیل و ارزش آن
-- وضعیت موجود
-- Scope و Boundary
-- وابستگی‌ها
-- Branch هدف
-- روش Validation
-- Evidence موردنیاز
-- Integration point
+Dependency direction:
+`Presentation → Application → Domain`
 
-ابهام کوچک نباید پروژه را متوقف کند؛ اما ابهام معماری یا داده‌ای باید قبل از تغییر پرریسک حل شود.
+Platform/Data implementations باید پشت boundary بمانند؛ Domain نباید مستقیم به Flutter plugin یا storage implementation وابسته شود.
 
-## 8. Definition of Done
-یک Task فقط زمانی Done است که موارد قابل‌اعمال کامل باشند:
+## 7. Data Governance
+Production storage اکنون schema v2 است و v1 را backward-compatible می‌خواند.
 
-`Implementation + Validation + Evidence + Documentation + Safe Integration`
+هر schema/storage change مهم حسب مورد باید داشته باشد:
+`Versioning + Backward Compatibility + Migration/Safe Upgrade + Validation + Recovery/Rollback`
 
-برای Product work معمولاً:
-`Working Software + Tests + Analyze + Build/CI Evidence + Review + Merge`
+داده کاربر برای ساده‌سازی توسعه نباید destructive rewrite شود.
 
-نوشتن فایل به‌تنهایی تحویل محسوب نمی‌شود.
+Backup/Restore باید production parser/serializer/recovery path را reuse کند؛ raw overwrite و serializer دوم ممنوع است.
 
-## 9. معماری هدف
-هدف معماری یادنگار:
-- Flutter / Dart
-- Clean Architecture
-- Feature-Based Architecture
-- Domain مستقل از Infrastructure تا حد منطقی
-- Dependency direction کنترل‌شده
-- Shared foundation پایدار
-- Persian RTL-first UI
+## 8. Reminder Governance
+Reminder روی همان TimelineItem و storage موجود سوار است.
 
-این موارد «Target» هستند و فقط وقتی Implementation واقعی در GitHub وجود داشته باشد می‌توان آن‌ها را وضعیت فعلی دانست.
+قواعد:
+- no sidecar Reminder database/repository
+- notification plugin بیرون Domain
+- persist-first: schedule/cancel failure نباید داده ذخیره‌شده را rollback کند
+- startup/Restore reconciliation از persisted Timeline انجام شود
+- recurring reminders فقط در Slice جدا پس از Audit
+- exact-alarm permission فقط اگر نیاز محصول و compatibility proof آن را توجیه کند
 
-## 10. حوزه محصول
-یادنگار برای ثبت و مرور سریع اطلاعات روزمره با محور Timeline طراحی می‌شود.
+## 9. CI / Quality
+Fast chain:
+`flutter pub get → flutter analyze → flutter test`
 
-حوزه‌های اولیه محصول:
-- یادداشت
-- رویداد
-- تماس
-- ایده
-- فعالیت روزانه
-- Timeline
-- ثبت سریع (Quick Capture)
-- تاریخ و زمان
-- جستجو/فیلتر در مرحله مناسب
+Android/Product/Release chain حسب Scope:
+`Fast CI → Android Build → Artifact Verify/Upload → live mergeability → expected-head merge → post-main proof`
 
-هر Feature جدید باید قبل از ایجاد مدل یا Storage مستقل، با Foundation مشترک تطبیق داده شود.
+Workflow rules:
+- reuse موجود قبل از Workflow جدید
+- `concurrency/cancel-in-progress` برای جلوگیری از runهای stale
+- artifact باید واقعی و قابل Verify باشد
+- build یک SHA به SHA دیگر نسبت داده نشود
 
-## 11. UI و تجربه کاربری
-اصول UI:
-- فارسی و RTL-first
-- ساده، سریع و کم‌اصطکاک
-- مناسب ثبت روزمره
-- سلسله‌مراتب بصری آرام
-- Navigation قابل پیش‌بینی
-- Timeline به‌عنوان محور تجربه اصلی
-- عدم ایجاد بدهی معماری برای رسیدن سریع به ظاهر
-
-تغییر گسترده UI قبل از Foundation نباید قراردادهای معماری ناپایدار بسازد.
-
-## 12. Data / Storage Governance
-تا زمانی که Storage واقعی انتخاب و پیاده‌سازی نشده است، هیچ فناوری ذخیره‌سازی به‌عنوان تصمیم قطعی ثبت نمی‌شود.
-
-هر تغییر آینده در Schema/Storage باید حسب مورد شامل این موارد باشد:
-`Versioning + Migration Path + Backward Compatibility + Validation + Recovery/Rollback`
-
-داده موجود کاربر نباید برای ساده‌سازی توسعه حذف یا بازنویسی مخرب شود.
-
-## 13. CI و Quality
-زنجیره هدف Validation برای Flutter:
-
-`flutter pub get → flutter analyze → flutter test → flutter build`
-
-در مراحل بعد، حسب نیاز:
-- Unit tests
-- Widget tests
-- Integration tests
-- RTL checks
-- Golden tests برای UI حساس
-- Performance checks
-- Migration tests
-
-GitHub Actions مدرک رسمی Repository است. اجرای محلی Feedback سریع است و جای Evidence مربوط به Ref دقیق را نمی‌گیرد.
-
-Workflow موفق Placeholder به معنی Validation واقعی Flutter نیست.
-
-## 14. Git و PR Governance
+## 10. Git / PR Governance
 - Branch کوچک و هدفمند
-- Commit کوچک و تک‌منظوره
-- عدم Force update در روند عادی
-- عدم Rewrite تاریخچه بدون ضرورت و تصمیم روشن
-- PR با Scope مشخص
-- Validation قبل از Merge
-- Merge فقط وقتی Head دقیق بررسی شده باشد
-- بازنویسی تغییر موجود بدون Audit ممنوع
+- PR یک هدف اصلی
+- Out-of-scope روشن
+- commits قابل Review/Rollback
+- هیچ stale merge
+- قبل از Merge، exact current head دوباره خوانده شود
+- Merge محصول/Release فقط با exact-head CI + Android و live mergeability
+- Merge با `expected_head_sha`
+- بعد از Merge، main تازه Verify شود
 
-## 15. مستندسازی
-طبقه‌بندی مستندات:
-1. **Canonical Governance:** قواعد عملیاتی پروژه؛ همین سند.
-2. **Current-State Records:** Snapshot دقیق و تاریخ‌دار وضعیت واقعی.
-3. **Architecture/ADR:** تصمیمات معماری تأییدشده.
-4. **Product/Feature Records:** نیازها، قرارداد و Evidence هر Feature.
-5. **Historical Records:** Auditهای قدیمی، Handoffها و سوابق تکامل.
+## 11. Merge Contract
+### Product / Release
+1. exact current head
+2. Fast CI Green همان Head
+3. Android/Release Gate Green همان Head
+4. relevant artifact steps Green
+5. live mergeability=true
+6. `expected_head_sha=exact head`
+7. post-main CI/Android proof
 
-هیچ سند فعال دیگری نباید مرجع Governance موازی با این سند ایجاد کند.
+### Docs-only
+1. exact current head
+2. Fast CI Green
+3. live mergeability=true
+4. expected-head lock
+5. post-main Fast CI proof
 
-## 16. Continuity / AI Handoff
-دانش پروژه باید مستقل از پایان یک گفتگو باقی بماند.
+## 12. Documentation-as-Code
+Canonical Governance:
+`docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
 
-ترتیب ادامه:
-`Read Canonical → Read Current State → Audit GitHub → Check Active Work → Check Decisions/Risks → Continue`
+Current execution plan:
+`docs/YADNEGAR_OPERATION_PLAN.md`
 
-دانشی که فقط در Conversation باشد، مرجع عملیاتی امن محسوب نمی‌شود.
+Current state:
+`docs/AI_CONTINUATION_STATE.md`
 
-## 17. Evidence و گزارش
-هر تغییر مهم باید Trace داشته باشد:
+Persian Handoff:
+`docs/AI_HANDOFF_CURRENT_FA.md`
 
-`Requirement → Change → Commit → Validation → Evidence → Documentation → Integration`
+Comprehensive historical/product reference:
+`docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
 
-گزارش مدیریتی ترجیحاً شامل این موارد است:
-`کجا هستیم | چه انجام شد | وضعیت | مدرک | مانع/ریسک | قدم بعد`
+Temporary active-state files باید پس از پایان Wave حذف شوند و به Canonical رقیب تبدیل نشوند.
 
-برچسب‌ها:
-- **واقعیت:** مستقیم Verify شده
-- **برنامه:** اقدام بعدی
-- **مسدود:** وابستگی واقعی مانع است
-- **نیاز به تصمیم:** تصمیم Owner لازم است
+## 13. Verified Current Baseline — 2026-08-27
+Verified main:
+`f85d804a84a4033c94e2dc843a6aa87f2d848991`
+
+Post-main evidence:
+- YadNegar CI `33051308713`: success
+- YadNegar Android Build `33051308694`: success
+- APK build/verify/upload: success
+
+Main product flow:
+`Quick Capture → Persist → Timeline → Search/Filter → Edit → Delete/Undo → Export → Backup/Restore → Reminder`
+
+Verified main capabilities include:
+- Persian RTL Timeline
+- Note/Event/Call/Idea/Activity
+- crash-recoverable JSON persistence
+- Search/Type/Date Range
+- occurredAt
+- Delete/Undo
+- Export
+- validated Backup/Restore
+- schema-v2 optional reminderAt with v1 compatibility
+- Persian Reminder UX
+- Android local notifications
+- startup/Restore Reminder reconciliation
+
+## 14. Reminder Integration Record
+### PR #76 / Issue #75
+- final head `6ab46b5029b3070e43e1524431b821a766326eb2`
+- CI `33046525150`: success
+- Android `33046525158`: success
+- merged main `fceb383aad507eed354d4b044e3939aacf5328d0`
+- post-main CI `33046893279`: success
+- post-main Android `33046893295`: success
+
+### PR #78 / Issue #77
+- final head `22bc0d1d855c98521dc554a770ff41e8475f532b`
+- CI `33050851398`: success
+- Android `33050851419`: success
+- 106 tests passed
+- exact Runner-generated dependency lock
+- expected-head merge
+- merged main `f85d804a84a4033c94e2dc843a6aa87f2d848991`
+- post-main CI `33051308713`: success
+- post-main Android `33051308694`: success
+
+Issue #77 is completed.
+
+## 15. Release Governance / Active Wave 7
+Roadmap after Reminder/Backup/Export is Release:
+`E2E + build + artifact + smoke + recovery`
+
+Active Issue #80 / PR #81:
+- extend existing Android workflow
+- preserve Debug artifact
+- produce release-mode Candidate artifact
+- verify non-empty output
+- emit SHA-256 and byte-size evidence
+- upload artifact + evidence
+
+Current signing audit:
+Android `release` buildType uses the debug signing config. Therefore current candidate is **not production-signed** and must not be described as Play-Store-ready.
+
+Production signing/key management is a separate security-sensitive Slice and requires explicit verified configuration.
+
+## 16. Automation Gap
+Issue #19 remains open. Required status check enforcement is not currently verified as writable through connected tooling.
+
+Until then, operational safety is enforced through exact-head proof + expected-head merge lock. Do not claim platform enforcement that does not exist.
+
+## 17. Reliability / Recovery
+For important changes:
+`Detect → Classify → Contain → Recover → Validate → Document → Improve`
+
+Data/release changes require rollback/recovery thinking before integration. Backup without tested recovery is not sufficient proof.
+
+## 18. AI Decision Boundary
+Routine, reversible, scoped engineering work can continue autonomously after Audit.
+
+Extra caution/owner decision when materially changing:
+- product direction
+- major architecture
+- destructive migration/data loss risk
+- security/signing secrets
+- irreversible release/publishing behavior
+- major visual redesign
+
+## 19. گزارش مالک
+Owner report باید کوتاه، غیر فنی و نتیجه‌محور باشد:
+`کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
 
 Inference نباید به‌عنوان Fact گزارش شود.
 
-## 18. مرز تصمیم AI
-AI می‌تواند کارهای Routine، کم‌ریسک، قابل Rollback و دارای Scope روشن را اجرا کند.
-
-برای موارد زیر باید احتیاط ویژه و در صورت نیاز تصمیم Owner گرفته شود:
-- تغییر جهت محصول
-- تغییر عمده معماری
-- Migration مخرب
-- ریسک از دست‌رفتن داده
-- تغییر امنیتی مهم
-- بازطراحی گسترده UI
-- Release behavior برگشت‌ناپذیر
-
-## 19. Reliability و Recovery
-برای تغییرات مهم:
-`Detect → Classify → Contain → Recover → Validate → Document → Improve`
-
-Rollback باید در طراحی تغییرات مهم در نظر گرفته شود. Backup بدون تست Recovery مدرک کافی برای قابلیت بازیابی نیست.
-
-## 20. فرمول نهایی توسعه
-**Fast Delivery = Parallel Independent Work + Automation + Fast Feedback + Controlled Integration + Evidence + Documentation**
+## 20. فرمول توسعه
+**Fast Delivery = Parallel Independent Work + Automation + Reuse + Fast Feedback + Controlled Integration + Evidence + Concurrent Documentation**
 
 **Professional Delivery = Speed + Quality + Architecture + Recovery + Traceability**
 
-هدف نهایی: ساخت یادنگار واقعی، تمیز، قابل‌توسعه و قابل‌نگهداری، با خروجی معتبر در ساعت‌ها به‌جای روزها.
-
-## 21. قانون Canonical
-مسیر Canonical این سند:
-`docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
-
-نسخه فعلی: `v1.0`
-
-اگر وضعیت Implementation با این سند اختلاف داشت، GitHub برای واقعیت Implementation مقدم است و Current-State/این سند باید در بخش مربوط اصلاح شوند.
+اگر Implementation با این سند اختلاف داشت، GitHub Reality مقدم است و Current State/این سند باید اصلاح شوند.

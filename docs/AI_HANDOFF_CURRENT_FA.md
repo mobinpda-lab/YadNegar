@@ -1,163 +1,138 @@
 # YadNegar — Live AI Handoff
 
 ## مرجع حقیقت
-GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
+GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
 Repository: `mobinpda-lab/YadNegar`  
-Current verified main: `78b14a8f50b9b0ccee02174fd6739c2cabcead7d`
+Default branch: `main`  
+Current verified main: `f85d804a84a4033c94e2dc843a6aa87f2d848991`
+
+Post-main روی همین SHA:
+- CI `33051308713`: success
+- Android `33051308694`: success
+- APK build/verify/upload: success
 
 ## وضعیت واقعی محصول
 Flow اصلی:
-`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup/Restore`
+`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup/Restore → Reminder`
 
 روی main:
-- Note/Event/Call/Idea/Activity روی یک TimelineItem
+- Note/Event/Call/Idea/Activity روی یک TimelineItem مشترک
 - فارسی و RTL
-- `بسم الله الرحمن الرحیم` وسط هدر و بالای عنوان یادنگار
-- JSON persistence واقعی و crash-recoverable
+- JSON persistence واقعی، schema-versioned و crash-recoverable
 - Search + Type + Date Range
 - occurredAt capture/edit
-- اصلاح Type
-- حذف امن
-- Undo با no-overwrite conflict protection
-- کپی خروجی خوانا از آیتم‌های فعلی Timeline
-- ساخت و Share یک Backup JSON معتبر و قابل‌حمل
-- Restore امن با validation قبل از جایگزینی، rollback و حفظ فیلترهای فعال
+- اصلاح Type، حذف امن و Undo بدون overwrite
+- Export خوانای Timeline فعلی
+- Backup معتبر و Restore امن
+- `reminderAt` اختیاری روی schema v2 با سازگاری خواندن v1
+- انتخاب/پاک‌کردن یادآور در Quick Capture/Edit
+- اعلان محلی واقعی Android
+- schedule/cancel فقط بعد از Persist موفق
+- حذف Reminder را cancel می‌کند و Undo دوباره schedule می‌کند
+- Edit متن، اعلان pending را با متن جدید refresh می‌کند
+- startup و Restore، Reminderهای ذخیره‌شده را از همان TimelineRepository reconcile می‌کنند
+- هیچ Reminder database/repository موازی وجود ندارد
 - Fast CI + Android APK Build/Verify/Upload واقعی
 
-Foundation موازی Model/Repository/Storage/AppShell وجود ندارد.
+## Reminder Data Contract — PR #76 / Issue #75
+Final head: `6ab46b5029b3070e43e1524431b821a766326eb2`
+- CI `33046525150`: success
+- Android `33046525158`: success
+- merged main: `fceb383aad507eed354d4b044e3939aacf5328d0`
+- post-main CI `33046893279`: success
+- post-main Android `33046893295`: success
 
-## PR #69 — Bismillah تکمیل شد
-Exact pre-merge head: `e3d485b5df4686224a2358855a3754707f794a59`
-- CI `33041625126`: success پس از rerun همان Head برای یک timeout flaky قدیمی
-- Android `33041625147`: success
-- Mergeability=true
-- merge با expected-head lock
+نتیجه:
+- `reminderAt` روی همان TimelineItem
+- write schema v2 و read سازگار v1
+- upgrade فقط روی اولین write امن
+- حفظ reminderAt در Edit/Backup/Restore
+- ترتیب Timeline بدون تغییر
 
-Merged main: `14bfd37a7304841db74133f5fd6524535350e49a`
-
-Post-main:
-- CI `33041864865`: success
-- Android `33041864841`: success
-
-## PR #68 / Issue #67 — Backup تکمیل و Verify شد
-Exact final pre-merge head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
-
-Pre-merge proof:
-- CI `33042505480`: success
-- Android `33042505505`: success
-- live mergeable=true
-- final lockfile روی همان Head
-- merge با expected-head lock
-
-Merged main: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
-
-Backup:
-- Snapshot از همان JSON storage موجود
-- recovery/validation قبل از Snapshot
-- reuse serializer/parser production
-- بدون schema/storage/serializer دوم
-- Timeline خالی backup معتبر می‌دهد
-- Share در composition root
-- `share_plus 10.1.4` exact-pinned
-
-Issue #67 بسته completed است.
-
-Post-main:
-- CI `33042973852`: success
-- Android `33042973848`: success
-
-## PR #73 / Issue #70 — Restore تکمیل و Verify شد
-Exact final pre-merge head: `fa8cfb2841eb761a062c8b9bbdd9dfee2bd0e600`
-
-Pre-merge proof:
-- CI `33045126480`: success
-- Android `33045126515`: success
-- live mergeable=true
-- final lockfile روی همان Head
+## Reminder UI/Notification — PR #78 / Issue #77
+Final head: `22bc0d1d855c98521dc554a770ff41e8475f532b`
+- CI `33050851398`: success
+- Android `33050851419`: success
+- 106 تست پاس شد
+- lockfile دقیق توسط GitHub Actions با Flutter 3.35 تولید و commit شد
+- mergeability=true
 - merge با expected-head lock
 
 Merged main:
-`78b14a8f50b9b0ccee02174fd6739c2cabcead7d`
-
-طراحی Restore:
-- candidate bytes قبل از write با production parser/schema Validate می‌شوند
-- malformed/unsupported/duplicate/blank/invalid UTF-8 قبل از تغییر primary رد می‌شوند
-- همان `_writeAll` با `.tmp`/`.bak` و rollback reuse می‌شود
-- raw overwrite و Storage دوم نداریم
-- file selection در composition edge با `file_picker 8.3.7`
-- تأیید و feedback فارسی
-- Restore موفق همان `_reload()` موجود را اجرا می‌کند؛ Search/Type/Date حفظ می‌شوند
-
-Issue #70 بسته completed است.
+`f85d804a84a4033c94e2dc843a6aa87f2d848991`
 
 Post-main:
-- CI `33045454060`: success
-- Android `33045454024`: success
+- CI `33051308713`: success
+- Android `33051308694`: success
 
-Restore wave fully verified است.
+Reminder design:
+- `flutter_local_notifications 19.5.0`
+- `timezone 0.10.1`
+- Plugin بیرون Domain و در platform/data edge
+- inexact scheduling؛ exact-alarm permission در MVP لازم نیست
+- permission اعلان فقط در مسیر مرتبط درخواست می‌شود
+- notification id collision-aware بدون sidecar DB
+- recurring reminder خارج Scope است
 
-## Foundationهای تکمیل‌شده اخیر
-- #65 / #64 — visible Export
-- #63 / #59 — Undo
-- #61 / #57 — Delete
-- #56 / #55 — edit Type
-- #54 / #53 — edit occurredAt
-- #52 / #51 — display Timeline time
-- #49 / #48 — Quick Capture occurredAt
-- #47 / #46 — Date Range UI
-- #42 / #41 — crash-recoverable persistence
-- #45 — CI dedupe
-- #44 — typography
+Issue #77 closed/completed است.
 
-این Foundationها دوباره ساخته نشوند.
+## Foundationهای تکمیل‌شده و غیرقابل تکرار
+- Restore #73/#70
+- Backup #68/#67
+- Export #65/#64
+- Undo #63/#59
+- Delete #61/#57
+- edit Type #56/#55
+- edit occurredAt #54/#53
+- Timeline date context #52/#51
+- Quick Capture occurredAt #49/#48
+- Date Range #47/#46
+- crash-recoverable persistence #42/#41
+- CI dedupe #45
+- typography #44
 
-## Docs فعال — PR #74
-Branch: `docs/current-state-restore-active`
+## Docs فعال — PR #79
+Branch: `docs/current-state-reminder-contract-final`
 
-Branch روی Restore main `78b14a8...` Sync شده است. سه سند Canonical با Restore نهایی و Product بعدی refresh می‌شوند و فایل موقت Restore حذف می‌شود. بعد فقط exact-head Fast CI + Fresh mergeability + expected-head merge lock لازم است.
+Branch structurally روی main Reminder `f85d804...` sync شده است. Final diff باید فقط Docs باشد. فایل موقت Reminder باید حذف شود و چهار سند Canonical با وضعیت نهایی Refresh شوند. سپس exact-head Fast CI، Fresh mergeability و expected-head merge lock.
+
+## Release فعال — Issue #80 / PR #81
+Roadmap واقعی بعد از Wave 6، **Wave 7 Release** است.
+
+Branch: `release/android-release-candidate-gate`  
+PR #81 initial head: `b0e3bf3e2846eb22ed8ae71d7676a2ae8fb9d024`
+
+Slice فعلی:
+- همان Android workflow موجود reuse می‌شود
+- Debug APK حفظ می‌شود
+- Release-mode candidate APK ساخته می‌شود
+- artifact باید non-empty باشد
+- SHA-256 و byte size ثبت می‌شود
+- candidate + evidence آپلود می‌شوند
+
+Fresh signing audit:
+`android/app/build.gradle.kts` هنوز release را با debug signing config امضا می‌کند. بنابراین Candidate فعلی **Production-signed نیست** و نباید Play-Store-ready گزارش شود.
+
+بعد از پایداری این Gate، Emulator smoke/recovery یک Slice کوچک جدا خواهد بود.
 
 ## Automation
-Issue #62 بسته/recovered است.
+Issue #19 باز است. required status check در Ruleset هنوز واقعاً writable/verified نیست.
 
-Issue #19 باز است: Ruleset در سطح Platform هنوز required status check قابل‌نوشتن از Connector ندارد.
+قانون Merge:
+`exact current head + exact-head CI + exact-head Android برای Product/Release + live mergeability + expected_head_sha + post-main proof`
 
-قرارداد Merge:
-`exact current head + exact-head CI + exact-head Android برای Product + live mergeability + expected_head_sha + post-main proof`
-
-## Product فعال — Issue #75 / PR #76
-`feat(reminder): add safe reminder data contract with schema migration`
-
-Fresh Audit:
-- Roadmap جامع Wave 6 را Reminder / Backup / Export تعریف کرده است.
-- Backup/Export/Restore تکمیل شده‌اند.
-- main فعلی هیچ `reminderAt/scheduledAt` در TimelineItem ندارد.
-- Storage main هنوز schema v1 است.
-- Reminder/Notification implementation مستقلی وجود ندارد.
-
-Slice اول:
-- `DateTime? reminderAt` روی همان TimelineItem مشترک
-- JSON write schema v2، با read سازگار v1
-- read v1 بدون mutation؛ اولین write امن upgrade به v2
-- حفظ reminderAt در Edit/Backup/Restore
-- timelineAt و ترتیب Timeline دست‌نخورده
-- بدون dependency جدید، Notification plugin، permission یا UI
-
-Branch: `feature/timeline-reminder-contract`  
-Draft PR: #76  
-Head ثبت‌شده در زمان refresh: `b79d2775d59f8212b2a8a754b6a75beb7640157c`
-
-Reminder UI و scheduling پلتفرمی Slice بعدی است و فقط بعد از Green و Merge این Data Contract شروع می‌شود.
+Green تاریخی برای Head جدید معتبر نیست.
 
 ## اصل سرعت
-Product / CI-Automation / Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
+Product / Release / CI-Automation / Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی، cancel stale runs و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
 
 ## ادامه
-1. PR #74 را با docs-only exact-head CI نهایی و merge کن.
-2. PR #76 را روی Head دقیق با CI + Android validate کن.
+1. PR #79 را docs-only نهایی و merge کن.
+2. PR #81 را روی Head دقیق با CI و Android validate کن؛ هر دو Debug و Release Candidate باید ساخته/Verify/Upload شوند.
 3. Green → Fresh mergeability → expected-head Merge → post-main proof.
-4. سپس Reminder UI/notification scheduling را به‌عنوان Slice مستقل ادامه بده.
-5. #19 باز بماند تا Ruleset write واقعی ممکن شود.
+4. سپس Android emulator smoke/recovery را به‌عنوان Slice بعدی Wave 7 شروع کن.
+5. #19 باز بماند تا enforcement واقعاً قابل‌نوشتن و Verify شود.
 
 ## Trigger
 `ادامه یادنگار`
