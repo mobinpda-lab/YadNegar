@@ -19,6 +19,8 @@ class EditTimelineItem {
     TimelineItemType? type,
     bool replaceOccurredAt = false,
     DateTime? occurredAt,
+    bool replaceReminderAt = false,
+    DateTime? reminderAt,
   }) async {
     final normalizedId = id.trim();
     if (normalizedId.isEmpty) {
@@ -49,7 +51,7 @@ class EditTimelineItem {
           : replaceOccurredAt
               ? occurredAt
               : existing.occurredAt,
-      reminderAt: existing.reminderAt,
+      reminderAt: replaceReminderAt ? reminderAt : existing.reminderAt,
     );
 
     await repository.upsert(updated);

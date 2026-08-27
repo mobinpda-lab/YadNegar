@@ -19,6 +19,7 @@ class QuickCapture {
     required String text,
     TimelineItemType type = TimelineItemType.note,
     DateTime? occurredAt,
+    DateTime? reminderAt,
   }) async {
     final normalizedText = text.trim();
     if (normalizedText.isEmpty) {
@@ -36,6 +37,7 @@ class QuickCapture {
       text: normalizedText,
       createdAt: clock(),
       occurredAt: occurredAt,
+      reminderAt: reminderAt,
     );
 
     await repository.upsert(item);
