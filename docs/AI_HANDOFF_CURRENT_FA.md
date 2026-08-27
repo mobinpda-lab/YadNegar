@@ -1,133 +1,116 @@
 # YadNegar — Live AI Handoff
 
 ## مرجع حقیقت
-GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعیت، Fresh Audit الزامی است. Green تاریخی برای Head جدید معتبر نیست.
+GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعیت، Fresh Audit الزامی است و Green تاریخی برای Head جدید معتبر نیست.
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current main: `4b792ba53a33e6153db35014ccdf3a15968a5383`
+Current main: `dc58de0e9d4b6aaa90a800a894404e9db86cf4f5`
 
 ## کجا هستیم
-Release Governance غیرمخرب تا انتها روی همان Workflow موجود پیاده و Verify شده است؛ هیچ Workflow/Foundation موازی ساخته نشده است.
+Release Governance غیرمخرب کامل و post-main Green است. توسعه محصول بعدی روی **Reminder تکرارشونده** در حال اجراست و هیچ Foundation موازی ساخته نشده است.
 
-زنجیره فعلی:
-`Fast CI → Android Build → Candidate/Manifest → Smoke/Recovery → Readiness → Version/Release Notes Draft → Approval/Rollback Evidence`
+## انجام‌شده — PR #96 / Issue #94
+`recurrence contract + schema v3 migration`
 
-## PR #90 — Version + Release Notes Draft
 Final head:
-`f3aab864469135a4f1a038d00305630b36a2e9cc`
+`225c948eac7a95e63d5618254fab7e6213a5c835`
+
+روی همان Timeline foundation موجود اضافه شد:
+- `none / daily / weekly`
+- schema v3
+- خواندن backward-compatible v1/v2
+- حفظ reminderAt قدیمی
+- عدم rewrite هنگام read
+- upgrade فقط در safe write موجود با tmp/bak
+- تست‌های migration و application
 
 Pre-merge:
-- CI `33074488110`: success
-- Android `33074488158`: success
-- Build / Smoke-Recovery / Readiness / Draft: success
+- CI `33078963061`: success
+- Android `33078963046`: success
+- Build / Smoke-Recovery / Readiness / Draft / Approval: success
 
-Post-main روی `6f3b1de0777263201a55faac9d1af1007d4d2e25`:
-- CI `33075537776`: success
-- Android `33075537814`: success
-- Build / Smoke-Recovery / Readiness / Draft: success
+با `expected_head_sha` Merge شد و main به `dc58de0e...` رسید.
 
-## PR #92 / Issue #91 — Tag Availability + Approval/Rollback
-Final head:
-`1990e70dfe5662aac31ed8859d7906ff274c6371`
+Post-main:
+- CI `33079988610`: success
+- Android `33079988616`: success
+- Build / Smoke-Recovery / Readiness / Draft / Approval: success
 
-Pre-merge:
-- CI `33075612499`: success
-- Android `33075612644`: success
-- Build: success
-- Smoke/Recovery: success
-- Readiness: success
-- Release Draft: success
-- Release Approval: success
+## فعال — PR #97 / Issue #95
+`Android scheduling + Persian recurrence UX`
 
-Fresh compare قبل از Merge ثابت کرد Scope فقط دو فایل است:
-- `.github/scripts/release-approval.sh`
-- `.github/workflows/android-build.yml`
+Branch:
+`product/recurring-reminder-scheduler-ux`
 
-با `expected_head_sha` Merge شد و main به:
-`4b792ba53a33e6153db35014ccdf3a15968a5383`
-رسید.
+Head دقیق این revision:
+`79bc8d84e8bab563ab63a688448fbf26d3a51dad`
 
-Post-main #92:
-- CI `33076475799`: success
-- Android `33076475804`: success
-- Build: success
-- Smoke/Recovery: success
-- Readiness: success
-- Draft: success
-- Approval: success
+Scope واقعی بعد از Fresh compare:
+- همان Android reminder scheduler
+- همان Quick Capture/Edit dialogs
+- timezone initialization اپ
+- dependency رسمی device timezone
+- همان reminder flow tests
 
-Issue #91 بسته و Completed است.
+رفتار پیاده‌شده:
+- بدون تکرار: رفتار فعلی حفظ می‌شود
+- روزانه: ساعت محلی دستگاه
+- هفتگی: روز هفته + ساعت محلی دستگاه
+- reminder تکرارشونده قدیمی به occurrence بعدی آینده منتقل می‌شود
+- timezone دستگاه قبل از startup/Restore reconcile تعیین می‌شود
+- اگر timezone قابل تشخیص نباشد recurrence fail-closed است و داده کاربر حذف/rollback نمی‌شود
+- انتخاب فارسی: `بدون تکرار / روزانه / هفتگی`
+- recurrence فقط وقتی reminder وجود دارد دیده می‌شود
+- persist-first حفظ شده است
+- پاک‌کردن reminder، recurrence را هم none می‌کند
+- Delete/Undo همچنان cancel/reschedule امن دارد
+- exact-alarm permission اضافه نشده است
 
-## معنی Release Approval فعلی
-این Approval به معنی اجازه انتشار Production نیست.
+Validation:
+- CI `33080762656`: success
+- Android `33080762586`: هنگام این revision فعال
 
-Release-mode هنوز debug-signed است؛ بنابراین وضعیت صحیح:
-`candidate verified / release governance verified / production signing blocked / not Play-Store-ready`
+تا Fresh-read پایان Android، Green نهایی #97 گزارش نشود.
 
-Tag فقط از نظر availability بررسی می‌شود؛ هیچ Tag/Ref ساخته یا جابه‌جا نشده است. هیچ GitHub Release، Play Store publish، production keystore یا signing secret ایجاد/Commit نشده است.
-
-## وضعیت محصول
+## وضعیت واقعی محصول
 Flow اصلی:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
-Foundation فعلی:
-- یک TimelineItem
-- فارسی/RTL
-- JSON persistence واقعی و crash-recoverable
-- Search/Filter/Edit/Delete/Undo
-- Export + Backup/Restore
-- schema-v2 با `reminderAt` و خواندن backward-compatible v1
-- Android local notifications
-- startup/Restore reminder reconciliation
+Storage schema فعلی روی main: v3  
+Compatibility: v1/v2 reads پشتیبانی می‌شوند.
 
-هیچ Reminder DB یا storage موازی وجود ندارد.
+هیچ Timeline/Reminder DB/Repository/Storage/Scheduler موازی وجود ندارد.
 
-## Slice بعدی محصول — Issue #93
-`product: add safe recurring reminders on the existing Timeline`
+## Release Safety
+وضعیت انتشار هنوز:
+`candidate verified / release governance verified / production signing blocked / not Play-Store-ready`
 
-Scope طراحی‌شده:
-- فقط `none / daily / weekly`
-- schema v3 با خواندن v1/v2
-- استفاده از همان TimelineItem، JSON repository، scheduler و Persian UX
-- بدون DB/Repository جدید
-- migration و recovery واقعی
-
-Implementation بعد از Merge امن docs baseline شروع می‌شود.
-
-## مستندسازی فعال — PR #86
-Branch:
-`docs/release-wave7-final`
-
-چهار سند Current State / Handoff / Operation Plan / Canonical Governance با نتیجه واقعی #92 و post-main آن Sync شده‌اند.
-
-Docs-only Merge:
-`exact head + Fast CI Green + live mergeability + expected_head_sha + post-main Fast CI`
+هیچ Tag/Release/Play Store publish واقعی یا production secret/keystore ساخته نشده است.
 
 ## Automation — Issue #19
-Issue #19 باز است. Ruleset PR را اجباری می‌کند و delete/non-fast-forward را می‌بندد، ولی required status checks هنوز Platform-level enforce نشده‌اند.
+#19 باز است. PR روی main اجباری است ولی required status checks هنوز Platform-level enforce نشده‌اند و ابزار متصل Ruleset Write ندارد.
 
-Tooling فعلی فقط Ruleset Read دارد؛ Write واقعی ندارد.
-
-قانون عملی تا زمان enforcement واقعی:
+قانون عملی Merge:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-## اصل سرعت
-- Laneهای مستقل موازی
+## اصل Maximum Parallel
+- Product / Release / Automation / Docs تا حد امن موازی
+- Runner blocked، Lane مستقل را متوقف نمی‌کند
 - Reuse قبل از Rebuild
-- Stacked preparation فقط با Fresh compare
+- Stacked work فقط با Fresh compare
 - PR کوچک و rollback-friendly
 - Evidence stale/fake ممنوع
 - مستندسازی هم‌زمان
-- Runner blocked، Lane مستقل را متوقف نمی‌کند
 
 ## ادامه
-1. CI Head جدید PR #86 سبز شود.
-2. #86 با Fresh head/mergeability و `expected_head_sha` Merge شود.
-3. post-main docs CI Verify شود.
-4. #93 از main تازه Branch شود و recurring reminder به‌صورت schema-v3 امن پیاده شود.
-5. #19 باز بماند تا Ruleset write واقعی فراهم شود.
-6. Production signing و Tag/Release/Publish واقعی فقط در Slice امنیتی/مالکیتی جدا انجام شوند.
+1. Android #97 روی Head دقیق کامل Green شود.
+2. Fresh head/mergeability #97 گرفته شود.
+3. Merge فقط با exact `expected_head_sha`.
+4. post-main #97 با Fast CI + Android/relevant gates Verify شود.
+5. docs recurring-reminder با نتیجه واقعی نهایی Refresh و Merge شود.
+6. Parent #93 فقط بعد از Product + post-main + docs بسته شود.
+7. #19 تا Ruleset Write واقعی باز بماند.
 
 ## Trigger
 `ادامه یادنگار`
