@@ -1,4 +1,4 @@
-# YADNEGAR PROJECT OPERATING PACKAGE v1.2
+# YADNEGAR PROJECT OPERATING PACKAGE v1.3
 ## مرجع عملیاتی واحد پروژه یادنگار
 
 **Project:** YadNegar / یادنگار  
@@ -55,7 +55,7 @@
 
 ### Lane C — Release / Platform
 - Android build/release candidate
-- deterministic artifact evidence
+- deterministic artifact/manifest/readiness evidence
 - emulator smoke/recovery
 - release governance
 - production signing فقط بعد از Audit امنیتی و تعیین مالک credentials
@@ -64,7 +64,7 @@
 - GitHub Actions
 - Analyze/Test/Build
 - stale-run cancellation
-- evidence capture
+- exact-run evidence capture
 - Current State / Handoff / Operation Plan / Canonical sync
 
 Rule:
@@ -107,7 +107,7 @@ Production storage schema v2 است و v1 را backward-compatible می‌خوا
 هر schema/storage change مهم حسب مورد:
 `Versioning + Backward Compatibility + Migration/Safe Upgrade + Validation + Recovery/Rollback`
 
-داده کاربر برای ساده‌سازی توسعه destructive rewrite نمی‌شود.
+داده کاربر destructive rewrite نمی‌شود.
 Backup/Restore باید production parser/serializer/recovery path را reuse کند؛ raw overwrite و serializer دوم ممنوع است.
 
 ## 8. Reminder Governance
@@ -125,14 +125,16 @@ Reminder روی همان TimelineItem و storage موجود سوار است.
 Fast chain:
 `flutter pub get → flutter analyze → flutter test`
 
-Android/Product/Release chain حسب Scope:
-`Fast CI → Android Build → Artifact Verify/Upload → Smoke/Recovery → live mergeability → expected-head merge → post-main proof`
+Release chain:
+`Fast CI → Android Build → Debug APK → Release Candidate → Manifest → Smoke/Recovery → Release Readiness → live mergeability → expected-head merge → post-main proof`
 
 Workflow rules:
 - reuse موجود قبل از Workflow جدید
 - `concurrency/cancel-in-progress` برای runهای stale
 - artifact باید واقعی و قابل Verify باشد
-- build یا Green یک SHA به SHA دیگر نسبت داده نشود
+- build/Green یک SHA به SHA دیگر نسبت داده نشود
+- source Head SHA از temporary PR validation SHA تفکیک شود
+- downstream readiness باید exact-run artifacts را مصرف کند، نه artifact تاریخی
 - PR validation نباید با push trigger تکراری شود مگر دلیل اثبات‌شده وجود داشته باشد
 
 ## 10. Git / PR Governance
@@ -151,7 +153,7 @@ Workflow rules:
 1. exact current head
 2. Fast CI Green همان Head
 3. Android/Release Gate Green همان Head
-4. relevant artifact/smoke/recovery steps Green
+4. relevant artifact/manifest/smoke/recovery/readiness jobs Green
 5. live mergeability=true
 6. `expected_head_sha=exact head`
 7. post-main CI/Android proof
@@ -186,61 +188,64 @@ Temporary active-state files پس از پایان Wave حذف شوند و به C
 
 ## 13. Verified Current Baseline — 2026-08-27
 Verified main:
-`9ffa1041c3205a35d0aa0744236e9e4dcbb28333`
+`a29fe46ba9c9c50be107e36b6c618ddc1a0c6e95`
 
-Integrated PR #83:
-`release: prove Android emulator smoke and storage recovery`
+Latest integrated Release Governance PR:
+PR #85 / Issue #84 — `release: add deterministic release manifest evidence`
 
-Final exact head:
-`60d1f21ce3574e3b6c04478351136acf35e9e8e7`
+Final exact PR head:
+`2a456003899ec24ab310a86f5f521c68a97fb483`
 
-Pre-merge exact-head evidence:
-- YadNegar CI `33069328808`: success
-- YadNegar Android Build `33069328907`: success
-- `android-build`: success
-- `android-smoke-recovery`: success
+Pre-merge evidence:
+- YadNegar CI `33070804473`: success
+- YadNegar Android Build `33070804465`: success
+- android-build: success
+- Manifest generation/upload: success
+- android-smoke-recovery: success
 
-Post-main evidence on `9ffa1041...`:
-- YadNegar CI `33070027775`: success
-- YadNegar Android Build `33070027900`: success
-- `android-build`: success
-- `android-smoke-recovery`: success
+Post-main evidence on `a29fe46...`:
+- YadNegar CI `33071541211`: success
+- YadNegar Android Build `33071541182`: success
+- android-build: success
+- android-smoke-recovery: success
 
 Main product flow:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
-Verified capabilities include:
-- Persian RTL Timeline
-- Note/Event/Call/Idea/Activity
-- crash-recoverable JSON persistence
-- Search/Type/Date Range
-- occurredAt
-- Delete/Undo
-- Export
-- validated Backup/Restore
-- schema-v2 optional reminderAt with v1 compatibility
-- Persian Reminder UX
-- Android local notifications
-- startup/Restore Reminder reconciliation
+Verified release capabilities:
 - Debug APK artifact
-- release-mode candidate artifact with hash/size evidence
+- release-mode Candidate APK
+- SHA-256 + byte-size evidence
+- deterministic `RELEASE_MANIFEST.txt`
+- version + application id
+- exact source SHA + separate validation SHA
+- explicit signing state
 - Android emulator startup proof
 - real `.bak` storage recovery proof
 
 ## 14. Release Governance
 Wave 7 contract `E2E + build + artifact + smoke + recovery` is verified complete.
 
-Current Release Governance lane builds on that foundation.
+Manifest Slice PR #85 / Issue #84 is verified complete and post-main Green.
 
-Active Issue #84 / PR #85:
-`release: add deterministic release manifest evidence`
+Active Issue #87 / PR #88:
+`release: aggregate candidate readiness evidence`
+
+Current exact head at this canonical revision:
+`32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
 
 Purpose:
-- preserve existing build/artifact/smoke/recovery gates
-- add deterministic `RELEASE_MANIFEST.txt`
-- record version, application id, exact source SHA, validation SHA, APK SHA-256, byte size and signing state
-- no duplicate workflow
-- no publishing mutation
+- preserve existing build/artifact/manifest/smoke/recovery gates
+- add dependent `release-readiness` job
+- consume exact-run Candidate + Smoke artifacts
+- verify Manifest source SHA against current source Head
+- require startup/recovery/storage marker/staging cleanup proof
+- emit `RELEASE_READINESS.txt`
+- explicitly report Production signing blocked while debug signing remains
+
+Validation at this revision:
+- Fast CI `33073336472`: success
+- Android `33073336417`: active; final claim requires Fresh-read
 
 Current signing audit:
 Android `release` buildType uses debug signing config. Therefore current candidate is **not production-signed** and must not be described as Play-Store-ready.
@@ -256,7 +261,7 @@ Live `main-protection` Ruleset:
 - non-fast-forward blocked
 - required status checks are not yet configured at Platform level
 
-Fresh tool discovery on 2026-08-27 still exposes Ruleset read but not Ruleset write.
+Connected tooling still exposes Ruleset read but not Ruleset write.
 Until write is genuinely available, operational exact-head proof + expected-head lock remains mandatory. Do not claim platform enforcement that does not exist.
 
 ## 16. Reliability / Recovery
