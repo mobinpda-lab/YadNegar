@@ -3,52 +3,40 @@
 Last updated: 2026-08-27
 
 ## Source of Truth
-`GitHub Reality > approved architecture decisions > canonical docs > exact CI/workflow evidence > conversation memory`
+GitHub Reality. Fresh-audit before write/merge/status claims.
 
-Fresh-audit before every write, merge, SHA/status or progress claim.
+## main
+`14bfd37a7304841db74133f5fd6524535350e49a`
 
-## Verified Main
-Repository: `mobinpda-lab/YadNegar`  
-Current main: `14bfd37a7304841db74133f5fd6524535350e49a`
+Main includes real Timeline persistence/retrieval/edit/delete/undo/export and the centered `بسم الله الرحمن الرحیم` home header. Post-main PR #69 Fast CI + Android are Green.
 
-Main includes Quick Capture, real crash-recoverable JSON persistence, Timeline retrieval/filtering, occurredAt, Edit/Delete/Undo, visible Export, and the centered `بسم الله الرحمن الرحیم` home header. Post-main Fast CI + Android for PR #69 are Green.
+## PR #68 — Validated Backup
+Exact head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
 
-## Active Product — PR #68 / Issue #67
-Validated portable Backup.
-
-Current exact head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
-
-Fresh evidence:
+Fresh proof:
 - CI `33042505480`: Green
 - Android `33042505505`: Green
-- live mergeability: true
-- lockfile finalized on this head
-- Backup branch structurally contains current main through sync commit `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
-- Bismillah + Backup action both preserved
+- mergeability: true
+- lockfile final
+- branch structurally contains current main through `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
+- Bismillah + Backup action preserved together
 
-No schema, TimelineRepository contract, second serializer, or second storage was introduced.
+No schema, TimelineRepository contract, second serializer, or second storage changes.
 
-## Immediate Merge Sequence
-1. Mark PR #68 Ready.
-2. Fresh-read PR exact head and mergeability again.
-3. Merge only with `expected_head_sha=8057eca7ba4957d49bc51c54cbf278935744ccfa` if there is no drift.
-4. Verify resulting main with Fast CI + Android.
+Merge contract now:
+Ready → Fresh head/mergeability → expected-head merge on `8057eca7...` → post-main CI + Android.
 
-## Documentation Lane
-Branch: `docs/current-state-backup-active`
-Final-sync onto resulting main after Product merge; refresh evidence; exact-head docs CI; safe merge.
+## Docs lane
+`docs/current-state-backup-active` must final-sync onto resulting main, refresh proof, exact-head docs CI, then safe merge.
 
 ## Automation
-Issue #19 remains open because Platform-level required status checks are not writable through connected GitHub tooling.
+Issue #19 remains open for Platform-level required checks.
 
-Operational contract:
-`exact current head + exact-head CI Green + exact-head Android Green + live mergeability + expected_head_sha + post-main proof`
-
-## Next Audited Slice
-Issue #70 — safe Timeline Restore/Import with production parser reuse, validation before write, and rollback. No feature branch before Backup post-main proof.
+## Next audited slice
+Issue #70 — safe Restore/Import with production parser validation + rollback. No feature branch before Backup post-main proof.
 
 ## Trigger
 `ادامه یادنگار`
 
-## Owner Report
+## Owner report
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
