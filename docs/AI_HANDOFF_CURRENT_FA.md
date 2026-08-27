@@ -5,10 +5,10 @@ GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعی
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current product main: `b8bd35976fe3a51834c56799525451eec145a2fd`
+Current product main: `0fbdb1c9dc3473112530843620480a3e7283e7ae`
 
 ## کجا هستیم
-Foundation Timeline/Reminder پایدار است. موج #111 / PR #112 ادغام و post-main کامل Verify شده است: کاربر بعد از انتخاب یک نوع Timeline می‌تواند از همان Dropdown گزینه واقعی `همه انواع` را انتخاب کند و فقط محدودیت نوع را بردارد، بدون اینکه متن جستجو یا فیلترهای تاریخ/یادآور پاک شوند.
+Foundation Timeline/Reminder پایدار است. موج #114 / PR #115 وارد `main` شده و post-main کامل Verify شده است: وقتی بازه زمانی فعال است، کاربر می‌تواند فقط همان بازه را پاک کند و متن جستجو، فیلتر نوع و فیلتر وضعیت یادآور را نگه دارد.
 
 ## موج‌های تکمیل‌شده
 - Recurring Reminder — parent #93: تکمیل
@@ -16,38 +16,38 @@ Foundation Timeline/Reminder پایدار است. موج #111 / PR #112 ادغا
 - Reminder Presence Filter — #102 / PR #103 + docs #105: تکمیل
 - Timeline Type Card Icons — #104 / PR #106 + docs #107: تکمیل
 - Shared Timeline Type Presentation — #108 / PR #109 + docs #110: تکمیل
+- Independent Type Filter Clear — #111 / PR #112 + docs #113: تکمیل؛ documented main `654cb489...`
 
-Documented main after #108 docs PR #110:
-`2c79d2e4f3d64571032560186229117df33dcafa`
-
-## Independent Type Filter Clear — #111 / PR #112
+## Independent Date-Range Clear — #114 / PR #115
 Final product head:
-`ee467aab71e682615d045acc5e363061e24a6ac5`
+`6cb084ae12c9dbab1e2fcd2dc812374522f1f895`
 
 Merged product main:
-`b8bd35976fe3a51834c56799525451eec145a2fd`
+`0fbdb1c9dc3473112530843620480a3e7283e7ae`
 
 رفتار نهایی:
-- Dropdown نوع اکنون `همه انواع` را به‌عنوان گزینه واقعی دارد.
-- مقدار آن `null` است و همان callback nullable موجود reuse می‌شود.
-- فیلتر نوع به‌تنهایی پاک می‌شود.
+- وقتی Date Range فعال است، کنترل پاک‌کردن مستقل نمایش داده می‌شود.
+- همان State موجود `_dateStart/_dateEndExclusive` reuse شده است.
+- پاک‌کردن تاریخ فقط Date Range را حذف و مسیر reload موجود را اجرا می‌کند.
 - query فعال حفظ می‌شود.
-- date range و reminder-presence state با این عمل Reset نمی‌شوند.
-- Clear All موجود همچنان همه فیلترهای مربوط را پاک می‌کند.
+- type filter حفظ می‌شود.
+- reminder-presence filter حفظ می‌شود.
+- Global Clear All بدون تغییر باقی مانده است.
 
-Scope واقعی فقط دو فایل بود:
+Scope واقعی فقط سه فایل است:
+- `lib/features/timeline/presentation/timeline_home.dart`
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_type_filter_all_option_test.dart`
+- `test/features/timeline/presentation/timeline_date_filter_clear_test.dart`
 
-Pre-merge exact-head روی `ee467aab...`:
-- Fast CI `33105499667`: success
-- Android `33105499651`: success full chain
+Pre-merge exact-head روی `6cb084ae...`:
+- Fast CI `33114258026`: success
+- Android `33114258075`: success full chain
 - live mergeability=true
 - exact expected-head merge: success
 
-Post-main روی `b8bd3597...`:
-- Fast CI `33109216102`: success
-- Android `33109216100`: success full chain
+Post-main روی `0fbdb1c9...`:
+- Fast CI `33115076694`: success
+- Android `33115076613`: success full chain
 - Build/Candidate: success
 - emulator Smoke/Recovery: success
 - Release Readiness: success
@@ -75,10 +75,10 @@ Compatibility: v1/v2 reads فعال است.
 قانون عملی Merge:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-## مستندات فعال #111
-Branch: `docs/timeline-type-filter-all-option-live`
+## مستندات فعال #114
+Branch: `docs/timeline-date-filter-clear-live`
 
-Branch از documented main قبلی آماده شد و در زمان Product Gate دست‌نخورده ماند. پس از Green کامل post-main محصول، بدون Force به exact main `b8bd3597...` Fast-forward شد و فقط سپس این اسناد نوشته شدند.
+Branch از main مستند قبلی `654cb489...` آماده شد و تا پایان Product Gate هیچ Write نداشت. بعد از Green کامل post-main، بدون Force به exact main `0fbdb1c9...` Fast-forward شد و سپس این اسناد با Evidence واقعی نوشته شدند.
 
 Gate Docs:
 1. Fresh compare = فقط چهار سند canonical
@@ -87,30 +87,28 @@ Gate Docs:
 4. live mergeability=true
 5. exact expected-head merge
 6. post-main Fast CI
-7. سپس Close #111
+7. سپس Close #114
 
 ## اصل Maximum Parallel
 - Product / Release / Automation / Docs تا حد امن موازی
 - Runner blocked، Lane مستقل را متوقف نمی‌کند
 - Reuse قبل از Rebuild
-- Stacked work فقط با Fresh compare
 - PR کوچک و rollback-friendly
 - Evidence stale/fake ممنوع
-- مستندسازی هم‌زمان
-
-## Discovery بعدی
-یک Candidate واقعی Audit شده اما هنوز Issue نیست: پاک‌کردن مستقل فیلتر تاریخ. State تاریخ در `TimelineHome` مستقل است، اما UI فعلی فقط انتخاب/تعویض بازه را ارائه می‌کند و برای حذف آن از Clear All استفاده می‌شود. بعد از بسته‌شدن #111 باید Fresh Audit نهایی شود و فقط در صورت حفظ Scope کوچک/reuse-first باز شود.
+- Historical Green برای Head جدید معتبر نیست
 
 ## صف فعلی
-- #111: فقط Docs نهایی و proof باقی مانده است.
+- #114: فقط Docs نهایی و proof باقی مانده است.
 - #19: محدودیت Ruleset Write؛ باز می‌ماند.
 
+بعد از بسته‌شدن #114، Feature جدید فقط با Fresh Audit و اثبات نیاز واقعی کوچک و reuse-first انتخاب می‌شود؛ Backlog مصنوعی ساخته نمی‌شود.
+
 ## ادامه
-1. Docs #111 را Fresh compare کن.
+1. Docs branch را مقابل `0fbdb1c9...` Fresh compare کن.
 2. PR Docs را باز و exact-head Fast CI را Verify کن.
 3. با mergeability زنده + expected-head ادغام کن.
-4. post-main Fast CI را Verify و #111 را Completed ببند.
-5. Candidate پاک‌کردن مستقل تاریخ را Fresh Audit کن و در صورت تأیید Slice بعدی قرار بده.
+4. post-main Fast CI را Verify و #114 را Completed ببند.
+5. سپس Product Queue را Fresh Audit کن.
 
 ## Trigger
 `ادامه یادنگار`
