@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 3.0 — Validated Backup Active
+## نسخه 3.1 — Backup Final Validation
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -15,17 +15,19 @@ Laneها:
 هدف: نرم‌افزار Verify‌شده در ساعت‌ها، نه روزها. Block یک Lane نباید Lane مستقل را متوقف کند.
 
 ## 2. main فعلی
-`ecd088c7d880b925cbb3240ad7ee0230a911d42e`
+`14bfd37a7304841db74133f5fd6524535350e49a`
 
 Main شامل Timeline واحد، persistence واقعی/crash-recoverable، پنج Type، Search/Type/Date، occurredAt، Edit/Delete/Undo و visible Export است.
+
+PR #69 نیز Bismillah را در هدر صفحه اصلی بالای عنوان یادنگار اضافه کرده و post-main Fast CI + Android هر دو Green هستند.
 
 No duplicate Model/Repository/Storage/AppShell.
 
 ## 3. Product فعال — PR #68 / Issue #67
 Backup معتبر و قابل‌حمل.
 
-Initial head: `65dd346b6203efa8a1d70a5908024c252d49dfba`
-Status: Draft dependency-resolution/validation.
+Current final-validation head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
+Status: Draft تا پایان exact-head Android Gate.
 
 ### Core/Data
 - `JsonFileTimelineRepository.readValidatedSnapshotBytes()` روی concrete implementation
@@ -46,12 +48,19 @@ Status: Draft dependency-resolution/validation.
 - TimelineHome دست‌نخورده
 - TimelineScreen action فارسی + success/error feedback
 - Share composition در `main.dart`
+- Bismillah header بعد از sync با current main حفظ شده است
 
 ### Dependency
 - `share_plus: 10.1.4` exact pin
+- package resolution واقعی روی Flutter 3.35 موفق بوده
+- `pubspec.lock` به package set واقعی CI Sync شده
 - latest majors عمداً استفاده نشده‌اند چون Flutter/Android toolchain جدیدتری می‌خواهند
-- اولین PR runs برای dependency resolution هستند
-- final `pubspec.lock` باید بعد از resolution واقعی Commit شود
+
+### Main Sync
+Backup branch بعد از PR #69 با current main از طریق Merge Commit دووالدی Sync شد:
+`529df3fd6656705fab3756a878c45d8ec2ed1bbc`
+
+این Sync هم‌زمان Backup action و Bismillah header را حفظ می‌کند.
 
 ## 4. Tests
 - valid snapshot preserves item + primary bytes
@@ -61,11 +70,17 @@ Status: Draft dependency-resolution/validation.
 - backup UI failure
 - no backup action without scope
 
-## 5. Initial Validation
-- CI `33027569106`: active
-- Android `33027569115`: active
+Dependency-resolution validation اولیه:
+- Analyze Green
+- 85 tests passed
 
-Green این Head به‌تنهایی merge evidence نهایی نیست چون lockfile هنوز final نشده. پس از lock sync Head جدید و exact-head gates جدید لازم است.
+## 5. Final Validation
+Head نهایی: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
+
+- CI `33042505480`: Green
+- Android `33042505505`: active در آخرین Fresh Audit
+
+فقط Gateهای همین Head merge evidence هستند.
 
 ## 6. Docs Lane
 `docs/current-state-backup-active`
@@ -96,17 +111,17 @@ Merge contract:
 3. Issue #19 — Ruleset gap
 
 ### Completed
+- PR #69 — Bismillah home header
 - PR #66 — Export wave docs
 - PR #65 / Issue #64 — visible Export
 - PR #63 / Issue #59 — Undo
 - PR #61 / Issue #57 — safe Delete
 
 ## 10. قدم بعد
-- dependency resolve/compile feedback #68
-- final lockfile sync
-- final CI + Android
-- Safe Merge + post-main proof
-- final Docs sync/merge
+- Android exact-head #68 را ببند
+- Green → Ready → Fresh mergeability → expected-head Merge
+- post-main CI + Android proof
+- final Docs structural sync/merge
 - Restore/Import فقط به‌عنوان Slice بعدی مستقل و بعد از Fresh Audit
 
 ## 11. گزارش مالک
