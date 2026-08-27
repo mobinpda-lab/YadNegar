@@ -10,7 +10,7 @@ Fresh-audit GitHub before every write, merge, SHA/status claim, or progress clai
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current verified main SHA: `9e31b6e4db22ca5d9a34231eb4205f01027d0655`
+Current verified main SHA: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
 Main contains one shared Timeline flow:
 `Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup`
@@ -25,7 +25,7 @@ Capabilities:
 - type correction
 - safe delete with confirmation
 - Undo with conflict/no-overwrite protection
-- copy visible Timeline items as readable Persian text
+- copy the currently visible Timeline items as readable Persian text
 - create and share a validated portable JSON backup snapshot
 - Fast CI + Android APK build/verify/upload
 
@@ -35,43 +35,54 @@ No duplicate Timeline Model / Repository / Storage / App Shell exists.
 `feat(ui): add Bismillah to home header`
 
 Exact pre-merge head: `e3d485b5df4686224a2358855a3754707f794a59`
-- CI `33041625126`: success after same-head rerun of one flaky legacy widget timeout
-- Android `33041625147`: success
+- YadNegar CI `33041625126`: success after same-head rerun of one flaky legacy widget timeout
+- YadNegar Android Build `33041625147`: success
 - live mergeability: true
-- expected-head merge lock used
+- merge used expected-head lock
 
 Merged main: `14bfd37a7304841db74133f5fd6524535350e49a`
-Post-main CI `33041864865`: success  
-Post-main Android `33041864841`: success
+
+Post-main proof:
+- YadNegar CI `33041864865`: success
+- YadNegar Android Build `33041864841`: success
+
+UI contract:
+- Bismillah is centered at the top of the AppBar
+- smaller/lighter than the `یادنگار` title
+- RTL and Export action remain intact
 
 ## Integrated — PR #68 / Issue #67
 `feat(backup): share validated Timeline backup snapshot`
 
 Exact final pre-merge head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
-- CI `33042505480`: success
-- Android `33042505505`: success
-- final lockfile on exact head
+- YadNegar CI `33042505480`: success
+- YadNegar Android Build `33042505505`: success
 - live mergeability: true
-- expected-head merge lock used
+- final `pubspec.lock` committed on this exact head
+- merge used `expected_head_sha`
 
 Merged main: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
-Post-main CI `33042973852`: success  
-Post-main Android `33042973848`: success, including APK build/verify/upload.
 
-Backup reuses production recovery/parser/serializer, creates no second schema/storage, supports empty Timeline backup, and exact-pins `share_plus 10.1.4` for Flutter 3.35.
+Backup design:
+- concrete `JsonFileTimelineRepository` exposes validated snapshot bytes without changing the Domain repository contract
+- existing recovery, parser and serializer are reused
+- no second schema, serializer or storage path
+- primary valid bytes are not mutated during backup
+- empty Timeline still produces a valid schema-versioned backup without creating primary storage
+- timestamped snapshot is written in temporary storage and revalidated with the production parser
+- Backup action is exposed through a small Presentation Scope
+- `TimelineHome` remains untouched
+- `share_plus 10.1.4` is exact-pinned for the repository's Flutter 3.35 toolchain
+- Backup branch was structurally synchronized with Bismillah main through `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
+
 Issue #67 is closed completed.
 
-## Integrated — PR #72
-`docs: reconcile Backup, Bismillah and Restore next state`
+Post-main proof for `edf0c72...`:
+- YadNegar CI `33042973852`: success
+- YadNegar Android Build `33042973848`: success
+- Android build / verify / artifact upload: success
 
-Exact head: `9689dd3f48097fa74e0fc7f1d669232d39d4afe7`
-- docs-only diff across the three canonical documents
-- exact-head Fast CI `33043437075`: success
-- live mergeability true
-- merged with expected-head lock
-
-Current main after Docs merge: `9e31b6e4db22ca5d9a34231eb4205f01027d0655`
-Post-main Fast CI `33044169143`: success.
+Backup wave is fully verified on the merged main.
 
 ## Previously Integrated Product Foundations
 - PR #65 / Issue #64 — visible Timeline Export
@@ -88,87 +99,58 @@ Post-main Fast CI `33044169143`: success.
 
 Do not recreate these foundations.
 
-## Active Product — PR #73 / Issue #70
-`feat(restore): validate and restore Timeline snapshots safely`
+## Documentation Lane
+Branch: `docs/current-state-backup-active`
 
-Branch: `feature/timeline-restore-import`
-Current exact head: `fa8cfb2841eb761a062c8b9bbdd9dfee2bd0e600`
-Status: Draft until final exact-head CI + Android proof.
-
-Implemented:
-- strict UTF-8 + JSON/schema validation before primary storage changes
-- typed unsupported-schema and duplicate-id rejection
-- invalid/blank/malformed/duplicate backup leaves primary bytes unchanged
-- existing production parser reused through `_decodeItems`
-- existing `_writeAll` staged `.tmp` / `.bak` replacement and rollback reused
-- no `TimelineRepository` Domain contract change
-- no second parser/serializer/storage
-- platform file selection remains in composition edge
-- exact-pinned `file_picker 8.3.7`
-- Persian confirmation before replacement
-- Persian success / invalid / unsupported / duplicate / failure feedback
-- successful Restore calls existing `TimelineHome._reload()` and preserves active Search/Type/Date state
-- Bismillah, Backup and Export actions remain intact
-
-Tests:
-- real-file valid restore
-- malformed JSON rejection with unchanged primary
-- unsupported schema rejection with unchanged primary
-- duplicate ID rejection with unchanged primary
-- blank/invalid UTF-8 rejection
-- widget confirmation cancel
-- successful reload while active search remains applied
-- unsupported-version Persian feedback
-
-Dependency proof:
-- pre-lock head `f04419ee...` CI `33044782989`: success
-- Analyze clean; 93 tests passed
-- Flutter 3.35 resolution added `file_picker 8.3.7` and `flutter_plugin_android_lifecycle 2.0.34`
-- final lockfile committed on current head `fa8cfb284...`
-
-Final exact-head gates now required on `fa8cfb284...`:
-- YadNegar CI `33045126480`: active at last refresh
-- YadNegar Android Build `33045126515`: active at last refresh
-
-Do not merge using pre-lock Green evidence.
-
-## Active Documentation Lane
-Branch: `docs/current-state-restore-active`
-
-This lane tracks PR #73 in parallel without blocking Product. Keep it unmerged while Product is active. After Product merge/post-main proof:
-1. structurally sync onto resulting main
-2. refresh exact final evidence
-3. ensure docs-only diff
-4. exact-head Fast CI
-5. live mergeability + expected-head lock
-6. post-main Fast CI
+The branch is structurally synchronized onto merged Backup main `edf0c72...`. Final documentation retains the full canonical history while updating current-state sections. Merge sequence:
+1. ensure live diff is documentation-only
+2. open a small Docs PR
+3. require exact-head Fast CI
+4. Fresh-read head/mergeability
+5. merge with expected-head lock
+6. verify resulting docs-only main with Fast CI
 
 ## Automation
 Issue #62 remains closed/recovered.
-Issue #19 remains open: Platform-level required status checks are not currently writable/proven through connected tooling.
+
+Issue #19 remains open. Main protection prevents unsafe branch operations, but Platform-level required status checks are still not writable through connected GitHub tooling.
 
 Operational merge contract:
 `exact current head + exact-head CI Green + exact-head Android Green for product + live mergeability + expected_head_sha lock + post-main proof`
 
 Historical Green is never reused for a new head.
 
+## Next Product — Issue #70
+`feat(backup): restore a validated Timeline snapshot safely`
+
+Fresh audit:
+- no independent Restore/Import implementation exists
+- no duplicate open Restore issue existed before #70
+- Backup #68 intentionally excluded Restore
+- production JSON parser/schema validation should be reused before any primary data change
+- existing staged `_writeAll` path already provides backup and restore-on-failure semantics
+- restore must reject invalid candidate data before touching primary storage
+- direct raw file overwrite is prohibited
+- platform file-selection boundary stays outside Domain
+- `TimelineHome` already owns `_reload()` and active Search/Type/Date state, so successful Restore should reuse that path rather than create another state controller
+
+Backup post-main proof is now complete, so Issue #70 may start from `edf0c72...` while the independent Docs lane runs.
+
 ## Parallel Speed Rules
 - verified software in hours through coordinated independent lanes
 - Product / Automation / Documentation move simultaneously when independent
 - blocked runners do not stop independent work
 - reuse before rebuild
-- batch related changes to avoid unnecessary duplicate CI runs
+- no duplicate foundations
 - no fake build/test/persistence evidence
 - no stale merge evidence
 - no stale canonical docs
 
 ## Next Actions
-1. Fresh-read CI + Android on final PR #73 head `fa8cfb284...`.
-2. Fix only evidence-backed failures if any.
-3. Green → Ready → Fresh head/mergeability → expected-head merge.
-4. Verify resulting main with CI + Android and confirm Issue #70 closure.
-5. Final-sync this Docs lane and merge with docs-only Fast CI.
-6. Fresh-audit the next real product gap; keep #19 open until enforcement is genuinely writable and verified.
+1. Finalize and merge the Docs lane with exact-head Fast CI + expected-head lock.
+2. Start Issue #70 from verified main `edf0c72...` as a separate validation/rollback slice.
+3. Keep Product and Docs moving independently.
+4. Keep Issue #19 open until required status enforcement is genuinely writable and verified.
 
 ## Trigger
 `ادامه یادنگار`
