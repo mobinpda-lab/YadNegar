@@ -4,15 +4,16 @@
 GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
 Repository: `mobinpda-lab/YadNegar`  
-Current verified main: `40415af1f064a7ef7298ce9993ee949c52664bff`
+Current verified main: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
 ## وضعیت واقعی محصول
 Flow اصلی:
-`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo → Export`
+`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup`
 
 روی main:
 - Note/Event/Call/Idea/Activity روی یک TimelineItem
 - فارسی و RTL
+- `بسم الله الرحمن الرحیم` وسط هدر و بالای عنوان یادنگار
 - JSON persistence واقعی و crash-recoverable
 - Search + Type + Date Range
 - occurredAt capture/edit
@@ -20,66 +21,118 @@ Flow اصلی:
 - حذف امن
 - Undo با no-overwrite conflict protection
 - کپی خروجی خوانا از آیتم‌های فعلی Timeline
+- ساخت و Share یک Backup JSON معتبر و قابل‌حمل
 - Fast CI + Android APK Build/Verify/Upload واقعی
 
 Foundation موازی Model/Repository/Storage/AppShell وجود ندارد.
 
-## PR #65 / Issue #64 — تکمیل شد
-Export visible Timeline به Clipboard وارد main شد.
-
-Exact pre-merge head: `114fca4cdfd2269d5d4ff906ce96afe0590a7162`
-- CI `33026398124`: success
-- Android `33026398078`: success
-- build/verify/upload APK: success
-- live mergeable=true
+## PR #69 — Bismillah تکمیل شد
+Exact pre-merge head: `e3d485b5df4686224a2358855a3754707f794a59`
+- CI `33041625126`: success پس از rerun همان Head برای یک timeout flaky قدیمی
+- Android `33041625147`: success
+- Mergeability=true
 - merge با expected-head lock
 
-Merged main: `40415af1f064a7ef7298ce9993ee949c52664bff`
+Merged main: `14bfd37a7304841db74133f5fd6524535350e49a`
 
 Post-main:
-- CI `33026680361`: success
-- Android `33026680302`: success با build/verify/upload APK
+- CI `33041864865`: success
+- Android `33041864841`: success
 
-طراحی Export:
-- Formatter خالص
-- همان آیتم‌های visible کپی می‌شوند
-- Search/Type/Date طبیعی حفظ می‌شوند
-- query دوم و dependency/schema/storage جدید وجود ندارد
+## PR #68 / Issue #67 — Backup تکمیل و Verify شد
+Exact final pre-merge head:
+`8057eca7ba4957d49bc51c54cbf278935744ccfa`
 
-Issue #64 بسته شده است.
+Pre-merge proof:
+- CI `33042505480`: success
+- Android `33042505505`: success
+- live mergeable=true
+- final lockfile روی همان Head
+- merge با expected-head lock
 
-## Docs فعال — PR #66
-Branch: `docs/current-state-wave6-export`
+Merged main:
+`edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
-از نظر تاریخچه روی main Export‌شده Sync شده و فقط سه فایل مستندات را تغییر می‌دهد. پس از این Final Refresh باید exact-head CI جدید بگیرد؛ سپس Ready + Fresh mergeability + expected-head merge lock.
+طراحی Backup:
+- Snapshot از همان JSON storage موجود
+- recovery/validation قبل از Snapshot
+- reuse همان serializer/parser داخلی؛ serializer/schema دوم نداریم
+- Timeline خالی backup معتبر می‌دهد بدون ساخت primary user storage
+- snapshot موقت دوباره با production parser Validate می‌شود
+- Backup action از Presentation Scope کوچک می‌آید
+- TimelineHome دست‌نخورده
+- Share در composition root
+- `share_plus 10.1.4` exact-pinned و با Flutter 3.35 Resolve شده
+- `pubspec.lock` با package set واقعی CI نهایی شده
+- Branch با Bismillah main از طریق sync commit `529df3fd6656705fab3756a878c45d8ec2ed1bbc` یکپارچه شده
+
+Issue #67 بسته completed است.
+
+Post-main `edf0c72...`:
+- CI `33042973852`: success
+- Android `33042973848`: success
+- Android Build / Verify / Upload APK: success
+
+Backup wave fully verified است.
+
+## Foundationهای تکمیل‌شده اخیر
+- #65 / #64 — visible Export
+- #63 / #59 — Undo
+- #61 / #57 — Delete
+- #56 / #55 — edit Type
+- #54 / #53 — edit occurredAt
+- #52 / #51 — display Timeline time
+- #49 / #48 — Quick Capture occurredAt
+- #47 / #46 — Date Range UI
+- #42 / #41 — crash-recoverable persistence
+- #45 — CI dedupe
+- #44 — typography
+
+این Foundationها دوباره ساخته نشوند.
+
+## Docs فعال
+Branch: `docs/current-state-backup-active`
+
+از نظر تاریخچه روی Backup main `edf0c72...` Sync شده و Canonical history کامل حفظ شده است. Merge Docs:
+1. Diff فقط Docs باشد
+2. PR کوچک باز شود
+3. exact-head Fast CI Green
+4. Fresh head/mergeability
+5. expected-head merge lock
+6. docs-only main Fast CI Verify
 
 ## Automation
-Issue #62 بسته و recovered است. Workflowها روی #65 طبیعی اجرا شدند و workaround تکراری ساخته نشد.
+Issue #62 بسته/recovered است.
 
-Issue #19 باز است: Ruleset فعلی PR را الزام می‌کند ولی required status check Platform-level هنوز از Connector قابل‌نوشتن نیست.
+Issue #19 باز است: Ruleset در سطح Platform هنوز required status check قابل‌نوشتن از Connector ندارد.
 
-## Product بعدی — Issue #67
-`feat(backup): share a validated Timeline backup snapshot`
+قرارداد Merge:
+`exact current head + exact-head CI + exact-head Android برای Product + live mergeability + expected_head_sha + post-main proof`
 
-Audit اولیه:
-- فایل داده واقعی در Application Support است
-- Storage فعلی schema-versioned و recoverable است
-- Backup باید همان storage معتبر را snapshot کند، نه JSON serializer دوم بسازد
-- Restore/Import در Slice جداگانه است
-- dependency اشتراک فایل فقط بعد از Flutter/Android compatibility audit انتخاب می‌شود
-- Reminder فعلاً ریسک permission/scheduling بیشتری دارد
+## Product بعدی — Issue #70
+`feat(backup): restore a validated Timeline snapshot safely`
 
-Branch Backup فقط بعد از Merge نهایی #66 شروع شود.
+Fresh Audit:
+- Restore implementation مستقل وجود ندارد
+- Issue تکراری مستقل برای Restore وجود نداشت
+- PR #68 Restore را عمداً خارج Scope گذاشت
+- candidate bytes باید قبل از write با production parser/schema Validate شوند
+- `_writeAll` موجود already staged replacement + backup + rollback دارد و باید reuse شود
+- duplicate-id safety قبل از replacement بررسی شود
+- raw overwrite مستقیم ممنوع
+- file selection boundary نباید به Domain نشت کند
+- `TimelineHome` مالک `_reload()` و فیلترهای فعال است؛ Restore موفق باید همان reload path را reuse کند
+
+Backup post-main proof کامل است؛ بنابراین Branch #70 می‌تواند از `edf0c72...` شروع شود، مستقل از Docs lane.
 
 ## اصل سرعت
 Product / CI-Automation / Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
 
 ## ادامه
-1. exact-head CI جدید #66 را Verify کن.
-2. Green → Ready → Fresh head/mergeability → expected-head Merge.
-3. main docs-only را با Fast CI Verify کن.
-4. سپس #67 را با compatibility audit Android/Share شروع کن.
-5. #19 را باز نگه دار تا Ruleset write واقعی ممکن شود.
+1. Docs branch را Diff-check کن، PR باز کن و exact-head CI بگیر.
+2. Docs Green → Fresh mergeability → expected-head Merge → main Fast CI.
+3. هم‌زمان Issue #70 را از verified main شروع کن.
+4. #19 را باز نگه دار تا Ruleset write واقعی ممکن شود.
 
 ## Trigger
 `ادامه یادنگار`
