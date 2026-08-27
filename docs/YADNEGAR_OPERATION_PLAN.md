@@ -1,7 +1,7 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 4.6 — Independent Timeline Type Filter Clear Integrated
+## نسخه 4.7 — Independent Timeline Date-Range Clear Integrated
 
-**تاریخ مبنا:** 2026-08-27  
+**تاریخ مبنا:** 2026-08-28  
 **مرجع حقیقت:** GitHub Repository State
 
 ## 1. مدل اجرا
@@ -16,11 +16,11 @@ Laneها:
 - Release/Platform
 - CI/Automation/Documentation
 
-Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked preparation فقط با Fresh compare و اثبات Scope مستقل قابل Merge است.
+Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked preparation فقط با Fresh compare و اثبات Scope مستقل مجاز است.
 
 ## 2. main فعلی
 Current product main:
-`b8bd35976fe3a51834c56799525451eec145a2fd`
+`0fbdb1c9dc3473112530843620480a3e7283e7ae`
 
 Main شامل:
 - Timeline foundation واحد
@@ -29,10 +29,11 @@ Main شامل:
 - Persian recurrence UX
 - Reminder status روی کارت
 - Reminder presence filter: همه / دارای یادآور / بدون یادآور
-- Search/Type/Date composition + clear/export behavior
-- آیکن متمایز پنج نوع canonical Timeline
-- mapping مشترک label/icon در کارت، فیلتر نوع، Quick Capture و Edit
-- گزینه واقعی `همه انواع` برای پاک‌کردن مستقل فیلتر نوع
+- Search/Type/Date composition
+- آیکن و label مشترک پنج نوع canonical Timeline
+- پاک‌کردن مستقل فیلتر نوع با گزینه واقعی `همه انواع`
+- پاک‌کردن مستقل Date Range با حفظ query/type/reminder filter
+- Export + Backup/Restore
 - Release Governance غیرمخرب کامل
 است.
 
@@ -51,39 +52,38 @@ Main شامل:
 - Reminder Presence Filter — #102 / PR #103 + docs #105: completed
 - Timeline Type Card Icons — #104 / PR #106 + docs #107: completed
 - Shared Timeline Type Presentation — #108 / PR #109 + docs #110: completed
+- Independent Type Filter Clear — #111 / PR #112 + docs #113: completed; documented main `654cb489...`
 
-Documented main after #110:
-`2c79d2e4f3d64571032560186229117df33dcafa`
-
-## 5. Independent Timeline Type Filter Clear — #111 / PR #112
+## 5. Independent Date-Range Clear — #114 / PR #115
 Final product head:
-`ee467aab71e682615d045acc5e363061e24a6ac5`
+`6cb084ae12c9dbab1e2fcd2dc812374522f1f895`
 
 Merged main:
-`b8bd35976fe3a51834c56799525451eec145a2fd`
+`0fbdb1c9dc3473112530843620480a3e7283e7ae`
 
 Scope واقعی:
+- `lib/features/timeline/presentation/timeline_home.dart`
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_type_filter_all_option_test.dart`
+- `test/features/timeline/presentation/timeline_date_filter_clear_test.dart`
 
 Reuse-first behavior:
-- `همه انواع` از hint به گزینه واقعی nullable تبدیل شد.
-- callback موجود `TimelineItemType?` با `null` reuse شد.
-- State یا callback دوم ساخته نشد.
-- حذف type constraint، query فعال را حفظ می‌کند.
-- date/reminder state با این action reset نمی‌شود.
-- Global Clear All بدون تغییر باقی مانده است.
+- State مستقل موجود `_dateStart/_dateEndExclusive` reuse شد.
+- callback کوچک date-only clear به `TimelineScreen` متصل شد.
+- کنترل پاک‌کردن فقط هنگام Date Range فعال دیده می‌شود.
+- query فعال، type filter و reminder-presence filter حفظ می‌شوند.
+- Global Clear All بدون تغییر باقی ماند.
+- Domain/schema/repository/storage/scheduler/workflow/dependencies دست‌نخورده ماندند.
 
 Pre-merge exact-head:
-- CI `33105499667`: success
-- Android `33105499651`: success full chain
+- CI `33114258026`: success
+- Android `33114258075`: success full chain
 - live mergeability=true
-- expected-head merge: success
+- exact expected-head merge: success
 
-Post-main exact SHA `b8bd3597...`:
-- CI `33109216102`: success
-- Android `33109216100`: success full chain
-- Build/Candidate/Smoke-Recovery/Readiness/Release-Draft/Approval all success
+Post-main exact SHA `0fbdb1c9...`:
+- CI `33115076694`: success
+- Android `33115076613`: success full chain
+- Build/Candidate/Smoke-Recovery/Readiness/Release-Draft/Approval: all success
 
 ## 6. Product Foundation
 Flow اصلی:
@@ -101,11 +101,11 @@ Ruleset `main-protection` فعال است و PR را اجباری می‌کند 
 قانون عملی تا enforcement واقعی:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-### Active Docs Sync — #111
+### Active Docs Sync — #114
 Branch:
-`docs/timeline-type-filter-all-option-live`
+`docs/timeline-date-filter-clear-live`
 
-Branch از documented main قبلی ساخته شد و تا پایان Product Gate بدون Write ماند؛ سپس بدون Force به exact main `b8bd3597...` Fast-forward شد و با Evidence واقعی به‌روزرسانی شد.
+Branch از main قبلی `654cb489...` ساخته شد و تا پایان Product Gate بدون Write ماند؛ سپس بدون Force به exact main `0fbdb1c9...` Fast-forward شد و با Evidence واقعی به‌روزرسانی شد.
 
 Merge Contract:
 1. fresh compare = docs-only
@@ -114,7 +114,7 @@ Merge Contract:
 4. live mergeability=true
 5. exact `expected_head_sha`
 6. post-main Fast CI
-7. Close #111 فقط بعد از proof
+7. Close #114 فقط بعد از proof
 
 ## 8. Merge Contract
 ### Product / Release
@@ -148,11 +148,11 @@ Historical Green برای Head جدید معتبر نیست.
 
 ## 10. Queue
 ### Active
-1. Docs sync نهایی #111
+1. Docs sync نهایی #114
 2. Issue #19 — required-status enforcement gap
 
 ### Next Product Discovery
-Candidate واقعی Audit‌شده ولی هنوز باز نشده: پاک‌کردن مستقل Date Range. `_dateStart/_dateEndExclusive` State مستقل هستند؛ UI فعلی انتخاب/تعویض بازه را دارد ولی حذف بازه از Global Clear All عبور می‌کند. پس از پایان Docs #111 باید Fresh Audit تکرار شود و فقط اگر Scope کوچک و presentation/reuse-first ماند Issue بعدی باز شود.
+بعد از بسته‌شدن #114، Queue و کد باید Fresh Audit شوند. Issue محصولی صرفاً برای پرکردن Backlog ساخته نمی‌شود؛ Slice بعدی باید نیاز واقعی، Scope کوچک و reuse بالا داشته باشد.
 
 ### Security-separated
 Production signing / real tag / release / publish فقط با Owner/Security decision صریح.
