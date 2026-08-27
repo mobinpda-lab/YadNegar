@@ -230,6 +230,14 @@ class _TimelineHomeState extends State<TimelineHome> {
     await _reload();
   }
 
+  void _clearDateRange() {
+    setState(() {
+      _dateStart = null;
+      _dateEndExclusive = null;
+    });
+    _reload();
+  }
+
   Future<DateTimeRange?> _showDateRangePicker(
     BuildContext context,
     DateTimeRange? initialRange,
@@ -982,6 +990,7 @@ class _TimelineHomeState extends State<TimelineHome> {
       dateRangeLabel: _dateRangeLabel,
       onDateRangeTap:
           widget.filterTimelineByDateRange == null ? null : _openDateRangeFilter,
+      onDateRangeClear: _hasDateRange ? _clearDateRange : null,
       onRestoreSnapshot:
           widget.restoreTimelineSnapshot == null ? null : _openSnapshotRestore,
     );
