@@ -10,7 +10,7 @@ Fresh-audit GitHub before every write, merge, SHA/status claim, or progress clai
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current main SHA: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
+Current verified main SHA: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
 Main contains one shared Timeline flow:
 `Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup`
@@ -79,9 +79,10 @@ Issue #67 is closed completed.
 
 Post-main proof for `edf0c72...`:
 - YadNegar CI `33042973852`: success
-- YadNegar Android Build `33042973848`: in progress in the latest Fresh Audit
+- YadNegar Android Build `33042973848`: success
+- Android build / verify / artifact upload: success
 
-Do not call Backup post-main fully verified until Android completes success on this exact main.
+Backup wave is fully verified on the merged main.
 
 ## Previously Integrated Product Foundations
 - PR #65 / Issue #64 — visible Timeline Export
@@ -101,13 +102,13 @@ Do not recreate these foundations.
 ## Documentation Lane
 Branch: `docs/current-state-backup-active`
 
-The branch is structurally synchronized onto merged Backup main `edf0c72...`. Final documentation should retain the full canonical history while updating current-state sections. Before merge:
-1. refresh final post-main Android evidence
-2. ensure live diff is documentation-only
-3. open a small Docs PR
-4. require exact-head Fast CI
-5. Fresh-read head/mergeability
-6. merge with expected-head lock
+The branch is structurally synchronized onto merged Backup main `edf0c72...`. Final documentation retains the full canonical history while updating current-state sections. Merge sequence:
+1. ensure live diff is documentation-only
+2. open a small Docs PR
+3. require exact-head Fast CI
+4. Fresh-read head/mergeability
+5. merge with expected-head lock
+6. verify resulting docs-only main with Fast CI
 
 ## Automation
 Issue #62 remains closed/recovered.
@@ -127,11 +128,13 @@ Fresh audit:
 - no duplicate open Restore issue existed before #70
 - Backup #68 intentionally excluded Restore
 - production JSON parser/schema validation should be reused before any primary data change
-- restore must preserve current data and roll back if final replacement fails
+- existing staged `_writeAll` path already provides backup and restore-on-failure semantics
+- restore must reject invalid candidate data before touching primary storage
 - direct raw file overwrite is prohibited
-- platform file-selection boundary should stay outside Domain
+- platform file-selection boundary stays outside Domain
+- `TimelineHome` already owns `_reload()` and active Search/Type/Date state, so successful Restore should reuse that path rather than create another state controller
 
-No Restore feature branch should start until Backup post-main Fast CI + Android are both proven Green.
+Backup post-main proof is now complete, so Issue #70 may start from `edf0c72...` while the independent Docs lane runs.
 
 ## Parallel Speed Rules
 - verified software in hours through coordinated independent lanes
@@ -144,11 +147,10 @@ No Restore feature branch should start until Backup post-main Fast CI + Android 
 - no stale canonical docs
 
 ## Next Actions
-1. Fresh-read Android post-main run `33042973848` on `edf0c72...`.
-2. If Green, mark Backup wave fully verified.
-3. Final-refresh and merge the Docs lane with exact-head Fast CI + expected-head lock.
-4. Start Issue #70 from the verified main and keep it as a separate validation/rollback slice.
-5. Keep Issue #19 open until required status enforcement is genuinely writable and verified.
+1. Finalize and merge the Docs lane with exact-head Fast CI + expected-head lock.
+2. Start Issue #70 from verified main `edf0c72...` as a separate validation/rollback slice.
+3. Keep Product and Docs moving independently.
+4. Keep Issue #19 open until required status enforcement is genuinely writable and verified.
 
 ## Trigger
 `ادامه یادنگار`
