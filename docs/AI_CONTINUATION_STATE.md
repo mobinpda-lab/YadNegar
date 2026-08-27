@@ -10,137 +10,118 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current main SHA: `4b792ba53a33e6153db35014ccdf3a15968a5383`
+Current main SHA: `1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
 
-Main now includes the completed non-mutating Release Governance chain:
-- Release Wave 7
-- deterministic `RELEASE_MANIFEST.txt`
-- deterministic `RELEASE_READINESS.txt`
-- deterministic `RELEASE_VERSION.txt`
-- deterministic `RELEASE_NOTES_DRAFT.md`
-- non-mutating proposed-tag availability proof
-- deterministic `RELEASE_APPROVAL.txt`
-- deterministic `ROLLBACK_PLAN.md`
+Main now includes the completed recurring-reminder product wave on top of the existing Timeline and release-governance foundations.
 
-## Completed Release Integration
-### PR #88 / Issue #87 — Candidate Readiness
-Final exact head: `32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
+## Recurring Reminder Wave — Issue #93
+The wave was implemented in two reusable slices:
+- #94 / PR #96 — recurrence contract + schema-v3 migration
+- #95 / PR #97 — Android recurrence scheduling + Persian UX
 
-Pre-merge and post-main Build / Smoke-Recovery / Readiness evidence are Green.
+### PR #96 / Issue #94 — Completed
+Final head:
+`225c948eac7a95e63d5618254fab7e6213a5c835`
 
-### PR #90 / Issue #89 — Version + Release Notes Draft
-Final exact head: `f3aab864469135a4f1a038d00305630b36a2e9cc`
+Integrated:
+- `TimelineReminderRecurrence { none, daily, weekly }`
+- JSON schema v3
+- backward-compatible v1/v2 reads
+- no read-time rewrite
+- safe-write upgrade through existing tmp/bak recovery
+- existing Timeline repository/storage/application path reused
 
-Pre-merge:
-- CI `33074488110`: success
-- Android `33074488158`: success
-- Build / Smoke-Recovery / Readiness / Release Draft: success
+Pre-merge proof:
+- Fast CI `33078963061`: success
+- Android `33078963046`: success
 
-Post-main on `6f3b1de0777263201a55faac9d1af1007d4d2e25`:
-- CI `33075537776`: success
-- Android `33075537814`: success
-- Build / Smoke-Recovery / Readiness / Release Draft: success
+Post-main proof on `dc58de0e9d4b6aaa90a800a894404e9db86cf4f5`:
+- Fast CI `33079988610`: success
+- Android `33079988616`: success
 
-### PR #92 / Issue #91 — Approval + Rollback Evidence
-Final exact head: `1990e70dfe5662aac31ed8859d7906ff274c6371`
+### PR #97 / Issue #95 — Completed
+Final head:
+`79bc8d84e8bab563ab63a688448fbf26d3a51dad`
 
-Pre-merge:
-- CI `33075612499`: success
-- Android `33075612644`: success
-- android-build: success
-- android-smoke-recovery: success
-- release-readiness: success
-- release-draft: success
-- release-approval: success
+Integrated behavior:
+- one-shot (`none`) preserved
+- daily recurrence at device-local clock time
+- weekly recurrence at device-local weekday + clock time
+- past recurring anchors advance to the next valid future occurrence
+- device IANA timezone resolved before startup/Restore reconciliation
+- recurrence fails closed if timezone cannot be resolved
+- persisted data is never rolled back because notification scheduling fails
+- Persian choices: `بدون تکرار / روزانه / هفتگی`
+- recurrence controls appear only when a reminder exists
+- persist-first create/edit and delete/Undo cancel/reschedule behavior preserved
+- no exact-alarm permission
 
-Fresh compare after #90 proved the PR changed only:
-- `.github/scripts/release-approval.sh`
-- `.github/workflows/android-build.yml`
+Pre-merge exact-head proof:
+- Fast CI `33080762656`: success
+- Android `33080762586`: success
 
-Merge used exact `expected_head_sha` and produced current main:
-`4b792ba53a33e6153db35014ccdf3a15968a5383`
+Merged to current main:
+`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
 
-Post-main proof on this exact main:
-- CI `33076475799`: success
-- Android `33076475804`: success
-- android-build: success
-- android-smoke-recovery: success
-- release-readiness: success
-- release-draft: success
-- release-approval: success
+Post-main proof:
+- Fast CI `33081668902`: success
+- Android `33081668913`: success
 
-Issue #91 is closed/completed.
-
-## Release Safety Reality
-The release-mode Candidate still uses the debug signing config.
-
-Correct status:
-`candidate verified / release governance verified / production signing blocked / not Play-Store-ready`
-
-The Approval evidence intentionally remains blocked by Production signing. The tag-availability check is non-mutating. No tag, GitHub Release, Play Store publication, production keystore or signing secret has been created/committed by this chain.
-
-## Verified Product Baseline
-One shared Timeline flow:
+## Product / Data Foundation
+Main flow:
 `Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
-Current foundations:
-- one `TimelineItem` for Note / Event / Call / Idea / Activity
-- Persian RTL UI
-- crash-recoverable schema-versioned JSON persistence
-- Search + Type + Date Range
-- optional `occurredAt`
-- safe Delete + Undo
-- Export + validated Backup/Restore
-- schema-v2 optional `reminderAt` with backward-compatible v1 reads
-- Persian Reminder UX + Android local notifications
-- startup/post-Restore Reminder reconciliation
+Current storage schema: v3.  
+Backward compatibility: v1 + v2 reads remain supported.
 
-No duplicate Timeline model/repository/storage/AppShell/Reminder database exists.
+No duplicate Timeline model/repository/storage/AppShell/Reminder database/scheduler exists.
 
-## Next Product Slice — Issue #93
-`product: add safe recurring reminders on the existing Timeline`
+## Release Baseline — Stable
+Verified chain:
+`Fast CI → Android Build → Candidate/Manifest → Smoke/Recovery → Readiness → Version/Release Notes Draft → Approval/Rollback Evidence`
 
-Fresh Audit already proved reuse points:
-- one TimelineItem with `reminderAt`
-- JSON schema v2 with v1 compatibility
-- one TimelineReminderScheduler boundary
-- one Android notification scheduler
-- existing mutation/schema/UI tests
+Release status remains:
+`candidate verified / release governance verified / production signing blocked / not Play-Store-ready`
 
-Planned narrow scope:
-- recurrence: `none`, `daily`, `weekly`
-- schema v3 with backward-compatible v1/v2 reads
-- same JSON repository/parser/serializer/recovery path
-- same Persian Quick Capture/Edit UX
-- same scheduler/payload/id foundation
-- no second Reminder DB/repository
-
-Issue #93 implementation may begin after this release/docs baseline is safely integrated.
-
-## Active Documentation — PR #86
-Branch: `docs/release-wave7-final`
-
-This PR is docs-only and is receiving the final factual refresh from #92/post-main evidence. Final merge requires:
-`exact current docs head + Fast CI Green + live mergeability + expected_head_sha + post-main Fast CI`
+No real tag, GitHub Release, Play Store publish, production keystore or signing secret has been created.
 
 ## Automation Gap — Issue #19
 Issue #19 remains open.
 
-Live Ruleset:
-- PR required
-- deletion blocked
-- non-fast-forward blocked
-- required status checks are not Platform-level enforced
+Live protection requires PR and blocks deletion/non-fast-forward, but required status checks are not Platform-level enforced. Connected tooling still exposes Ruleset read without Ruleset write.
 
-Connected tooling still exposes Ruleset read but no Ruleset write. Do not claim enforcement that does not exist.
-
-Until Ruleset write is genuinely available:
+Until real enforcement is writable:
 `exact current head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
+
+## Active Documentation — PR #98
+PR #98 is the final docs-only synchronization for the recurring-reminder wave.
+
+Required final gate:
+1. exact current docs head
+2. exact-head Fast CI Green
+3. live mergeability=true
+4. merge with exact `expected_head_sha`
+5. post-main Fast CI proof
+6. close parent Issue #93 only after that proof
+
+## Next Product Slice — Issue #99
+`product: surface reminder status on Timeline cards`
+
+Planned scope is presentation-only reuse of existing `TimelineItem.reminderAt` and recurrence fields:
+- no reminder => no reminder summary
+- one-shot => date/time summary
+- daily => `روزانه` + clock time
+- weekly => `هفتگی` + weekday/clock summary
+- focused TimelineScreen widget tests
+
+No schema/repository/storage/scheduler/navigation foundation change is planned.
+
+Implementation starts after #93 is fully closed.
 
 ## Parallel Speed Rules
 - Product / Release / Automation / Docs move simultaneously when independent
 - blocked Runner never stops an independent Lane
-- stacked preparation only with fresh post-dependency compare proving isolated scope
+- stacked preparation requires fresh compare proving isolated scope
 - reuse before rebuild
 - small reversible PRs
 - no stale/fake evidence
@@ -148,12 +129,12 @@ Until Ruleset write is genuinely available:
 - docs move concurrently with implementation
 
 ## Next Actions
-1. Final exact-head Fast CI for docs PR #86.
-2. Fresh-read #86 head/mergeability and merge with exact `expected_head_sha`.
-3. Verify post-main Fast CI after docs merge.
-4. Start Issue #93 implementation on a fresh branch from the resulting main; use schema-v3 migration and existing reminder foundation only.
-5. Keep Issue #19 open until Ruleset write becomes genuinely available.
-6. Production signing and any real tag/release/publish mutation remain separate owner/security decisions.
+1. Finish exact-head gate and merge PR #98.
+2. Verify PR #98 post-main Fast CI.
+3. Close parent Issue #93.
+4. Start Issue #99 as a small presentation-only PR from fresh main.
+5. Keep Issue #19 open until required-check enforcement is genuinely writable.
+6. Production signing and real tag/release/publish remain separate owner/security decisions.
 
 ## Trigger
 `ادامه یادنگار`
