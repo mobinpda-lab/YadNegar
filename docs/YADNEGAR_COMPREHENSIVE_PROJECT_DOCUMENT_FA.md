@@ -1,5 +1,5 @@
 # سند جامع پروژه یادنگار (YadNegar)
-## نسخه 1.4 — مرجع جامع محصول، مهندسی، اجرا و تداوم
+## نسخه 1.5 — مرجع جامع محصول، مهندسی، اجرا و تداوم
 
 **Project:** YadNegar / یادنگار  
 **Repository:** `mobinpda-lab/YadNegar`  
@@ -26,9 +26,9 @@ Green تاریخی برای Head جدید قابل انتقال نیست.
 
 ## 2. وضعیت Verify‌شده فعلی — 2026-08-27
 Current product main:
-`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
+`885b988d996e7daf8e79e82ebe25b2d55e14f95a`
 
-Main اکنون یک Flutter product واقعی با Foundation واحد و Flow زیر است:
+Main یک Flutter product واقعی با Foundation واحد و Flow زیر است:
 `Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
 Storage schema فعلی: v3  
@@ -37,7 +37,12 @@ UI: Persian RTL
 
 Foundation موازی برای Timeline/Storage/Reminder/AppShell وجود ندارد.
 
-Timeline اکنون علاوه بر Search/Type/Date، فیلتر Presence یادآور دارد و پنج نوع canonical آیتم با Material icon متمایز نمایش داده می‌شوند.
+Timeline اکنون:
+- Search/Type/Date composition دارد
+- Reminder presence filter دارد
+- Reminder status را روی کارت نشان می‌دهد
+- پنج نوع canonical آیتم را با Material icon متمایز نشان می‌دهد
+- همان Persian label + icon را از یک presentation mapping مشترک در کارت، فیلتر نوع، Quick Capture و Edit reuse می‌کند
 
 ---
 
@@ -76,6 +81,7 @@ Dependency direction:
 - Shared core کوچک بماند.
 - قابلیت جدید ابتدا نقاط Reuse موجود را Audit کند.
 - پوشه/Service/Model بدون مصرف واقعی ساخته نشود.
+- Presentation metadata تکراری در صورت امکان به یک منبع کوچک مشترک منتقل شود، بدون انتقال UI concern به Domain.
 
 ---
 
@@ -134,22 +140,11 @@ Persian UX:
 - Issue #99 completed
 
 ### Reminder Presence Filter — #102 / PR #103
-Final product head:
-`256c2f05a5ce0d4bfaba6c9a711e7470d78f932a`
-
 Product merged to:
 `3428c1798a43fd39fadd5f47673d1bd0366583ca`
 
 Final docs PR #105 merged to:
 `4d6dc18021b5d327b3a55972288df2b2a4d1c197`
-
-Behavior:
-- `همه موارد`
-- `دارای یادآور`
-- `بدون یادآور`
-- reminder presence روی خروجی Search/Type/Date موجود اعمال می‌شود
-- Clear موجود، فیلتر Reminder را هم Reset می‌کند
-- Export موارد visible فعلی را استفاده می‌کند
 
 Final proof:
 - product Fast CI `33092820178`: success
@@ -161,33 +156,66 @@ Final proof:
 
 Issue #102 completed.
 
-### Timeline Type Icons — #104 / PR #106
+### Timeline Type Card Icons — #104 / PR #106 + Docs #107
 Final product head:
 `042491caadb405a31473b51986c263a6f9ba5d5c`
 
-Merged main:
+Product merged to:
 `9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
 
-Scope واقعی فقط:
-- `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_type_icon_test.dart`
+Final docs PR #107 merged to:
+`09d3bf13a8f4a7525b7619247095f4974774de67`
 
-Mapping:
+Mapping introduced on Timeline cards:
 - note => `Icons.note_outlined`
 - event => `Icons.event_outlined`
 - call => `Icons.call_outlined`
 - idea => `Icons.lightbulb_outline`
 - activity => `Icons.check_circle_outline`
 
-Existing Persian type text, timestamp, Reminder status and Reminder presence filter unchanged.
-
-Pre-merge proof:
+Product proof:
 - Fast CI `33095681567`: success
 - Android `33095681514`: success full chain
+- post-main Fast CI `33096491732`: success
+- post-main Android `33096491859`: success full chain
 
-Post-main proof on exact current product main:
-- Fast CI `33096491732`: success
-- Android `33096491859`: success full chain
+Docs proof:
+- docs exact-head Fast CI `33097974085`: success
+- docs post-main Fast CI `33098163806`: success
+
+Issue #104 completed.
+
+### Shared Timeline Type Presentation — #108 / PR #109
+Final product head:
+`e6195dc11eebbed7db9b83fcefc7bf52c7bd9268`
+
+Merged main:
+`885b988d996e7daf8e79e82ebe25b2d55e14f95a`
+
+Fresh scope فقط چهار فایل Presentation/Test بود:
+- `lib/features/timeline/presentation/timeline_home.dart`
+- `lib/features/timeline/presentation/timeline_item_type_presentation.dart`
+- `lib/features/timeline/presentation/timeline_screen.dart`
+- `test/features/timeline/presentation/timeline_type_selector_icon_test.dart`
+
+Outcome:
+- یک presentation mapping مشترک برای Persian label + Material icon
+- Timeline card از همان mapping استفاده می‌کند
+- Type filter از همان mapping استفاده می‌کند
+- Quick Capture selector از همان mapping استفاده می‌کند
+- Edit selector از همان mapping استفاده می‌کند
+- mappingهای private/duplicate قبلی حذف شدند
+- Domain/schema/repository/storage/scheduler/navigation/dependencies دست‌نخورده ماندند
+
+Pre-merge exact-head proof:
+- Fast CI `33099191968`: success
+- Android `33099192004`: success full chain
+- live mergeability=true
+- exact expected-head merge: success
+
+Post-main proof on exact `885b988d...`:
+- Fast CI `33103519511`: success
+- Android `33103519546`: success full chain
   - Build/Candidate: success
   - emulator Smoke/Recovery: success
   - Release Readiness: success
@@ -195,9 +223,9 @@ Post-main proof on exact current product main:
   - Approval/Rollback evidence: success
 
 Final documentation branch:
-`docs/timeline-type-icons-live`
+`docs/timeline-type-selector-icons-live`
 
-Issue #104 closes only after docs exact-head CI, exact-head merge, and docs post-main Fast CI are verified.
+Issue #108 closes only after docs exact-head CI, exact-head merge, and docs post-main Fast CI are verified.
 
 ---
 
@@ -294,14 +322,14 @@ Historical Green برای Head جدید معتبر نیست.
 
 ---
 
-## 12. وضعیت مستندات فعال #104
+## 12. وضعیت مستندات فعال #108
 Branch:
-`docs/timeline-type-icons-live`
+`docs/timeline-type-selector-icons-live`
 
-هدف: چهار سند live/canonical را با outcome واقعی PR #106 و post-main Green همگام کند.
+Branch قبل از Product Merge آماده شد ولی هیچ Write روی آن انجام نشد. پس از ادغام PR #109، بدون Force از main قبلی به exact main `885b988d...` Fast-forward شد و سپس چهار سند live/canonical با outcome واقعی و post-main Green به‌روزرسانی شدند.
 
-پس از ادغام و Verify:
-- Issue #104 completed/closed
+پس از ادغام و Verify مستندات:
+- Issue #108 completed/closed
 - Product queue از Fresh GitHub Reality دوباره ساخته می‌شود
 - Issue #19 تا Ruleset Write واقعی باز می‌ماند
 
@@ -318,7 +346,7 @@ Branch:
 5. Branch از main تازه
 6. focused tests + exact-head gates
 
-Candidate فقط بعد از Audit کد پذیرفته می‌شود.
+در Audit فعلی هیچ TODO/FIXME آشکاری پیدا نشده و پس از #108 هیچ Issue محصولی از پیش‌ساخته‌ای در صف نیست؛ بنابراین Candidate بعدی فقط بعد از Audit واقعی UX/code پذیرفته می‌شود.
 
 ---
 
