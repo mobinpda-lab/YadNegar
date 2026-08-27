@@ -1,5 +1,5 @@
 # سند جامع پروژه یادنگار (YadNegar)
-## نسخه 1.2 — مرجع جامع محصول، مهندسی، اجرا و تداوم
+## نسخه 1.3 — مرجع جامع محصول، مهندسی، اجرا و تداوم
 
 **Project:** YadNegar / یادنگار  
 **Repository:** `mobinpda-lab/YadNegar`  
@@ -25,8 +25,8 @@ Green تاریخی برای Head جدید قابل انتقال نیست.
 ---
 
 ## 2. وضعیت Verify‌شده فعلی — 2026-08-27
-Current main:
-`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
+Current product main:
+`3428c1798a43fd39fadd5f47673d1bd0366583ca`
 
 Main اکنون یک Flutter product واقعی با Foundation واحد و Flow زیر است:
 `Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
@@ -119,38 +119,48 @@ Persian UX:
 
 ---
 
-## 7. Timeline Reminder Status — Issue #99 / PR #100
+## 7. Reminder Product Waves
+### Recurring Reminder — #93
+- PR #96 / Issue #94: recurrence contract + schema v3 + v1/v2 compatibility
+- PR #97 / Issue #95: device-local daily/weekly scheduling + Persian UX
+- #98 documentation sync
+- parent #93 completed
+
+### Timeline Reminder Status — #99 / PR #100
+Product merged to:
+`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
+
+Final docs PR #101 merged to:
+`fb2a02624421ba135de87357817d13922fed7abf`
+
+Issue #99 is completed and closed.
+
+### Reminder Presence Filter — #102 / PR #103
 Final product head:
-`32fd20609daa8d6fea74c325fecb14e096c0106d`
+`256c2f05a5ce0d4bfaba6c9a711e7470d78f932a`
 
 Merged main:
-`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
+`3428c1798a43fd39fadd5f47673d1bd0366583ca`
 
 Scope واقعی فقط:
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_reminder_status_test.dart`
+- `test/features/timeline/presentation/timeline_reminder_filter_test.dart`
 
-رفتار کارت:
-- no reminder => no reminder row
-- one-shot => date/time
-- daily => `روزانه` + clock
-- weekly => `هفتگی` + Persian weekday + clock
-- type + Timeline timestamp قبلی حفظ می‌شوند
+رفتار:
+- `همه موارد`
+- `دارای یادآور`
+- `بدون یادآور`
+- reminder presence روی خروجی Search/Type/Date موجود اعمال می‌شود
+- Clear موجود، فیلتر Reminder را هم Reset می‌کند
+- Export موارد visible فعلی را استفاده می‌کند
 
 Pre-merge evidence:
-- Fast CI `33086840280`: success
-- Android `33086840284`: success
+- Fast CI `33092820178`: success
+- Android `33092820203`: success across Build/Candidate, Emulator Smoke/Recovery, Readiness, deterministic Release Draft, Approval/Rollback evidence
 
 Post-main evidence روی SHA دقیق فعلی:
-- Fast CI `33087745543`: success
-- Android `33087745462`: success
-- Android Build/Candidate: success
-- Emulator Smoke/Recovery: success
-- Release Readiness: success
-- deterministic Release Draft: success
-- Approval/Rollback evidence: success
-
-Issue #99 بعد از ادغام و post-main proof مستندات نهایی بسته می‌شود.
+- Fast CI `33093725156`: success
+- Android `33093725042`: success across the same full chain
 
 ---
 
@@ -190,7 +200,7 @@ Android chain:
 Evidence فقط برای SHA دقیق خودش معتبر است.
 
 ### Issue #19 — Platform Enforcement Gap
-Ruleset زنده:
+Ruleset `main-protection` زنده است:
 - PR required
 - deletion blocked
 - non-fast-forward blocked
@@ -245,30 +255,40 @@ Laneهای مستقل:
 
 ---
 
-## 12. وضعیت مستندات فعال
+## 12. وضعیت مستندات فعال #102
 Branch:
-`docs/timeline-reminder-status-live`
+`docs/timeline-reminder-filter-live`
 
-این Branch چهار سند live/canonical را با outcome واقعی PR #100 و post-main Green همگام می‌کند.
+این Branch چهار سند live/canonical را با outcome واقعی PR #103 و post-main Green همگام می‌کند.
 
 پس از ادغام و Verify:
-- Issue #99 بسته می‌شود.
-- Product queue دوباره از GitHub Reality ساخته می‌شود.
+- Issue #102 بسته می‌شود.
+- #104 به Lane ادغام محصول منتقل می‌شود.
 
 ---
 
-## 13. انتخاب Slice بعدی
-هیچ Feature جدید صرفاً برای پرکردن Backlog ساخته نمی‌شود.
+## 13. Slice بعدی — #104
+Issue #104:
+`product: differentiate Timeline item types with icons`
 
-روش:
-1. Fresh Audit محصول و open issues
-2. پیدا کردن یک نیاز کوچک با reuse بالا
-3. اثبات اینکه schema/storage/scheduler/foundation جدید لازم نیست
-4. Issue با Definition of Done روشن
-5. Branch از main تازه
-6. focused tests + exact-head gates
+Branch:
+`product/timeline-type-icons`
 
-Candidateها فقط بعد از Audit کد پذیرفته می‌شوند؛ حدس محصولی نباید به Foundation جدید تبدیل شود.
+هدف: پنج نوع فعلی Timeline با Material iconهای موجود سریع‌تر قابل اسکن شوند.
+
+Scope مجاز:
+- presentation-only
+- استفاده از `TimelineItem.type`
+- focused widget tests
+
+ممنوع:
+- schema/model contract change
+- repository/storage change
+- scheduler/platform change
+- navigation/foundation change
+- dependency یا asset pipeline جدید
+
+آماده‌سازی موازی مجاز است؛ Integration فقط پس از تکمیل Docs #102، Fresh compare مستقل و exact-head gates.
 
 ---
 
