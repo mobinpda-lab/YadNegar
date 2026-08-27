@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -16,6 +17,7 @@ import 'package:yadnegar/features/timeline/data/json_timeline_backup_service.dar
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_home.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restore_action.dart';
 import 'package:yadnegar/theme/app_fonts.dart';
 
 final Random _secureRandom = Random.secure();
@@ -58,6 +60,36 @@ Future<void> main() async {
           editTimelineItem: EditTimelineItem(repository: repository),
           deleteTimelineItem: DeleteTimelineItem(repository: repository),
           restoreTimelineItem: RestoreTimelineItem(repository: repository),
+          restoreTimelineSnapshot: () async {
+            final result = await FilePicker.platform.pickFiles(
+              type: FileType.custom,
+              allowedExtensions: <String>['json'],
+              withData: true,
+            );
+            if (result == null || result.files.isEmpty) {
+              return TimelineSnapshotRestoreResult.cancelled;
+            }
+
+            final selected = result.files.single;
+            final bytes = selected.bytes ??
+                (selected.path == null
+                    ? null
+                    : await File(selected.path!).readAsBytes());
+            if (bytes == null) {
+              return TimelineSnapshotRestoreResult.invalidBackup;
+            }
+
+            try {
+              await repository.restoreValidatedSnapshotBytes(bytes);
+              return TimelineSnapshotRestoreResult.restored;
+            } on UnsupportedTimelineStorageSchemaException {
+              return TimelineSnapshotRestoreResult.unsupportedSchema;
+            } on DuplicateTimelineItemIdException {
+              return TimelineSnapshotRestoreResult.duplicateId;
+            } on FormatException {
+              return TimelineSnapshotRestoreResult.invalidBackup;
+            }
+          },
           searchTimeline: SearchTimeline(repository: repository),
           filterTimelineByDateRange: FilterTimelineByDateRange(
             repository: repository,
