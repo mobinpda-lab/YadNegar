@@ -4,9 +4,11 @@ import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:yadnegar/features/timeline/application/delete_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
@@ -27,7 +29,16 @@ final Random _secureRandom = Random.secure();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  tz.initializeTimeZones();
+  tzdata.initializeTimeZones();
+
+  var localTimezoneReady = false;
+  try {
+    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
+    localTimezoneReady = true;
+  } catch (_) {
+    // Recurring reminders fail closed if device timezone cannot be resolved.
+  }
 
   final notifications = FlutterLocalNotificationsPlugin();
   await notifications.initialize(
@@ -49,6 +60,7 @@ Future<void> main() async {
   final reminderScheduler = AndroidLocalTimelineReminderScheduler(
     notifications: notifications,
     clock: DateTime.now,
+    localTimezoneReady: localTimezoneReady,
   );
 
   try {
