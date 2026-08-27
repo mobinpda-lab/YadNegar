@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 4.0 — Recurring Reminder Wave Active
+## نسخه 4.1 — Recurring Reminder Wave Complete
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -20,12 +20,14 @@ Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked prepa
 
 ## 2. main فعلی
 Current main:
-`dc58de0e9d4b6aaa90a800a894404e9db86cf4f5`
+`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
 
 Main شامل:
 - Timeline foundation واحد
 - schema v3 برای Reminder recurrence
 - backward-compatible v1/v2 reads
+- daily/weekly Android reminder scheduling با timezone محلی دستگاه
+- Persian recurrence UX
 - Release Governance غیرمخرب کامل
 است.
 
@@ -38,66 +40,51 @@ Main شامل:
 
 هیچ Tag، GitHub Release، Play Store publish یا production keystore/secret ساخته نشده است.
 
-## 4. Recurring Reminder Wave — Issue #93
-هدف: Reminder تکرارشونده امن با reuse کامل foundation موجود.
+## 4. Recurring Reminder Wave — Completed
+Parent: Issue #93
 
-### Completed — Issue #94 / PR #96
+### Issue #94 / PR #96
 `recurrence contract + schema v3 migration`
 
 Final head:
 `225c948eac7a95e63d5618254fab7e6213a5c835`
 
-انجام‌شده:
-- recurrence: `none / daily / weekly`
-- همان TimelineItem و repository
-- schema v3
-- v1/v2 backward-compatible reads
-- no read-time rewrite
-- safe-write upgrade با همان tmp/bak recovery
-- focused migration/application tests
-
 Pre-merge:
 - CI `33078963061`: success
 - Android `33078963046`: success
-- Build / Smoke-Recovery / Readiness / Draft / Approval: success
 
-Merge با exact `expected_head_sha` انجام شد.
-
-Post-main روی `dc58de0e...`:
+Post-main:
 - CI `33079988610`: success
 - Android `33079988616`: success
-- Build / Smoke-Recovery / Readiness / Draft / Approval: success
 
-### Active — Issue #95 / PR #97
+### Issue #95 / PR #97
 `Android scheduling + Persian recurrence UX`
 
-Exact head این revision:
+Final head:
 `79bc8d84e8bab563ab63a688448fbf26d3a51dad`
 
-Scope:
-- همان Android Reminder scheduler
-- همان Quick Capture/Edit dialogs
-- device timezone initialization
-- `flutter_timezone` dependency
-- همان reminder flow tests
+رفتار نهایی:
+- none => one-shot فعلی
+- daily => ساعت محلی دستگاه
+- weekly => روز هفته + ساعت محلی دستگاه
+- past anchor => occurrence بعدی آینده
+- timezone قبل از startup/Restore reconciliation
+- timezone failure => recurrence fail-closed؛ داده rollback نمی‌شود
+- Persian UI: `بدون تکرار / روزانه / هفتگی`
+- persist-first حفظ شده
+- clear reminder => recurrence none
+- no exact-alarm permission
 
-رفتار:
-- بدون تکرار: one-shot فعلی
-- روزانه: ساعت محلی دستگاه
-- هفتگی: روز هفته + ساعت محلی دستگاه
-- occurrence قدیمی به اجرای آینده منتقل می‌شود
-- timezone قبل از startup/Restore reconcile تعیین می‌شود
-- timezone نامعتبر/ناموجود => recurrence fail-closed؛ داده ذخیره‌شده rollback نمی‌شود
-- UI فقط هنگام وجود Reminder گزینه‌های `بدون تکرار / روزانه / هفتگی` را نشان می‌دهد
-- persist-first حفظ شده است
-- پاک‌کردن Reminder recurrence را هم none می‌کند
-- exact-alarm permission اضافه نشده است
-
-Validation:
+Pre-merge:
 - CI `33080762656`: success
-- Android `33080762586`: Build Green؛ Smoke/Recovery هنگام این revision در حال اجرا
+- Android `33080762586`: success
 
-Merge فقط پس از Green کامل Android و Fresh head/mergeability انجام می‌شود.
+Merged main:
+`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+
+Post-main:
+- CI `33081668902`: success
+- Android `33081668913`: success
 
 ## 5. Product Foundation
 Flow اصلی:
@@ -106,7 +93,7 @@ Flow اصلی:
 Current storage schema: v3  
 Compatibility: v1/v2 reads پشتیبانی می‌شوند.
 
-هیچ Model / Repository / Storage / AppShell / Reminder DB موازی وجود ندارد.
+هیچ Model / Repository / Storage / AppShell / Reminder DB / Scheduler موازی وجود ندارد.
 
 ## 6. Automation / Documentation
 ### Issue #19
@@ -115,15 +102,41 @@ Ruleset فعلی PR را اجباری می‌کند و deletion/non-fast-forward
 قانون عملی تا enforcement واقعی:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-### PR #98 — Documentation
-Branch:
-`docs/recurring-reminders-live`
+### PR #98 — Final Recurring-Reminder Docs
+چهار سند Current State / Persian Handoff / Operation Plan / Canonical Governance با outcome واقعی #97 همگام می‌شوند.
 
-Current State / Persian Handoff / Operation Plan / Canonical Governance هم‌زمان با Product Sync می‌شوند.
+Merge Contract:
+1. exact docs head
+2. Fast CI Green همان Head
+3. live mergeability=true
+4. exact `expected_head_sha`
+5. post-main Fast CI
+6. Close parent #93
 
-PR #98 قبل از Merge یک Refresh نهایی از outcome واقعی #97 دریافت می‌کند.
+## 7. Next Product Slice — Issue #99
+`product: surface reminder status on Timeline cards`
 
-## 7. Merge Contract
+هدف: کاربر بدون بازکردن Edit بداند Timeline item reminder دارد یا تکرارشونده است.
+
+Scope:
+- Presentation-only
+- reuse `TimelineItem.reminderAt` + recurrence
+- no reminder => no reminder row/badge
+- one-shot => reminder date/time
+- daily => `روزانه` + clock time
+- weekly => `هفتگی` + weekday/clock summary
+- focused TimelineScreen widget tests
+
+Out of scope:
+- schema
+- repository/storage
+- scheduler
+- navigation/screen foundation
+- Reminder DB
+
+Dependency: Implementation فقط پس از بسته‌شدن کامل #93.
+
+## 8. Merge Contract
 ### Product / Release
 1. exact current head
 2. Fast CI Green همان Head
@@ -143,7 +156,7 @@ PR #98 قبل از Merge یک Refresh نهایی از outcome واقعی #97 د�
 
 Historical Green برای Head جدید معتبر نیست.
 
-## 8. خط قرمز
+## 9. خط قرمز
 - duplicate workflow/foundation/storage
 - fake/stale evidence
 - destructive migration
@@ -153,20 +166,23 @@ Historical Green برای Head جدید معتبر نیست.
 - Tag/Release/Play Store mutation بدون Owner/Security decision
 - حذف Gate برای سرعت
 
-## 9. Queue
+## 10. Queue
 ### Active
-1. PR #97 — finish Android + merge gate
-2. PR #98 — concurrent documentation
-3. Issue #19 — required-status enforcement gap
+1. PR #98 — final recurring-reminder docs gate + merge
+2. Issue #19 — required-status enforcement gap
 
-### After #97
-4. post-main proof #97
-5. final docs refresh + docs-only merge
-6. close parent #93 only after Product + post-main + docs
-7. Production signing در Slice امنیتی جدا
+### Immediately After #98
+3. Verify docs post-main Fast CI
+4. Close parent Issue #93
+5. Start Issue #99 as a small UI-only branch/PR
+6. Run exact-head Fast CI + relevant Android gate
+7. Merge with expected-head lock + post-main proof + concurrent docs
 
-## 10. اصل سرعت
+### Security-separated
+8. Production signing / real tag / release / publish only with explicit Owner/Security decision
+
+## 11. اصل سرعت
 `Maximum Parallel = Independent Lanes + Safe Stacked Preparation + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Concurrent Documentation`
 
-## 11. گزارش مالک
+## 12. گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
