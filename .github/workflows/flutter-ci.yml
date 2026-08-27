@@ -30,6 +30,8 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
+      - name: Emit resolved lockfile for finalization
+        run: cat pubspec.lock
       - name: Analyze
         run: flutter analyze
       - name: Test
