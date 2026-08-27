@@ -179,3 +179,76 @@ jobs:
           path: build/android-smoke-evidence/
           if-no-files-found: warn
           retention-days: 14
+
+  release-readiness:
+    needs:
+      - android-build
+      - android-smoke-recovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download exact-run candidate evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-android-release-candidate
+          path: build/readiness/candidate
+
+      - name: Download exact-run smoke and recovery evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-android-smoke-recovery-evidence
+          path: build/readiness/smoke
+
+      - name: Verify candidate readiness evidence
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+
+          manifest=$(find build/readiness/candidate -type f -name RELEASE_MANIFEST.txt -print -quit)
+          smoke=$(find build/readiness/smoke -type f -name RESULT.txt -print -quit)
+
+          test -n "$manifest"
+          test -n "$smoke"
+          test -s "$manifest"
+          test -s "$smoke"
+
+          grep -Fx "source_sha=$SOURCE_SHA" "$manifest"
+          grep -Eq '^version=.+$' "$manifest"
+          grep -Eq '^application_id=.+$' "$manifest"
+          grep -Eq '^apk_sha256=[0-9a-f]{64}$' "$manifest"
+          grep -Eq '^bytes=[1-9][0-9]*$' "$manifest"
+          grep -Fx 'signing=debug-key-release-mode-not-production-signed' "$manifest"
+          grep -Fx 'release_class=release-mode-candidate-not-production-signed' "$manifest"
+
+          grep -Fx 'startup=passed' "$smoke"
+          grep -Fx 'recovery=passed' "$smoke"
+          grep -Fx 'storage_marker=preserved' "$smoke"
+          grep -Fx 'staging_cleanup=passed' "$smoke"
+
+          version=$(sed -n 's/^version=//p' "$manifest" | head -n1)
+          application_id=$(sed -n 's/^application_id=//p' "$manifest" | head -n1)
+          apk_sha=$(sed -n 's/^apk_sha256=//p' "$manifest" | head -n1)
+
+          mkdir -p build/release-readiness
+          {
+            printf 'format=yadnegar-release-readiness-v1\n'
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'version=%s\n' "$version"
+            printf 'application_id=%s\n' "$application_id"
+            printf 'apk_sha256=%s\n' "$apk_sha"
+            printf 'candidate=verified\n'
+            printf 'smoke_recovery=verified\n'
+            printf 'production_signing=blocked\n'
+            printf 'blocker=debug-key-release-mode-not-production-signed\n'
+            printf 'release_status=candidate-ready-production-release-blocked\n'
+          } | tee build/release-readiness/RELEASE_READINESS.txt
+
+      - name: Upload release readiness evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-release-readiness
+          path: build/release-readiness/RELEASE_READINESS.txt
+          if-no-files-found: error
+          retention-days: 14
