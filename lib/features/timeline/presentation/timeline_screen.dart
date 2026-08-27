@@ -210,11 +210,22 @@ class _TimelineScreenState extends State<TimelineScreen> {
               controller: widget.searchController,
               onChanged: widget.onSearchChanged,
               textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'جستجو در یادنگار',
                 hintText: 'متن مورد را جستجو کنید',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: widget.searchController!.text.isEmpty
+                    ? null
+                    : IconButton(
+                        key: const Key('timeline-query-clear'),
+                        tooltip: 'پاک کردن متن جستجو',
+                        onPressed: () {
+                          widget.searchController!.clear();
+                          widget.onSearchChanged?.call('');
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
