@@ -15,7 +15,7 @@ Current main: `14bfd37a7304841db74133f5fd6524535350e49a`
 `feat(backup): share validated Timeline backup snapshot`
 
 Current final-validation head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
-Status: final exact-head CI و Android هر دو Green؛ مرحله بعد Ready + Fresh mergeability + expected-head merge.
+Status: final exact-head CI و Android هر دو Green؛ live mergeability نیز در آخرین Fresh Audit true بود. مرحله بعد Ready + Fresh read + expected-head merge.
 
 طراحی نهایی:
 - Snapshot از همان JSON storage موجود
@@ -43,21 +43,9 @@ Branch بعد از Merge شدن بسم‌الله با current main به‌صو�
 - valid empty snapshot
 - widget success/error/absence of backup action
 
-## Dependency / Validation Gate
-Toolchain فعلی:
-- Flutter 3.35.0
-- AGP 8.9.1
-- Gradle 8.12
-
-Dependency-resolution اولیه روی همین Toolchain موفق بود:
-- Analyze بدون خطا
-- 85 تست پاس
-
 Final exact-head runs روی `8057eca7...`:
 - CI `33042505480`: Green
 - Android `33042505505`: Green
-
-فقط همین Head برای Merge معتبر است.
 
 ## Docs موازی
 Branch `docs/current-state-backup-active` وضعیت Backup و Bismillah را هم‌زمان ثبت می‌کند. Product merge → structural sync → final evidence → exact-head docs CI → merge.
