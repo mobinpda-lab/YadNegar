@@ -14,6 +14,7 @@ on:
       - '.github/workflows/android-build.yml'
       - '.github/scripts/android-smoke-recovery.sh'
       - '.github/scripts/release-draft.sh'
+      - '.github/scripts/release-approval.sh'
   pull_request:
     branches: [main]
     paths:
@@ -25,6 +26,7 @@ on:
       - '.github/workflows/android-build.yml'
       - '.github/scripts/android-smoke-recovery.sh'
       - '.github/scripts/release-draft.sh'
+      - '.github/scripts/release-approval.sh'
   workflow_dispatch:
 
 permissions:
@@ -289,5 +291,42 @@ jobs:
           path: |
             build/release-draft/output/RELEASE_VERSION.txt
             build/release-draft/output/RELEASE_NOTES_DRAFT.md
+          if-no-files-found: error
+          retention-days: 14
+
+  release-approval:
+    needs:
+      - release-draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download exact-run release draft evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-release-draft
+          path: build/release-approval/version
+
+      - name: Download exact-run release readiness evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-release-readiness
+          path: build/release-approval/readiness
+
+      - name: Verify tag availability and emit approval rollback package
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: bash .github/scripts/release-approval.sh
+
+      - name: Upload release approval and rollback evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-release-approval
+          path: |
+            build/release-approval/output/RELEASE_APPROVAL.txt
+            build/release-approval/output/ROLLBACK_PLAN.md
           if-no-files-found: error
           retention-days: 14
