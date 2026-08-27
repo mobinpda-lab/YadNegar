@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yadnegar/features/timeline/application/export_timeline_text.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 
 typedef TimelineClipboardWriter = Future<void> Function(String text);
 
@@ -41,11 +42,39 @@ class TimelineScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final backupScope = TimelineBackupScope.maybeOf(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('یادنگار'),
-        centerTitle: false,
+        toolbarHeight: 88,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'بسم الله الرحمن الرحیم',
+              key: const Key('home-bismillah'),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            const Text('یادنگار'),
+          ],
+        ),
+        centerTitle: true,
         actions: [
+          if (backupScope != null)
+            IconButton(
+              key: const Key('timeline-backup-action'),
+              tooltip: 'پشتیبان‌گیری',
+              onPressed: isLoading
+                  ? null
+                  : () => _shareBackup(context, backupScope.backupAction),
+              icon: const Icon(Icons.backup_outlined),
+            ),
           IconButton(
             key: const Key('timeline-export-action'),
             tooltip: 'کپی موارد نمایش‌داده‌شده',
@@ -63,6 +92,28 @@ class TimelineScreen extends StatelessWidget {
         label: const Text('ثبت سریع'),
       ),
     );
+  }
+
+  Future<void> _shareBackup(
+    BuildContext context,
+    TimelineBackupAction backupAction,
+  ) async {
+    try {
+      await backupAction();
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('فایل پشتیبان برای اشتراک‌گذاری آماده شد.')),
+      );
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('پشتیبان‌گیری انجام نشد.')),
+      );
+    }
   }
 
   Future<void> _copyExport(BuildContext context) async {

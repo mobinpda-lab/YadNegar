@@ -62,6 +62,14 @@ class JsonFileTimelineRepository implements TimelineRepository {
     return List<TimelineItem>.unmodifiable(items);
   }
 
+  Future<List<int>> readValidatedSnapshotBytes() async {
+    final items = await _readAll();
+    if (await file.exists()) {
+      return file.readAsBytes();
+    }
+    return utf8.encode(_encodeItems(items));
+  }
+
   Future<List<TimelineItem>> _readAll() async {
     await _recoverMissingPrimary();
 
@@ -137,14 +145,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
   Future<void> _writeAll(List<TimelineItem> items) async {
     await file.parent.create(recursive: true);
-
-    final payload = <String, Object>{
-      'schemaVersion': schemaVersion,
-      'items': items.map<Map<String, Object?>>(_itemToJson).toList(),
-    };
-
-    const encoder = JsonEncoder.withIndent('  ');
-    final encoded = encoder.convert(payload);
+    final encoded = _encodeItems(items);
 
     await _tryDelete(_temporaryFile);
     await _temporaryFile.writeAsString(encoded, flush: true);
@@ -167,6 +168,15 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
 
     await _tryDelete(_backupFile);
+  }
+
+  String _encodeItems(List<TimelineItem> items) {
+    final payload = <String, Object>{
+      'schemaVersion': schemaVersion,
+      'items': items.map<Map<String, Object?>>(_itemToJson).toList(),
+    };
+    const encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert(payload);
   }
 
   Future<void> _cleanupStagingFiles() async {
