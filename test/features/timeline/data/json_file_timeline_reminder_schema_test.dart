@@ -46,6 +46,7 @@ void main() {
 
     expect(items.single.id, 'legacy-note');
     expect(items.single.reminderAt, isNull);
+    expect(items.single.reminderRecurrence, TimelineReminderRecurrence.none);
     expect(await storageFile.readAsBytes(), legacyBytes);
 
     await repository.upsert(items.single);
@@ -54,81 +55,119 @@ void main() {
     expect(decoded['schemaVersion'], JsonFileTimelineRepository.schemaVersion);
     final storedItem = (decoded['items'] as List<dynamic>).single as Map<String, dynamic>;
     expect(storedItem['reminderAt'], isNull);
+    expect(storedItem['reminderRecurrence'], 'none');
   });
 
-  test('schema v2 round-trips reminderAt without changing timelineAt', () async {
+  test('reads schema v2 unchanged and preserves reminderAt on v3 safe write', () async {
+    const v2 = '''
+{
+  "schemaVersion": 2,
+  "items": [
+    {
+      "id": "v2-reminder",
+      "type": "call",
+      "text": "تماس قدیمی",
+      "createdAt": "2026-08-27T07:00:00.000Z",
+      "occurredAt": null,
+      "reminderAt": "2026-08-28T09:30:00.000Z"
+    }
+  ]
+}
+''';
+    await storageFile.writeAsString(v2, flush: true);
+    final before = await storageFile.readAsBytes();
+
+    final item = (await repository.listNewestFirst()).single;
+
+    expect(item.reminderAt, DateTime.utc(2026, 8, 28, 9, 30));
+    expect(item.reminderRecurrence, TimelineReminderRecurrence.none);
+    expect(await storageFile.readAsBytes(), before);
+
+    await repository.upsert(item);
+
+    final decoded = jsonDecode(await storageFile.readAsString()) as Map<String, dynamic>;
+    expect(decoded['schemaVersion'], 3);
+    final storedItem = (decoded['items'] as List<dynamic>).single as Map<String, dynamic>;
+    expect(storedItem['reminderAt'], '2026-08-28T09:30:00.000Z');
+    expect(storedItem['reminderRecurrence'], 'none');
+  });
+
+  test('schema v3 round-trips daily reminder recurrence', () async {
     final createdAt = DateTime.utc(2026, 8, 27, 7);
-    final occurredAt = DateTime.utc(2026, 8, 27, 8);
-    final reminderAt = DateTime.utc(2026, 8, 27, 9, 30);
+    final reminderAt = DateTime.utc(2026, 8, 28, 9, 30);
 
     await repository.upsert(
       TimelineItem(
-        id: 'event-reminder',
-        type: TimelineItemType.event,
-        text: 'جلسه',
+        id: 'daily-reminder',
+        type: TimelineItemType.note,
+        text: 'پیگیری روزانه',
         createdAt: createdAt,
-        occurredAt: occurredAt,
         reminderAt: reminderAt,
+        reminderRecurrence: TimelineReminderRecurrence.daily,
       ),
     );
 
     final reloaded = (await JsonFileTimelineRepository(storageFile).listNewestFirst()).single;
     expect(reloaded.reminderAt, reminderAt);
-    expect(reloaded.timelineAt, occurredAt);
+    expect(reloaded.reminderRecurrence, TimelineReminderRecurrence.daily);
 
     final decoded = jsonDecode(await storageFile.readAsString()) as Map<String, dynamic>;
-    expect(decoded['schemaVersion'], 2);
+    expect(decoded['schemaVersion'], 3);
     final storedItem = (decoded['items'] as List<dynamic>).single as Map<String, dynamic>;
-    expect(storedItem['reminderAt'], reminderAt.toIso8601String());
+    expect(storedItem['reminderRecurrence'], 'daily');
   });
 
-  test('restoring a valid v1 snapshot upgrades it through the safe v2 write path', () async {
-    final legacySnapshot = utf8.encode('''
+  test('restoring a valid v2 snapshot upgrades it through the safe v3 write path', () async {
+    final v2Snapshot = utf8.encode('''
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "items": [
     {
       "id": "legacy-restore",
       "type": "idea",
       "text": "از پشتیبان قدیمی",
       "createdAt": "2026-08-27T05:00:00.000Z",
-      "occurredAt": null
+      "occurredAt": null,
+      "reminderAt": "2026-08-29T10:00:00.000Z"
     }
   ]
 }
 ''');
 
-    await repository.restoreValidatedSnapshotBytes(legacySnapshot);
+    await repository.restoreValidatedSnapshotBytes(v2Snapshot);
 
     final decoded = jsonDecode(await storageFile.readAsString()) as Map<String, dynamic>;
-    expect(decoded['schemaVersion'], 2);
+    expect(decoded['schemaVersion'], 3);
     final restored = (await repository.listNewestFirst()).single;
     expect(restored.id, 'legacy-restore');
-    expect(restored.reminderAt, isNull);
+    expect(restored.reminderAt, DateTime.utc(2026, 8, 29, 10));
+    expect(restored.reminderRecurrence, TimelineReminderRecurrence.none);
   });
 
-  test('backup snapshot preserves reminderAt in schema v2', () async {
+  test('backup snapshot preserves weekly recurrence in schema v3', () async {
     final reminderAt = DateTime.utc(2026, 8, 28, 10);
     await repository.upsert(
       TimelineItem(
         id: 'backup-reminder',
         type: TimelineItemType.call,
-        text: 'تماس فردا',
+        text: 'تماس هفتگی',
         createdAt: DateTime.utc(2026, 8, 27, 10),
         reminderAt: reminderAt,
+        reminderRecurrence: TimelineReminderRecurrence.weekly,
       ),
     );
 
     final snapshot = utf8.decode(await repository.readValidatedSnapshotBytes());
     final decoded = jsonDecode(snapshot) as Map<String, dynamic>;
-    expect(decoded['schemaVersion'], 2);
+    expect(decoded['schemaVersion'], 3);
     final storedItem = (decoded['items'] as List<dynamic>).single as Map<String, dynamic>;
     expect(storedItem['reminderAt'], reminderAt.toIso8601String());
+    expect(storedItem['reminderRecurrence'], 'weekly');
   });
 
-  test('schema v2 rejects an invalid reminderAt value', () async {
+  test('schema v3 rejects an invalid recurrence value', () async {
     await storageFile.writeAsString(
-      '{"schemaVersion":2,"items":[{"id":"bad","type":"note","text":"bad","createdAt":"2026-08-27T06:00:00.000Z","occurredAt":null,"reminderAt":"not-a-date"}]}',
+      '{"schemaVersion":3,"items":[{"id":"bad","type":"note","text":"bad","createdAt":"2026-08-27T06:00:00.000Z","occurredAt":null,"reminderAt":"2026-08-28T06:00:00.000Z","reminderRecurrence":"monthly"}]}',
       flush: true,
     );
 
