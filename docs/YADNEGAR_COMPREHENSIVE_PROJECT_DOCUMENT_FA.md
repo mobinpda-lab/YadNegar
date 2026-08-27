@@ -1,5 +1,5 @@
 # سند جامع پروژه یادنگار (YadNegar)
-## نسخه 1.5 — مرجع جامع محصول، مهندسی، اجرا و تداوم
+## نسخه 1.6 — مرجع جامع محصول، مهندسی، اجرا و تداوم
 
 **Project:** YadNegar / یادنگار  
 **Repository:** `mobinpda-lab/YadNegar`  
@@ -26,12 +26,12 @@ Green تاریخی برای Head جدید قابل انتقال نیست.
 
 ## 2. وضعیت Verify‌شده فعلی — 2026-08-27
 Current product main:
-`885b988d996e7daf8e79e82ebe25b2d55e14f95a`
+`b8bd35976fe3a51834c56799525451eec145a2fd`
 
-Main یک Flutter product واقعی با Foundation واحد و Flow زیر است:
+Flow اصلی محصول:
 `Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
-Storage schema فعلی: v3  
+Storage schema: v3  
 Backward compatibility: v1/v2 reads  
 UI: Persian RTL
 
@@ -41,25 +41,26 @@ Timeline اکنون:
 - Search/Type/Date composition دارد
 - Reminder presence filter دارد
 - Reminder status را روی کارت نشان می‌دهد
-- پنج نوع canonical آیتم را با Material icon متمایز نشان می‌دهد
-- همان Persian label + icon را از یک presentation mapping مشترک در کارت، فیلتر نوع، Quick Capture و Edit reuse می‌کند
+- پنج نوع canonical را با Material icon متمایز نشان می‌دهد
+- Persian label + icon را از یک presentation mapping مشترک در کارت، فیلتر نوع، Quick Capture و Edit reuse می‌کند
+- فیلتر نوع را می‌توان با گزینه واقعی `همه انواع` مستقل از query/date/reminder پاک کرد
 
 ---
 
-## 3. مأموریت محصول
+## 3. مأموریت و اصول محصول
 یادنگار اپلیکیشنی فارسی، سریع و کم‌اصطکاک برای ثبت و مرور اطلاعات روزمره است.
 
 چرخه تجربه:
 `Capture quickly → Organize minimally → Review in Timeline → Find/Edit later`
 
-انواع فعلی Timeline:
+انواع Timeline:
 - یادداشت
 - رویداد
 - تماس
 - ایده
 - فعالیت
 
-اصول محصول:
+اصول:
 - Capture-first
 - Timeline-first
 - RTL-native
@@ -69,7 +70,7 @@ Timeline اکنون:
 
 ---
 
-## 4. معماری محصول
+## 4. معماری و Data Safety
 Dependency direction:
 `Presentation → Application → Domain`
 
@@ -80,15 +81,10 @@ Dependency direction:
 - Storage/Repository موازی بدون ADR ممنوع است.
 - Shared core کوچک بماند.
 - قابلیت جدید ابتدا نقاط Reuse موجود را Audit کند.
-- پوشه/Service/Model بدون مصرف واقعی ساخته نشود.
-- Presentation metadata تکراری در صورت امکان به یک منبع کوچک مشترک منتقل شود، بدون انتقال UI concern به Domain.
+- Service/Model/Foundation بدون مصرف واقعی ساخته نشود.
+- Presentation metadata تکراری در صورت امکان به منبع کوچک مشترک منتقل شود، بدون انتقال UI concern به Domain.
 
----
-
-## 5. Timeline و Persistence
-یک `TimelineItem` مشترک برای انواع محتوای Timeline استفاده می‌شود.
-
-Persistence فعلی:
+Persistence:
 - JSON schema-versioned
 - schema v3
 - backward-compatible v1/v2 reads
@@ -102,18 +98,16 @@ Persistence فعلی:
 
 ---
 
-## 6. Reminder Foundation
-Reminder روی Foundation موجود Timeline سوار است؛ DB/Repository/Scheduler دوم وجود ندارد.
+## 5. Reminder Foundation
+Reminder روی همان Timeline foundation سوار است؛ DB/Repository/Scheduler دوم وجود ندارد.
 
 Recurrence contract:
 - `none`
 - `daily`
 - `weekly`
 
-رفتار:
-- none => one-shot
-- daily => ساعت محلی دستگاه
-- weekly => روز هفته + ساعت محلی دستگاه
+رفتار کلیدی:
+- one-shot / daily / weekly device-local scheduling
 - past recurring anchor => occurrence بعدی آینده
 - device IANA timezone قبل از startup/Restore reconciliation
 - timezone resolution failure => recurrence fail-closed
@@ -127,116 +121,98 @@ Persian UX:
 
 ---
 
-## 7. Product Waves
+## 6. Product Waves
 ### Recurring Reminder — #93
 - PR #96 / Issue #94: recurrence contract + schema v3 + v1/v2 compatibility
 - PR #97 / Issue #95: device-local daily/weekly scheduling + Persian UX
-- #98 documentation sync
+- docs #98
 - parent #93 completed
 
-### Timeline Reminder Status — #99 / PR #100
-- وضعیت Reminder مستقیماً روی کارت Timeline نمایش داده می‌شود.
-- final docs PR #101 integrated
-- Issue #99 completed
+### Timeline Reminder Status — #99 / PR #100 + Docs #101
+Reminder status روی کارت Timeline؛ completed.
 
-### Reminder Presence Filter — #102 / PR #103
-Product merged to:
-`3428c1798a43fd39fadd5f47673d1bd0366583ca`
-
-Final docs PR #105 merged to:
-`4d6dc18021b5d327b3a55972288df2b2a4d1c197`
-
-Final proof:
-- product Fast CI `33092820178`: success
-- product Android `33092820203`: success full chain
-- product post-main Fast CI `33093725156`: success
-- product post-main Android `33093725042`: success full chain
-- docs exact-head Fast CI `33095665307`: success
-- docs post-main Fast CI `33095853727`: success
-
-Issue #102 completed.
+### Reminder Presence Filter — #102 / PR #103 + Docs #105
+فیلتر `همه موارد / دارای یادآور / بدون یادآور` روی خروجی Search/Type/Date موجود؛ completed.
 
 ### Timeline Type Card Icons — #104 / PR #106 + Docs #107
-Final product head:
-`042491caadb405a31473b51986c263a6f9ba5d5c`
+پنج type canonical با icon متمایز؛ completed.
 
-Product merged to:
-`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
-
-Final docs PR #107 merged to:
-`09d3bf13a8f4a7525b7619247095f4974774de67`
-
-Mapping introduced on Timeline cards:
-- note => `Icons.note_outlined`
-- event => `Icons.event_outlined`
-- call => `Icons.call_outlined`
-- idea => `Icons.lightbulb_outline`
-- activity => `Icons.check_circle_outline`
-
-Product proof:
-- Fast CI `33095681567`: success
-- Android `33095681514`: success full chain
-- post-main Fast CI `33096491732`: success
-- post-main Android `33096491859`: success full chain
-
-Docs proof:
-- docs exact-head Fast CI `33097974085`: success
-- docs post-main Fast CI `33098163806`: success
-
-Issue #104 completed.
-
-### Shared Timeline Type Presentation — #108 / PR #109
+### Shared Timeline Type Presentation — #108 / PR #109 + Docs #110
 Final product head:
 `e6195dc11eebbed7db9b83fcefc7bf52c7bd9268`
 
-Merged main:
+Product merged to:
 `885b988d996e7daf8e79e82ebe25b2d55e14f95a`
 
-Fresh scope فقط چهار فایل Presentation/Test بود:
-- `lib/features/timeline/presentation/timeline_home.dart`
-- `lib/features/timeline/presentation/timeline_item_type_presentation.dart`
-- `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_type_selector_icon_test.dart`
+Final docs main:
+`2c79d2e4f3d64571032560186229117df33dcafa`
 
 Outcome:
 - یک presentation mapping مشترک برای Persian label + Material icon
-- Timeline card از همان mapping استفاده می‌کند
-- Type filter از همان mapping استفاده می‌کند
-- Quick Capture selector از همان mapping استفاده می‌کند
-- Edit selector از همان mapping استفاده می‌کند
-- mappingهای private/duplicate قبلی حذف شدند
+- reuse در Timeline card، type filter، Quick Capture و Edit
+- mappingهای private/duplicate حذف شدند
 - Domain/schema/repository/storage/scheduler/navigation/dependencies دست‌نخورده ماندند
 
+Proof:
+- pre-merge Fast CI `33099191968`: success
+- pre-merge Android `33099192004`: success full chain
+- product post-main Fast CI `33103519511`: success
+- product post-main Android `33103519546`: success full chain
+- docs exact-head Fast CI `33104664609`: success
+- docs post-main Fast CI `33104816048`: success
+
+Issue #108 completed.
+
+### Independent Timeline Type Filter Clear — #111 / PR #112
+Final product head:
+`ee467aab71e682615d045acc5e363061e24a6ac5`
+
+Product merged to:
+`b8bd35976fe3a51834c56799525451eec145a2fd`
+
+Fresh scope فقط دو فایل بود:
+- `lib/features/timeline/presentation/timeline_screen.dart`
+- `test/features/timeline/presentation/timeline_type_filter_all_option_test.dart`
+
+Outcome:
+- `همه انواع` از hint صرف به گزینه واقعی nullable در همان Dropdown تبدیل شد.
+- callback موجود `TimelineItemType?` با `null` reuse شد.
+- فقط type constraint حذف می‌شود.
+- query فعال حفظ می‌شود.
+- date-range/reminder state با این action پاک نمی‌شود.
+- Global Clear All بدون تغییر باقی ماند.
+- State/Callback/Foundation دوم ساخته نشد.
+
 Pre-merge exact-head proof:
-- Fast CI `33099191968`: success
-- Android `33099192004`: success full chain
+- Fast CI `33105499667`: success
+- Android `33105499651`: success full chain
 - live mergeability=true
 - exact expected-head merge: success
 
-Post-main proof on exact `885b988d...`:
-- Fast CI `33103519511`: success
-- Android `33103519546`: success full chain
+Post-main proof on `b8bd3597...`:
+- Fast CI `33109216102`: success
+- Android `33109216100`: success full chain
   - Build/Candidate: success
   - emulator Smoke/Recovery: success
   - Release Readiness: success
   - deterministic Release Draft: success
   - Approval/Rollback evidence: success
 
-Final documentation branch:
-`docs/timeline-type-selector-icons-live`
+Final docs branch:
+`docs/timeline-type-filter-all-option-live`
 
-Issue #108 closes only after docs exact-head CI, exact-head merge, and docs post-main Fast CI are verified.
+Issue #111 فقط پس از docs exact-head CI، exact-head merge و docs post-main Fast CI بسته می‌شود.
 
 ---
 
-## 8. Release Governance
-زنجیره موجود و Verify‌شده:
+## 7. Release Governance
+زنجیره Verify‌شده:
 `Fast CI → Android Build → Candidate/Manifest → Smoke/Recovery → Readiness → Version/Release Notes Draft → Approval/Rollback Evidence`
 
 وضعیت:
 `candidate verified / release governance verified / production signing blocked / not Play-Store-ready`
 
-هیچ‌یک از این موارد به‌صورت واقعی ایجاد نشده‌اند:
+موارد زیر عمداً ایجاد نشده‌اند:
 - production keystore/secret
 - production signing
 - release tag
@@ -247,7 +223,7 @@ Issue #108 closes only after docs exact-head CI, exact-head merge, and docs post
 
 ---
 
-## 9. CI و Automation
+## 8. CI و Automation
 Fast CI:
 - dependencies
 - analyze
@@ -261,7 +237,6 @@ Android chain:
 - deterministic release draft
 - approval/rollback package
 
-اصل:
 Evidence فقط برای SHA دقیق خودش معتبر است.
 
 ### Issue #19 — Platform Enforcement Gap
@@ -270,16 +245,14 @@ Ruleset `main-protection` زنده است:
 - deletion blocked
 - non-fast-forward blocked
 
-اما required status checks هنوز Platform-level enforce نشده‌اند و Connected tooling Ruleset Write ندارد.
+Required status checks هنوز Platform-level enforce نشده‌اند و Connected tooling Ruleset Write ندارد.
 
 تا زمان enforcement واقعی:
 `exact current head + exact-head relevant gates + live mergeability + exact expected_head_sha + post-main proof`
 
 ---
 
-## 10. مدل Maximum Parallel
-YadNegar یک صف خطی نیست.
-
+## 9. مدل Maximum Parallel
 Laneهای مستقل:
 - Core/Data
 - Product/UX
@@ -300,7 +273,7 @@ Laneهای مستقل:
 
 ---
 
-## 11. Merge Contract
+## 10. Merge Contract
 ### Product / Release
 1. exact current head
 2. exact-head Fast CI Green
@@ -322,35 +295,35 @@ Historical Green برای Head جدید معتبر نیست.
 
 ---
 
-## 12. وضعیت مستندات فعال #108
+## 11. وضعیت مستندات فعال #111
 Branch:
-`docs/timeline-type-selector-icons-live`
+`docs/timeline-type-filter-all-option-live`
 
-Branch قبل از Product Merge آماده شد ولی هیچ Write روی آن انجام نشد. پس از ادغام PR #109، بدون Force از main قبلی به exact main `885b988d...` Fast-forward شد و سپس چهار سند live/canonical با outcome واقعی و post-main Green به‌روزرسانی شدند.
+Branch از documented main قبلی `2c79d2e4...` آماده شد، در طول Product Gate دست‌نخورده ماند، سپس بعد از Green کامل post-main بدون Force به exact product main `b8bd3597...` Fast-forward شد و چهار سند live/canonical با Evidence واقعی به‌روزرسانی شدند.
 
 پس از ادغام و Verify مستندات:
-- Issue #108 completed/closed
-- Product queue از Fresh GitHub Reality دوباره ساخته می‌شود
+- Issue #111 completed/closed
 - Issue #19 تا Ruleset Write واقعی باز می‌ماند
+- Product queue دوباره از Fresh GitHub Reality ساخته می‌شود
 
 ---
 
-## 13. انتخاب Slice بعدی
-هیچ Feature جدید صرفاً برای پرکردن Backlog ساخته نمی‌شود.
+## 12. انتخاب Slice بعدی
+Feature جدید صرفاً برای پرکردن Backlog ساخته نمی‌شود.
 
-روش:
-1. Fresh Audit محصول و open issues
-2. پیدا کردن یک نیاز کوچک با reuse بالا
-3. اثبات اینکه schema/storage/scheduler/foundation جدید لازم نیست
-4. Issue با Definition of Done روشن
-5. Branch از main تازه
-6. focused tests + exact-head gates
+Candidate Audit‌شده فعلی: **پاک‌کردن مستقل Date Range**.
 
-در Audit فعلی هیچ TODO/FIXME آشکاری پیدا نشده و پس از #108 هیچ Issue محصولی از پیش‌ساخته‌ای در صف نیست؛ بنابراین Candidate بعدی فقط بعد از Audit واقعی UX/code پذیرفته می‌شود.
+Evidence کد روی `b8bd3597...`:
+- `_dateStart` و `_dateEndExclusive` State مستقل هستند.
+- `_openDateRangeFilter()` بازه را انتخاب/تعویض می‌کند.
+- UI فعلی دکمه Date Range را برای انتخاب بازه دارد، اما clear مستقل ندارد.
+- `_clearSearch()` تاریخ را همراه query/type پاک می‌کند.
+
+پس از پایان #111 باید Fresh Audit تکرار شود. اگر Scope همچنان کوچک و presentation/reuse-first بود، Issue بعدی باید Definition of Done روشن داشته باشد: حذف فقط تاریخ و حفظ query/type/reminder، بدون Foundation/Data change.
 
 ---
 
-## 14. خط قرمزهای پایدار
+## 13. خط قرمزهای پایدار
 - duplicate Timeline/Reminder/Storage/Workflow foundation
 - destructive migration بدون قرارداد
 - stale/fake evidence
@@ -362,7 +335,7 @@ Branch قبل از Product Merge آماده شد ولی هیچ Write روی آن
 
 ---
 
-## 15. Trigger ادامه
+## 14. Trigger ادامه
 عبارت:
 `ادامه یادنگار`
 
