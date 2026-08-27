@@ -8,6 +8,7 @@ import 'package:yadnegar/features/timeline/application/restore_timeline_item.dar
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restore_action.dart';
 
@@ -474,7 +475,7 @@ class _TimelineHomeState extends State<TimelineHome> {
                       .map(
                         (type) => DropdownMenuItem<TimelineItemType>(
                           value: type,
-                          child: Text(_typeLabel(type)),
+                          child: TimelineItemTypeOption(type: type),
                         ),
                       )
                       .toList(growable: false),
@@ -658,7 +659,7 @@ class _TimelineHomeState extends State<TimelineHome> {
         builder: (context, setDialogState) {
           final supportsOccurredAt = _supportsOccurredAt(selectedType);
           return AlertDialog(
-            title: Text('ویرایش ${_typeLabel(selectedType)}'),
+            title: Text('ویرایش ${timelineItemTypeLabel(selectedType)}'),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -674,7 +675,7 @@ class _TimelineHomeState extends State<TimelineHome> {
                         .map(
                           (type) => DropdownMenuItem<TimelineItemType>(
                             value: type,
-                            child: Text(_typeLabel(type)),
+                            child: TimelineItemTypeOption(type: type),
                           ),
                         )
                         .toList(growable: false),
@@ -953,16 +954,6 @@ class _TimelineHomeState extends State<TimelineHome> {
     if (reminderWarning != null) {
       _showMessage(reminderWarning);
     }
-  }
-
-  String _typeLabel(TimelineItemType type) {
-    return switch (type) {
-      TimelineItemType.note => 'یادداشت',
-      TimelineItemType.event => 'رویداد',
-      TimelineItemType.call => 'تماس',
-      TimelineItemType.idea => 'ایده',
-      TimelineItemType.activity => 'فعالیت',
-    };
   }
 
   String _recurrenceLabel(TimelineReminderRecurrence recurrence) {

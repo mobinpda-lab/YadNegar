@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:yadnegar/features/timeline/application/export_timeline_text.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';
 
 typedef TimelineClipboardWriter = Future<void> Function(String text);
 
@@ -231,7 +232,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                         .map(
                           (type) => DropdownMenuItem<TimelineItemType>(
                             value: type,
-                            child: Text(_typeLabel(type)),
+                            child: TimelineItemTypeOption(type: type),
                           ),
                         )
                         .toList(growable: false),
@@ -406,7 +407,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
           key: Key('timeline-item-${item.id}'),
           child: ListTile(
             leading: Icon(
-              _typeIcon(item.type),
+              timelineItemTypeIcon(item.type),
               key: Key('timeline-type-icon-${item.id}'),
             ),
             title: Text(item.text),
@@ -414,7 +415,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_typeLabel(item.type)),
+                Text(timelineItemTypeLabel(item.type)),
                 const SizedBox(height: 2),
                 Text(
                   _timelineTimeLabel(item),
@@ -493,26 +494,6 @@ class _TimelineScreenState extends State<TimelineScreen> {
       DateTime.saturday => 'شنبه',
       DateTime.sunday => 'یکشنبه',
       _ => '',
-    };
-  }
-
-  IconData _typeIcon(TimelineItemType type) {
-    return switch (type) {
-      TimelineItemType.note => Icons.note_outlined,
-      TimelineItemType.event => Icons.event_outlined,
-      TimelineItemType.call => Icons.call_outlined,
-      TimelineItemType.idea => Icons.lightbulb_outline,
-      TimelineItemType.activity => Icons.check_circle_outline,
-    };
-  }
-
-  String _typeLabel(TimelineItemType type) {
-    return switch (type) {
-      TimelineItemType.note => 'یادداشت',
-      TimelineItemType.event => 'رویداد',
-      TimelineItemType.call => 'تماس',
-      TimelineItemType.idea => 'ایده',
-      TimelineItemType.activity => 'فعالیت',
     };
   }
 }
