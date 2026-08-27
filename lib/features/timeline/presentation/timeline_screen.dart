@@ -405,7 +405,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
         return Card(
           key: Key('timeline-item-${item.id}'),
           child: ListTile(
-            leading: const Icon(Icons.notes),
+            leading: Icon(
+              _typeIcon(item.type),
+              key: Key('timeline-type-icon-${item.id}'),
+            ),
             title: Text(item.text),
             subtitle: Column(
               mainAxisSize: MainAxisSize.min,
@@ -490,6 +493,16 @@ class _TimelineScreenState extends State<TimelineScreen> {
       DateTime.saturday => 'شنبه',
       DateTime.sunday => 'یکشنبه',
       _ => '',
+    };
+  }
+
+  IconData _typeIcon(TimelineItemType type) {
+    return switch (type) {
+      TimelineItemType.note => Icons.note_outlined,
+      TimelineItemType.event => Icons.event_outlined,
+      TimelineItemType.call => Icons.call_outlined,
+      TimelineItemType.idea => Icons.lightbulb_outline,
+      TimelineItemType.activity => Icons.check_circle_outline,
     };
   }
 
