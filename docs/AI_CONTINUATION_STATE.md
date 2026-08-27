@@ -10,33 +10,37 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Verified main SHA: `9ffa1041c3205a35d0aa0744236e9e4dcbb28333`
+Verified main SHA: `a29fe46ba9c9c50be107e36b6c618ddc1a0c6e95`
 
-Main includes PR #83:
-`release: prove Android emulator smoke and storage recovery`
+Main includes completed Release Wave 7 plus deterministic Release Manifest evidence.
 
-PR #83 final exact head:
-`60d1f21ce3574e3b6c04478351136acf35e9e8e7`
+### Integrated PR #85 / Issue #84
+`release: add deterministic release manifest evidence`
+
+Final exact PR head:
+`2a456003899ec24ab310a86f5f521c68a97fb483`
 
 Pre-merge exact-head proof:
-- YadNegar CI run `33069328808`: success
-- YadNegar Android Build run `33069328907`: success
+- YadNegar CI `33070804473`: success
+- YadNegar Android Build `33070804465`: success
+- `android-build`: success
+- Release Candidate + `RELEASE_MANIFEST.txt`: build/verify/upload success
+- `android-smoke-recovery`: success
+
+Merge used exact `expected_head_sha` and produced main:
+`a29fe46ba9c9c50be107e36b6c618ddc1a0c6e95`
+
+Post-main proof on this exact main:
+- YadNegar CI `33071541211`: success
+- YadNegar Android Build `33071541182`: success
 - `android-build`: success
 - `android-smoke-recovery`: success
-- Debug APK + Release Candidate: build/verify/upload success
-- emulator startup + real storage recovery evidence: success
 
-Merge used exact `expected_head_sha` and produced main `9ffa1041c3205a35d0aa0744236e9e4dcbb28333`.
+Issue #84 is closed/completed.
 
-Post-main proof currently:
-- YadNegar CI run `33070027775`: success
-- YadNegar Android Build run `33070027900`: active at this documentation commit; do not report final Green until a fresh read proves all jobs complete
-
-Issue #82 is closed/completed.
-
-## Verified Product Baseline
+## Verified Product / Release Baseline
 One shared Timeline flow:
-`Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup/Restore → Reminder`
+`Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
 Verified foundations on main:
 - Note / Event / Call / Idea / Activity on one `TimelineItem`
@@ -52,71 +56,79 @@ Verified foundations on main:
 - startup/post-Restore Reminder reconciliation
 - Fast CI
 - Android Debug APK artifact
-- release-mode candidate APK + SHA-256/size evidence
+- release-mode Candidate APK
+- SHA-256 + byte-size evidence
+- deterministic `RELEASE_MANIFEST.txt`
+- exact source SHA separated from workflow validation SHA
 - Android emulator startup proof
 - production storage `.bak` recovery proof
 
 No duplicate Timeline model/repository/storage/AppShell/Reminder database exists.
 
-## Completed Release Wave 7
-Wave 7 contract:
-`E2E + build + artifact + smoke + recovery`
+## Release Signing State
+Current Android release-mode build still uses the debug signing config.
 
-Completed:
-- PR #81 / Issue #80 — deterministic Release Candidate artifact gate
-- PR #83 / Issue #82 — Android emulator smoke + real storage recovery gate
+Correct status:
+`candidate verified / not production-signed / not Play-Store-ready`
 
-Current release candidate is **not production-signed**. `android/app/build.gradle.kts` still uses the debug signing config for release-mode builds. Do not claim Play-Store-ready or production-signed status.
+No secret or production keystore is committed to the repository.
 
-## Active Release Governance — Issue #84 / PR #85
-Issue #84 / PR #85:
-`release: add deterministic release manifest evidence`
+## Active Release Governance — Issue #87 / PR #88
+`release: aggregate candidate readiness evidence`
 
 Branch:
-`release/deterministic-release-manifest`
+`release/candidate-readiness-evidence`
 
-Initial exact head:
-`cb8bd2d23dfc06bdb8f8ab20869dabb8edbfd340`
+Exact current head at this documentation commit:
+`32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
 
 Purpose:
-- reuse existing Android workflow
-- preserve build + artifact + smoke/recovery gates
-- add `RELEASE_MANIFEST.txt`
-- record app version, application id, exact source SHA, APK SHA-256, byte size and explicit signing state
-- no signing secret
-- no tag/release/publish mutation
+- reuse the existing Android workflow
+- preserve Build + Manifest + Smoke/Recovery gates
+- add dependent `release-readiness` aggregation
+- validate exact-run Candidate and Smoke evidence
+- emit `RELEASE_READINESS.txt`
+- explicitly report Production signing as blocked while debug signing remains
 
-Current exact-head runs:
-- YadNegar CI `33070352421`
-- YadNegar Android Build `33070352464`
+Exact-head runs started:
+- YadNegar CI `33073336472`
+- YadNegar Android Build `33073336417`
 
-Both must be fresh-read before any Green or merge claim.
+These runs were active when this document revision was written. Fresh-read is required before any Green or merge claim.
+
+## Active Documentation — PR #86
+Branch:
+`docs/release-wave7-final`
+
+Purpose:
+- keep Current State / Persian Handoff / Operation Plan / Canonical Governance aligned with GitHub reality
+- remain docs-only
+- merge only after exact-head Fast CI + fresh mergeability + `expected_head_sha`
 
 ## Automation Gap
 Issue #19 remains open.
 
-Live `main-protection` Ruleset requires PR and blocks deletion/non-fast-forward, but platform-level required status checks are still not configured. Fresh tool discovery on 2026-08-27 again exposes Ruleset read only, not Ruleset write.
+`main` requires PR via the live Ruleset, but required status checks are not currently configured as Platform-level enforcement. Connected tooling still exposes Ruleset read, not Ruleset write.
 
-Until real Ruleset write exists, operational merge safety is:
+Until real platform enforcement is writable, operational merge safety remains:
 `exact current head + exact-head quality + exact-head Android/relevant jobs + live mergeability + expected_head_sha + post-main proof`
 
 ## Parallel Speed Rules
 - Product / Release / CI-Automation / Docs move simultaneously when independent
-- blocked runner does not stop independent work
+- blocked Runner never stops an independent Lane
 - reuse before rebuild
 - small reversible PRs
-- no fake evidence
-- no stale merge evidence
+- no fake or stale evidence
 - no duplicate workflow/storage/foundation
 - docs move concurrently with implementation
 
 ## Next Actions
-1. Fresh-read post-main Android run `33070027900` for main `9ffa1041...`.
-2. Validate PR #85 exact head; require Fast CI + Android Build + Smoke/Recovery Green.
-3. Finalize this docs branch from the actual completed evidence and open a docs-only PR.
-4. Merge any Green PR only after fresh head/mergeability and exact `expected_head_sha`.
-5. Keep #19 open until Ruleset write is genuinely available.
-6. Production signing remains a separate security-sensitive slice after keystore/credential ownership is defined.
+1. Validate PR #88 on exact head `32d2b6de...`: Fast CI + Android Build + Smoke/Recovery + Release Readiness.
+2. If Green, fresh-read head/mergeability and merge only with exact `expected_head_sha`.
+3. Verify post-main after any #88 merge.
+4. Refresh PR #86 one final time from actual #88 outcome, then merge docs-only safely.
+5. Keep Issue #19 open until required-check enforcement is genuinely writable.
+6. Production signing remains a separate security-sensitive slice after secure keystore/credential ownership is defined.
 
 ## Trigger
 `ادامه یادنگار`
