@@ -10,62 +10,61 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current main SHA: `1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+Current main SHA: `8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
 
-Main now includes the completed recurring-reminder product wave on top of the existing Timeline and release-governance foundations.
+Main contains the completed recurring-reminder foundation plus direct reminder-status presentation on Timeline cards.
 
-## Recurring Reminder Wave — Issue #93
-The wave was implemented in two reusable slices:
-- #94 / PR #96 — recurrence contract + schema-v3 migration
-- #95 / PR #97 — Android recurrence scheduling + Persian UX
+## Completed Recurring Reminder Wave — Issue #93
+- #94 / PR #96 — recurrence contract + JSON schema v3 migration
+- #95 / PR #97 — device-local daily/weekly Android scheduling + Persian UX
+- #98 — final recurring-reminder documentation synchronization
+- Parent #93 — closed/completed
 
-### PR #96 / Issue #94 — Completed
-Final head:
-`225c948eac7a95e63d5618254fab7e6213a5c835`
-
-Integrated:
-- `TimelineReminderRecurrence { none, daily, weekly }`
-- JSON schema v3
-- backward-compatible v1/v2 reads
-- no read-time rewrite
-- safe-write upgrade through existing tmp/bak recovery
-- existing Timeline repository/storage/application path reused
-
-Pre-merge proof:
-- Fast CI `33078963061`: success
-- Android `33078963046`: success
-
-Post-main proof on `dc58de0e9d4b6aaa90a800a894404e9db86cf4f5`:
-- Fast CI `33079988610`: success
-- Android `33079988616`: success
-
-### PR #97 / Issue #95 — Completed
-Final head:
-`79bc8d84e8bab563ab63a688448fbf26d3a51dad`
-
-Integrated behavior:
-- one-shot (`none`) preserved
-- daily recurrence at device-local clock time
-- weekly recurrence at device-local weekday + clock time
-- past recurring anchors advance to the next valid future occurrence
-- device IANA timezone resolved before startup/Restore reconciliation
+Key safety remains:
+- one Timeline model/repository/storage path
+- one Reminder scheduler path
+- backward-compatible v1/v2 reads with current schema v3
+- persist-first mutations
 - recurrence fails closed if timezone cannot be resolved
-- persisted data is never rolled back because notification scheduling fails
-- Persian choices: `بدون تکرار / روزانه / هفتگی`
-- recurrence controls appear only when a reminder exists
-- persist-first create/edit and delete/Undo cancel/reschedule behavior preserved
 - no exact-alarm permission
 
-Pre-merge exact-head proof:
-- Fast CI `33080762656`: success
-- Android `33080762586`: success
+## Timeline Reminder Status — Issue #99 / PR #100
+Final product head:
+`32fd20609daa8d6fea74c325fecb14e096c0106d`
 
-Merged to current main:
-`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+Merged with exact expected-head lock to current main:
+`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
 
-Post-main proof:
-- Fast CI `33081668902`: success
-- Android `33081668913`: success
+Fresh product compare was limited to:
+- `lib/features/timeline/presentation/timeline_screen.dart`
+- `test/features/timeline/presentation/timeline_reminder_status_test.dart`
+
+Integrated behavior:
+- no reminder => no reminder row
+- one-shot => reminder date/time
+- daily => Persian `روزانه` + clock time
+- weekly => Persian `هفتگی` + Persian weekday + clock time
+- existing item type + Timeline timestamp stay visible
+
+Exact-head pre-merge proof:
+- Fast CI `33086840280`: success
+- Android `33086840284`: success
+  - Build/Candidate: success
+  - emulator Smoke/Recovery: success
+  - Release Readiness: success
+  - deterministic Release Draft: success
+  - Approval/Rollback evidence: success
+
+Post-main proof on exact main `8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`:
+- Fast CI `33087745543`: success
+- Android `33087745462`: success
+  - Build/Candidate: success
+  - emulator Smoke/Recovery: success
+  - Release Readiness: success
+  - deterministic Release Draft: success
+  - Approval/Rollback evidence: success
+
+Issue #99 closes only after this documentation synchronization is integrated and verified.
 
 ## Product / Data Foundation
 Main flow:
@@ -88,37 +87,25 @@ No real tag, GitHub Release, Play Store publish, production keystore or signing 
 ## Automation Gap — Issue #19
 Issue #19 remains open.
 
-Live protection requires PR and blocks deletion/non-fast-forward, but required status checks are not Platform-level enforced. Connected tooling still exposes Ruleset read without Ruleset write.
+Live protection requires PR and blocks deletion/non-fast-forward, but required status checks are not Platform-level enforced. Connected tooling exposes Ruleset read without Ruleset write.
 
 Until real enforcement is writable:
 `exact current head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-## Active Documentation — PR #98
-PR #98 is the final docs-only synchronization for the recurring-reminder wave.
+## Active Documentation
+Branch: `docs/timeline-reminder-status-live`
 
-Required final gate:
+Purpose: synchronize the four live/canonical project documents with the completed #99 / PR #100 outcome and exact post-main evidence.
+
+Docs-only merge contract:
 1. exact current docs head
 2. exact-head Fast CI Green
 3. live mergeability=true
-4. merge with exact `expected_head_sha`
+4. exact `expected_head_sha`
 5. post-main Fast CI proof
-6. close parent Issue #93 only after that proof
+6. close #99 only after that proof
 
-## Next Product Slice — Issue #99
-`product: surface reminder status on Timeline cards`
-
-Planned scope is presentation-only reuse of existing `TimelineItem.reminderAt` and recurrence fields:
-- no reminder => no reminder summary
-- one-shot => date/time summary
-- daily => `روزانه` + clock time
-- weekly => `هفتگی` + weekday/clock summary
-- focused TimelineScreen widget tests
-
-No schema/repository/storage/scheduler/navigation foundation change is planned.
-
-Implementation starts after #93 is fully closed.
-
-## Parallel Speed Rules
+## Maximum Parallel Rules
 - Product / Release / Automation / Docs move simultaneously when independent
 - blocked Runner never stops an independent Lane
 - stacked preparation requires fresh compare proving isolated scope
@@ -129,12 +116,12 @@ Implementation starts after #93 is fully closed.
 - docs move concurrently with implementation
 
 ## Next Actions
-1. Finish exact-head gate and merge PR #98.
-2. Verify PR #98 post-main Fast CI.
-3. Close parent Issue #93.
-4. Start Issue #99 as a small presentation-only PR from fresh main.
+1. Integrate this docs synchronization with exact-head evidence.
+2. Verify docs post-main Fast CI.
+3. Close Issue #99 as completed.
+4. Fresh-audit existing Timeline filter architecture and open the next small reuse-first product slice only if scope is isolated.
 5. Keep Issue #19 open until required-check enforcement is genuinely writable.
-6. Production signing and real tag/release/publish remain separate owner/security decisions.
+6. Production signing and real tag/release/publish remain separate Owner/Security decisions.
 
 ## Trigger
 `ادامه یادنگار`

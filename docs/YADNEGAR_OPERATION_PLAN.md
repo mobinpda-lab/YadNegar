@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 4.1 — Recurring Reminder Wave Complete
+## نسخه 4.2 — Timeline Reminder Status Complete
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -20,7 +20,7 @@ Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked prepa
 
 ## 2. main فعلی
 Current main:
-`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
 
 Main شامل:
 - Timeline foundation واحد
@@ -28,6 +28,7 @@ Main شامل:
 - backward-compatible v1/v2 reads
 - daily/weekly Android reminder scheduling با timezone محلی دستگاه
 - Persian recurrence UX
+- نمایش مستقیم وضعیت Reminder روی کارت Timeline
 - Release Governance غیرمخرب کامل
 است.
 
@@ -41,52 +42,49 @@ Main شامل:
 هیچ Tag، GitHub Release، Play Store publish یا production keystore/secret ساخته نشده است.
 
 ## 4. Recurring Reminder Wave — Completed
-Parent: Issue #93
+Parent #93 بسته است.
 
-### Issue #94 / PR #96
-`recurrence contract + schema v3 migration`
+### PR #96 / Issue #94
+- recurrence contract: `none / daily / weekly`
+- schema v3
+- v1/v2 backward compatibility
+- safe-write migration با recovery موجود
 
-Final head:
-`225c948eac7a95e63d5618254fab7e6213a5c835`
-
-Pre-merge:
-- CI `33078963061`: success
-- Android `33078963046`: success
-
-Post-main:
-- CI `33079988610`: success
-- Android `33079988616`: success
-
-### Issue #95 / PR #97
-`Android scheduling + Persian recurrence UX`
-
-Final head:
-`79bc8d84e8bab563ab63a688448fbf26d3a51dad`
-
-رفتار نهایی:
-- none => one-shot فعلی
-- daily => ساعت محلی دستگاه
-- weekly => روز هفته + ساعت محلی دستگاه
-- past anchor => occurrence بعدی آینده
-- timezone قبل از startup/Restore reconciliation
-- timezone failure => recurrence fail-closed؛ داده rollback نمی‌شود
-- Persian UI: `بدون تکرار / روزانه / هفتگی`
-- persist-first حفظ شده
-- clear reminder => recurrence none
+### PR #97 / Issue #95
+- daily/weekly device-local scheduling
+- Persian recurrence UX
+- timezone-safe reconciliation
+- fail-closed recurrence on timezone resolution failure
+- persist-first behavior
 - no exact-alarm permission
 
-Pre-merge:
-- CI `33080762656`: success
-- Android `33080762586`: success
+## 5. Timeline Reminder Status — Issue #99 / PR #100
+Final product head:
+`32fd20609daa8d6fea74c325fecb14e096c0106d`
 
 Merged main:
-`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
+
+Scope واقعی:
+- `lib/features/timeline/presentation/timeline_screen.dart`
+- `test/features/timeline/presentation/timeline_reminder_status_test.dart`
+
+رفتار:
+- no reminder => no row
+- one-shot => date/time
+- daily => `روزانه` + clock
+- weekly => `هفتگی` + Persian weekday + clock
+
+Pre-merge:
+- CI `33086840280`: success
+- Android `33086840284`: success
 
 Post-main:
-- CI `33081668902`: success
-- Android `33081668913`: success
+- CI `33087745543`: success
+- Android `33087745462`: success
+- Build/Candidate/Smoke-Recovery/Readiness/Release-Draft/Approval all success
 
-## 5. Product Foundation
+## 6. Product Foundation
 Flow اصلی:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
@@ -95,15 +93,18 @@ Compatibility: v1/v2 reads پشتیبانی می‌شوند.
 
 هیچ Model / Repository / Storage / AppShell / Reminder DB / Scheduler موازی وجود ندارد.
 
-## 6. Automation / Documentation
+## 7. Automation / Documentation
 ### Issue #19
 Ruleset فعلی PR را اجباری می‌کند و deletion/non-fast-forward را می‌بندد، اما required status checks هنوز Platform-level enforce نشده‌اند. Connected tooling Ruleset Write ندارد.
 
 قانون عملی تا enforcement واقعی:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-### PR #98 — Final Recurring-Reminder Docs
-چهار سند Current State / Persian Handoff / Operation Plan / Canonical Governance با outcome واقعی #97 همگام می‌شوند.
+### Active Docs Sync
+Branch:
+`docs/timeline-reminder-status-live`
+
+هدف: چهار سند Current State / Persian Handoff / Operation Plan / Comprehensive Reference را با outcome واقعی #99/#100 همگام کند.
 
 Merge Contract:
 1. exact docs head
@@ -111,30 +112,7 @@ Merge Contract:
 3. live mergeability=true
 4. exact `expected_head_sha`
 5. post-main Fast CI
-6. Close parent #93
-
-## 7. Next Product Slice — Issue #99
-`product: surface reminder status on Timeline cards`
-
-هدف: کاربر بدون بازکردن Edit بداند Timeline item reminder دارد یا تکرارشونده است.
-
-Scope:
-- Presentation-only
-- reuse `TimelineItem.reminderAt` + recurrence
-- no reminder => no reminder row/badge
-- one-shot => reminder date/time
-- daily => `روزانه` + clock time
-- weekly => `هفتگی` + weekday/clock summary
-- focused TimelineScreen widget tests
-
-Out of scope:
-- schema
-- repository/storage
-- scheduler
-- navigation/screen foundation
-- Reminder DB
-
-Dependency: Implementation فقط پس از بسته‌شدن کامل #93.
+6. Close #99 فقط بعد از proof
 
 ## 8. Merge Contract
 ### Product / Release
@@ -168,18 +146,17 @@ Historical Green برای Head جدید معتبر نیست.
 
 ## 10. Queue
 ### Active
-1. PR #98 — final recurring-reminder docs gate + merge
+1. docs sync برای outcome #99/#100
 2. Issue #19 — required-status enforcement gap
 
-### Immediately After #98
-3. Verify docs post-main Fast CI
-4. Close parent Issue #93
-5. Start Issue #99 as a small UI-only branch/PR
-6. Run exact-head Fast CI + relevant Android gate
-7. Merge with expected-head lock + post-main proof + concurrent docs
+### Next Product Discovery
+3. Fresh Audit معماری Search/Filter موجود
+4. انتخاب یک Slice کوچک و reuse-first که به schema/storage/scheduler جدید نیاز نداشته باشد
+5. ایجاد Issue/Branch فقط بعد از اثبات Scope مستقل
+6. exact-head CI/Android + expected-head merge + post-main proof + concurrent docs
 
 ### Security-separated
-8. Production signing / real tag / release / publish only with explicit Owner/Security decision
+7. Production signing / real tag / release / publish فقط با Owner/Security decision صریح
 
 ## 11. اصل سرعت
 `Maximum Parallel = Independent Lanes + Safe Stacked Preparation + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Concurrent Documentation`
