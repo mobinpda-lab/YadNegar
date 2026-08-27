@@ -27,7 +27,7 @@ No duplicate Model/Repository/Storage/AppShell.
 Backup معتبر و قابل‌حمل.
 
 Current final-validation head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
-Status: Draft تا پایان exact-head Android Gate.
+Status: final exact-head gates Green؛ آماده Ready/Fresh mergeability/expected-head merge.
 
 ### Core/Data
 - `JsonFileTimelineRepository.readValidatedSnapshotBytes()` روی concrete implementation
@@ -78,7 +78,7 @@ Dependency-resolution validation اولیه:
 Head نهایی: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
 
 - CI `33042505480`: Green
-- Android `33042505505`: active در آخرین Fresh Audit
+- Android `33042505505`: Green
 
 فقط Gateهای همین Head merge evidence هستند.
 
@@ -98,7 +98,7 @@ Merge contract:
 6. post-main proof
 
 ## 8. Out of Scope
-- Restore/Import
+- Restore/Import داخل PR #68
 - Reminder/notification
 - second serializer/schema
 - second Timeline storage
@@ -110,6 +110,9 @@ Merge contract:
 2. docs/current-state-backup-active — parallel docs
 3. Issue #19 — Ruleset gap
 
+### Next audited slice
+- Issue #70 — validated Timeline Restore/Import with validation + rollback؛ Branch فقط بعد از Merge و post-main proof #68.
+
 ### Completed
 - PR #69 — Bismillah home header
 - PR #66 — Export wave docs
@@ -118,11 +121,10 @@ Merge contract:
 - PR #61 / Issue #57 — safe Delete
 
 ## 10. قدم بعد
-- Android exact-head #68 را ببند
-- Green → Ready → Fresh mergeability → expected-head Merge
+- PR #68 Ready → Fresh mergeability → expected-head Merge
 - post-main CI + Android proof
 - final Docs structural sync/merge
-- Restore/Import فقط به‌عنوان Slice بعدی مستقل و بعد از Fresh Audit
+- سپس Issue #70 به‌عنوان Slice مستقل Restore/Import
 
 ## 11. گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
