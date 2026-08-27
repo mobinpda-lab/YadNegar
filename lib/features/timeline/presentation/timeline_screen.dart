@@ -6,7 +6,13 @@ import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.da
 
 typedef TimelineClipboardWriter = Future<void> Function(String text);
 
-class TimelineScreen extends StatelessWidget {
+enum TimelineReminderPresenceFilter {
+  all,
+  withReminder,
+  withoutReminder,
+}
+
+class TimelineScreen extends StatefulWidget {
   const TimelineScreen({
     super.key,
     this.items = const <TimelineItem>[],
@@ -43,6 +49,30 @@ class TimelineScreen extends StatelessWidget {
   final VoidCallback? onRestoreSnapshot;
 
   @override
+  State<TimelineScreen> createState() => _TimelineScreenState();
+}
+
+class _TimelineScreenState extends State<TimelineScreen> {
+  TimelineReminderPresenceFilter _reminderFilter =
+      TimelineReminderPresenceFilter.all;
+
+  bool get _hasReminderFilter =>
+      _reminderFilter != TimelineReminderPresenceFilter.all;
+
+  bool get _hasActiveSearch => widget.hasActiveSearch || _hasReminderFilter;
+
+  List<TimelineItem> get _visibleItems {
+    final matches = widget.items.where((item) {
+      return switch (_reminderFilter) {
+        TimelineReminderPresenceFilter.all => true,
+        TimelineReminderPresenceFilter.withReminder => item.reminderAt != null,
+        TimelineReminderPresenceFilter.withoutReminder => item.reminderAt == null,
+      };
+    }).toList(growable: false);
+    return List<TimelineItem>.unmodifiable(matches);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final backupScope = TimelineBackupScope.maybeOf(context);
 
@@ -68,18 +98,18 @@ class TimelineScreen extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
-          if (onRestoreSnapshot != null)
+          if (widget.onRestoreSnapshot != null)
             IconButton(
               key: const Key('timeline-restore-action'),
               tooltip: 'بازیابی پشتیبان',
-              onPressed: isLoading ? null : onRestoreSnapshot,
+              onPressed: widget.isLoading ? null : widget.onRestoreSnapshot,
               icon: const Icon(Icons.restore_page_outlined),
             ),
           if (backupScope != null)
             IconButton(
               key: const Key('timeline-backup-action'),
               tooltip: 'پشتیبان‌گیری',
-              onPressed: isLoading
+              onPressed: widget.isLoading
                   ? null
                   : () => _shareBackup(context, backupScope.backupAction),
               icon: const Icon(Icons.backup_outlined),
@@ -87,7 +117,7 @@ class TimelineScreen extends StatelessWidget {
           IconButton(
             key: const Key('timeline-export-action'),
             tooltip: 'کپی موارد نمایش‌داده‌شده',
-            onPressed: isLoading ? null : () => _copyExport(context),
+            onPressed: widget.isLoading ? null : () => _copyExport(context),
             icon: const Icon(Icons.copy_all_outlined),
           ),
         ],
@@ -95,7 +125,7 @@ class TimelineScreen extends StatelessWidget {
       body: _buildPageBody(),
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('quick-capture-action'),
-        onPressed: onQuickCapture,
+        onPressed: widget.onQuickCapture,
         tooltip: 'ثبت سریع',
         icon: const Icon(Icons.add),
         label: const Text('ثبت سریع'),
@@ -126,7 +156,7 @@ class TimelineScreen extends StatelessWidget {
   }
 
   Future<void> _copyExport(BuildContext context) async {
-    final text = const ExportTimelineText().export(items);
+    final text = const ExportTimelineText().export(_visibleItems);
     if (text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('موردی برای کپی وجود ندارد.')),
@@ -135,7 +165,7 @@ class TimelineScreen extends StatelessWidget {
     }
 
     try {
-      final writer = clipboardWriter ?? _writeClipboard;
+      final writer = widget.clipboardWriter ?? _writeClipboard;
       await writer(text);
       if (!context.mounted) {
         return;
@@ -158,10 +188,12 @@ class TimelineScreen extends StatelessWidget {
   }
 
   Widget _buildPageBody() {
-    final hasSearchControls = searchController != null && onSearchChanged != null;
-    final hasDateControls = onDateRangeTap != null;
+    final hasSearchControls =
+        widget.searchController != null && widget.onSearchChanged != null;
+    final hasDateControls = widget.onDateRangeTap != null;
+    final hasReminderControls = widget.items.isNotEmpty || _hasReminderFilter;
 
-    if (!hasSearchControls && !hasDateControls) {
+    if (!hasSearchControls && !hasDateControls && !hasReminderControls) {
       return _buildContent();
     }
 
@@ -172,8 +204,8 @@ class TimelineScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: TextField(
               key: const Key('timeline-search-input'),
-              controller: searchController,
-              onChanged: onSearchChanged,
+              controller: widget.searchController,
+              onChanged: widget.onSearchChanged,
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 labelText: 'جستجو در یادنگار',
@@ -192,7 +224,7 @@ class TimelineScreen extends StatelessWidget {
                 Expanded(
                   child: DropdownButton<TimelineItemType>(
                     key: const Key('timeline-type-filter'),
-                    value: selectedFilterType,
+                    value: widget.selectedFilterType,
                     hint: const Text('همه انواع'),
                     isExpanded: true,
                     items: TimelineItemType.values
@@ -203,15 +235,15 @@ class TimelineScreen extends StatelessWidget {
                           ),
                         )
                         .toList(growable: false),
-                    onChanged: onTypeFilterChanged,
+                    onChanged: widget.onTypeFilterChanged,
                   ),
                 ),
-                if (hasActiveSearch) ...[
+                if (_hasActiveSearch) ...[
                   const SizedBox(width: 8),
                   IconButton(
                     key: const Key('timeline-search-clear'),
                     tooltip: 'پاک کردن جستجو و فیلترها',
-                    onPressed: onClearSearch,
+                    onPressed: _clearFilters,
                     icon: const Icon(Icons.clear),
                   ),
                 ],
@@ -219,16 +251,60 @@ class TimelineScreen extends StatelessWidget {
             ),
           ),
         ],
+        if (hasReminderControls)
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              hasSearchControls ? 0 : 12,
+              16,
+              4,
+            ),
+            child: Row(
+              children: [
+                const Text('یادآور:'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButton<TimelineReminderPresenceFilter>(
+                    key: const Key('timeline-reminder-filter'),
+                    value: _reminderFilter,
+                    isExpanded: true,
+                    items: TimelineReminderPresenceFilter.values
+                        .map(
+                          (filter) => DropdownMenuItem<
+                              TimelineReminderPresenceFilter>(
+                            value: filter,
+                            child: Text(_reminderFilterLabel(filter)),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (filter) {
+                      if (filter == null) {
+                        return;
+                      }
+                      setState(() {
+                        _reminderFilter = filter;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         if (hasDateControls)
           Padding(
-            padding: EdgeInsets.fromLTRB(16, hasSearchControls ? 0 : 12, 16, 8),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              hasSearchControls || hasReminderControls ? 0 : 12,
+              16,
+              8,
+            ),
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 key: const Key('timeline-date-filter'),
-                onPressed: onDateRangeTap,
+                onPressed: widget.onDateRangeTap,
                 icon: const Icon(Icons.date_range),
-                label: Text(dateRangeLabel ?? 'فیلتر بازه زمانی'),
+                label: Text(widget.dateRangeLabel ?? 'فیلتر بازه زمانی'),
               ),
             ),
           ),
@@ -237,19 +313,26 @@ class TimelineScreen extends StatelessWidget {
     );
   }
 
+  void _clearFilters() {
+    setState(() {
+      _reminderFilter = TimelineReminderPresenceFilter.all;
+    });
+    widget.onClearSearch?.call();
+  }
+
   Widget _buildContent() {
-    if (isLoading) {
+    if (widget.isLoading) {
       return const Center(
         child: CircularProgressIndicator(key: Key('timeline-loading')),
       );
     }
 
-    if (errorMessage != null) {
+    if (widget.errorMessage != null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            errorMessage!,
+            widget.errorMessage!,
             key: const Key('timeline-error'),
             textAlign: TextAlign.center,
           ),
@@ -257,7 +340,9 @@ class TimelineScreen extends StatelessWidget {
       );
     }
 
-    if (items.isEmpty && hasActiveSearch) {
+    final visibleItems = _visibleItems;
+
+    if (visibleItems.isEmpty && _hasActiveSearch) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
@@ -283,7 +368,7 @@ class TimelineScreen extends StatelessWidget {
       );
     }
 
-    if (items.isEmpty) {
+    if (visibleItems.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
@@ -312,10 +397,10 @@ class TimelineScreen extends StatelessWidget {
     return ListView.separated(
       key: const Key('timeline-list'),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-      itemCount: items.length,
+      itemCount: visibleItems.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final item = items[index];
+        final item = visibleItems[index];
         final reminderLabel = _reminderLabel(item);
         return Card(
           key: Key('timeline-item-${item.id}'),
@@ -342,8 +427,12 @@ class TimelineScreen extends StatelessWidget {
               ],
             ),
             isThreeLine: true,
-            trailing: onItemTap == null ? null : const Icon(Icons.chevron_left),
-            onTap: onItemTap == null ? null : () => onItemTap!(item),
+            trailing: widget.onItemTap == null
+                ? null
+                : const Icon(Icons.chevron_left),
+            onTap: widget.onItemTap == null
+                ? null
+                : () => widget.onItemTap!(item),
           ),
         );
       },
@@ -368,6 +457,14 @@ class TimelineScreen extends StatelessWidget {
         'یادآور: روزانه - ${_formatTime(reminderAt)}',
       TimelineReminderRecurrence.weekly =>
         'یادآور: هفتگی - ${_weekdayLabel(reminderAt.weekday)} - ${_formatTime(reminderAt)}',
+    };
+  }
+
+  String _reminderFilterLabel(TimelineReminderPresenceFilter filter) {
+    return switch (filter) {
+      TimelineReminderPresenceFilter.all => 'همه موارد',
+      TimelineReminderPresenceFilter.withReminder => 'دارای یادآور',
+      TimelineReminderPresenceFilter.withoutReminder => 'بدون یادآور',
     };
   }
 
