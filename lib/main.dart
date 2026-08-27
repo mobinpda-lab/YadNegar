@@ -82,6 +82,7 @@ Future<void> main() async {
           editTimelineItem: EditTimelineItem(repository: repository),
           deleteTimelineItem: DeleteTimelineItem(repository: repository),
           restoreTimelineItem: RestoreTimelineItem(repository: repository),
+          reminderScheduler: reminderScheduler,
           restoreTimelineSnapshot: () async {
             final result = await FilePicker.platform.pickFiles(
               type: FileType.custom,

@@ -6,6 +6,7 @@ import 'package:yadnegar/features/timeline/application/load_timeline.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
+import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restore_action.dart';
@@ -20,24 +21,33 @@ typedef TimelineOccurredAtPicker = Future<DateTime?> Function(
   DateTime initialDateTime,
 );
 
+typedef TimelineReminderAtPicker = Future<DateTime?> Function(
+  BuildContext context,
+  DateTime initialDateTime,
+);
+
 class _QuickCaptureDraft {
   const _QuickCaptureDraft({
     required this.text,
     required this.type,
     this.occurredAt,
+    this.reminderAt,
   });
 
   final String text;
   final TimelineItemType type;
   final DateTime? occurredAt;
+  final DateTime? reminderAt;
 }
 
 class _EditTimelineDraft {
   const _EditTimelineDraft({
     required this.text,
     required this.replaceOccurredAt,
+    required this.replaceReminderAt,
     this.replacementType,
     this.occurredAt,
+    this.reminderAt,
     this.deleteRequested = false,
   });
 
@@ -45,6 +55,8 @@ class _EditTimelineDraft {
   final TimelineItemType? replacementType;
   final bool replaceOccurredAt;
   final DateTime? occurredAt;
+  final bool replaceReminderAt;
+  final DateTime? reminderAt;
   final bool deleteRequested;
 }
 
@@ -61,6 +73,8 @@ class TimelineHome extends StatefulWidget {
     this.filterTimelineByDateRange,
     this.dateRangePicker,
     this.occurredAtPicker,
+    this.reminderAtPicker,
+    this.reminderScheduler,
   });
 
   final QuickCapture quickCapture;
@@ -73,6 +87,8 @@ class TimelineHome extends StatefulWidget {
   final FilterTimelineByDateRange? filterTimelineByDateRange;
   final TimelineDateRangePicker? dateRangePicker;
   final TimelineOccurredAtPicker? occurredAtPicker;
+  final TimelineReminderAtPicker? reminderAtPicker;
+  final TimelineReminderScheduler? reminderScheduler;
 
   @override
   State<TimelineHome> createState() => _TimelineHomeState();
@@ -254,6 +270,39 @@ class _TimelineHomeState extends State<TimelineHome> {
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
+  Future<DateTime?> _showReminderAtPicker(
+    BuildContext context,
+    DateTime initialDateTime,
+  ) async {
+    final now = DateTime.now();
+    final initialDate = initialDateTime.isBefore(now) ? now : initialDateTime;
+    final date = await showDatePicker(
+      context: context,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(2100),
+      initialDate: initialDate,
+      helpText: 'تاریخ یادآور',
+      cancelText: 'انصراف',
+      confirmText: 'بعدی',
+    );
+    if (date == null || !context.mounted) {
+      return null;
+    }
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initialDateTime),
+      helpText: 'زمان یادآور',
+      cancelText: 'انصراف',
+      confirmText: 'اعمال',
+    );
+    if (time == null) {
+      return null;
+    }
+
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
   DateTime _startOfDay(DateTime value) {
     if (value.isUtc) {
       return DateTime.utc(value.year, value.month, value.day);
@@ -275,6 +324,50 @@ class _TimelineHomeState extends State<TimelineHome> {
 
   bool _supportsOccurredAt(TimelineItemType type) {
     return type == TimelineItemType.event || type == TimelineItemType.activity;
+  }
+
+  bool _isFutureReminder(DateTime? value) {
+    return value == null || value.isAfter(DateTime.now());
+  }
+
+  Future<String?> _scheduleReminder(TimelineItem item) async {
+    final scheduler = widget.reminderScheduler;
+    if (scheduler == null || item.reminderAt == null) {
+      return null;
+    }
+
+    try {
+      final result = await scheduler.schedule(item);
+      return switch (result) {
+        TimelineReminderScheduleResult.scheduled => null,
+        TimelineReminderScheduleResult.permissionDenied =>
+          'مورد ذخیره شد، اما اجازه نمایش اعلان یادآور داده نشد.',
+        TimelineReminderScheduleResult.skippedPast =>
+          'مورد ذخیره شد، اما زمان یادآور باید در آینده باشد.',
+      };
+    } catch (_) {
+      return 'مورد ذخیره شد، اما تنظیم اعلان یادآور انجام نشد.';
+    }
+  }
+
+  Future<String?> _cancelReminder(String timelineItemId) async {
+    final scheduler = widget.reminderScheduler;
+    if (scheduler == null) {
+      return null;
+    }
+    try {
+      await scheduler.cancel(timelineItemId);
+      return null;
+    } catch (_) {
+      return 'تغییر ذخیره شد، اما همگام‌سازی یادآور کامل نشد.';
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _clearSearch() {
@@ -331,33 +424,20 @@ class _TimelineHomeState extends State<TimelineHome> {
           if (!mounted) {
             return;
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('فایل پشتیبان با موفقیت بازیابی شد.')),
-          );
+          _showMessage('فایل پشتیبان با موفقیت بازیابی شد.');
           return;
         case TimelineSnapshotRestoreResult.invalidBackup:
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('فایل پشتیبان معتبر نیست.')),
-          );
+          _showMessage('فایل پشتیبان معتبر نیست.');
           return;
         case TimelineSnapshotRestoreResult.unsupportedSchema:
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('نسخه این فایل پشتیبان پشتیبانی نمی‌شود.')),
-          );
+          _showMessage('نسخه این فایل پشتیبان پشتیبانی نمی‌شود.');
           return;
         case TimelineSnapshotRestoreResult.duplicateId:
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('فایل پشتیبان شامل شناسه‌های تکراری است.')),
-          );
+          _showMessage('فایل پشتیبان شامل شناسه‌های تکراری است.');
           return;
       }
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('بازیابی فایل پشتیبان انجام نشد.')),
-      );
+      _showMessage('بازیابی فایل پشتیبان انجام نشد.');
     }
   }
 
@@ -365,158 +445,22 @@ class _TimelineHomeState extends State<TimelineHome> {
     var draft = '';
     var selectedType = TimelineItemType.note;
     DateTime? occurredAt;
+    DateTime? reminderAt;
 
     final captureDraft = await showDialog<_QuickCaptureDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('ثبت سریع'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text('نوع مورد'),
-              const SizedBox(height: 4),
-              DropdownButton<TimelineItemType>(
-                key: const Key('quick-capture-type'),
-                value: selectedType,
-                isExpanded: true,
-                items: TimelineItemType.values
-                    .map(
-                      (type) => DropdownMenuItem<TimelineItemType>(
-                        value: type,
-                        child: Text(_typeLabel(type)),
-                      ),
-                    )
-                    .toList(growable: false),
-                onChanged: (type) {
-                  if (type == null) {
-                    return;
-                  }
-                  setDialogState(() {
-                    selectedType = type;
-                    if (!_supportsOccurredAt(type)) {
-                      occurredAt = null;
-                    }
-                  });
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                key: const Key('quick-capture-input'),
-                autofocus: true,
-                minLines: 1,
-                maxLines: 4,
-                onChanged: (value) => draft = value,
-                decoration: const InputDecoration(
-                  hintText: 'چه چیزی را می‌خواهید به خاطر بسپارید؟',
-                ),
-              ),
-              if (_supportsOccurredAt(selectedType)) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  key: const Key('quick-capture-occurred-at'),
-                  onPressed: () async {
-                    final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
-                    final value = await picker(
-                      dialogContext,
-                      occurredAt ?? DateTime.now(),
-                    );
-                    if (value == null || !dialogContext.mounted) {
-                      return;
-                    }
-                    setDialogState(() => occurredAt = value);
-                  },
-                  icon: const Icon(Icons.event),
-                  label: Text(
-                    occurredAt == null
-                        ? 'تاریخ و زمان (اختیاری)'
-                        : _formatDateTime(occurredAt!),
-                  ),
-                ),
-                if (occurredAt != null)
-                  TextButton(
-                    key: const Key('quick-capture-occurred-at-clear'),
-                    onPressed: () => setDialogState(() => occurredAt = null),
-                    child: const Text('پاک کردن تاریخ و زمان'),
-                  ),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('انصراف'),
-            ),
-            FilledButton(
-              key: const Key('quick-capture-save'),
-              onPressed: () => Navigator.of(dialogContext).pop(
-                _QuickCaptureDraft(
-                  text: draft,
-                  type: selectedType,
-                  occurredAt: occurredAt,
-                ),
-              ),
-              child: const Text('ثبت'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (captureDraft == null) {
-      return;
-    }
-
-    try {
-      await widget.quickCapture.capture(
-        text: captureDraft.text,
-        type: captureDraft.type,
-        occurredAt: captureDraft.occurredAt,
-      );
-      await _reload();
-    } on ArgumentError {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('متن ثبت سریع نمی‌تواند خالی باشد.')),
-      );
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ثبت مورد جدید انجام نشد.')),
-      );
-    }
-  }
-
-  Future<void> _openEdit(TimelineItem item) async {
-    final editTimelineItem = widget.editTimelineItem;
-    if (editTimelineItem == null) {
-      return;
-    }
-
-    var draft = item.text;
-    var selectedType = item.type;
-    var occurredAt = item.occurredAt;
-
-    final editDraft = await showDialog<_EditTimelineDraft>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final supportsOccurredAt = _supportsOccurredAt(selectedType);
-          return AlertDialog(
-            title: Text('ویرایش ${_typeLabel(selectedType)}'),
-            content: Column(
+          content: SingleChildScrollView(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text('نوع مورد'),
                 const SizedBox(height: 4),
                 DropdownButton<TimelineItemType>(
-                  key: const Key('timeline-edit-type'),
+                  key: const Key('quick-capture-type'),
                   value: selectedType,
                   isExpanded: true,
                   items: TimelineItemType.values
@@ -540,26 +484,25 @@ class _TimelineHomeState extends State<TimelineHome> {
                   },
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('timeline-edit-input'),
-                  initialValue: item.text,
+                TextField(
+                  key: const Key('quick-capture-input'),
                   autofocus: true,
                   minLines: 1,
-                  maxLines: 6,
+                  maxLines: 4,
                   onChanged: (value) => draft = value,
                   decoration: const InputDecoration(
-                    labelText: 'متن',
+                    hintText: 'چه چیزی را می‌خواهید به خاطر بسپارید؟',
                   ),
                 ),
-                if (supportsOccurredAt) ...[
+                if (_supportsOccurredAt(selectedType)) ...[
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
-                    key: const Key('timeline-edit-occurred-at'),
+                    key: const Key('quick-capture-occurred-at'),
                     onPressed: () async {
                       final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
                       final value = await picker(
                         dialogContext,
-                        occurredAt ?? item.createdAt,
+                        occurredAt ?? DateTime.now(),
                       );
                       if (value == null || !dialogContext.mounted) {
                         return;
@@ -575,12 +518,211 @@ class _TimelineHomeState extends State<TimelineHome> {
                   ),
                   if (occurredAt != null)
                     TextButton(
-                      key: const Key('timeline-edit-occurred-at-clear'),
+                      key: const Key('quick-capture-occurred-at-clear'),
                       onPressed: () => setDialogState(() => occurredAt = null),
                       child: const Text('پاک کردن تاریخ و زمان'),
                     ),
                 ],
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  key: const Key('quick-capture-reminder-at'),
+                  onPressed: () async {
+                    final picker = widget.reminderAtPicker ?? _showReminderAtPicker;
+                    final value = await picker(
+                      dialogContext,
+                      reminderAt ?? DateTime.now().add(const Duration(hours: 1)),
+                    );
+                    if (value == null || !dialogContext.mounted) {
+                      return;
+                    }
+                    setDialogState(() => reminderAt = value);
+                  },
+                  icon: const Icon(Icons.notifications_none),
+                  label: Text(
+                    reminderAt == null
+                        ? 'یادآور (اختیاری)'
+                        : _formatDateTime(reminderAt!),
+                  ),
+                ),
+                if (reminderAt != null)
+                  TextButton(
+                    key: const Key('quick-capture-reminder-at-clear'),
+                    onPressed: () => setDialogState(() => reminderAt = null),
+                    child: const Text('پاک کردن یادآور'),
+                  ),
               ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('انصراف'),
+            ),
+            FilledButton(
+              key: const Key('quick-capture-save'),
+              onPressed: () => Navigator.of(dialogContext).pop(
+                _QuickCaptureDraft(
+                  text: draft,
+                  type: selectedType,
+                  occurredAt: occurredAt,
+                  reminderAt: reminderAt,
+                ),
+              ),
+              child: const Text('ثبت'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (captureDraft == null) {
+      return;
+    }
+    if (!_isFutureReminder(captureDraft.reminderAt)) {
+      _showMessage('زمان یادآور باید در آینده باشد.');
+      return;
+    }
+
+    late final TimelineItem item;
+    try {
+      item = await widget.quickCapture.capture(
+        text: captureDraft.text,
+        type: captureDraft.type,
+        occurredAt: captureDraft.occurredAt,
+        reminderAt: captureDraft.reminderAt,
+      );
+    } on ArgumentError {
+      _showMessage('متن ثبت سریع نمی‌تواند خالی باشد.');
+      return;
+    } catch (_) {
+      _showMessage('ثبت مورد جدید انجام نشد.');
+      return;
+    }
+
+    final reminderWarning = await _scheduleReminder(item);
+    await _reload();
+    if (reminderWarning != null) {
+      _showMessage(reminderWarning);
+    }
+  }
+
+  Future<void> _openEdit(TimelineItem item) async {
+    final editTimelineItem = widget.editTimelineItem;
+    if (editTimelineItem == null) {
+      return;
+    }
+
+    var draft = item.text;
+    var selectedType = item.type;
+    var occurredAt = item.occurredAt;
+    var reminderAt = item.reminderAt;
+
+    final editDraft = await showDialog<_EditTimelineDraft>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final supportsOccurredAt = _supportsOccurredAt(selectedType);
+          return AlertDialog(
+            title: Text('ویرایش ${_typeLabel(selectedType)}'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('نوع مورد'),
+                  const SizedBox(height: 4),
+                  DropdownButton<TimelineItemType>(
+                    key: const Key('timeline-edit-type'),
+                    value: selectedType,
+                    isExpanded: true,
+                    items: TimelineItemType.values
+                        .map(
+                          (type) => DropdownMenuItem<TimelineItemType>(
+                            value: type,
+                            child: Text(_typeLabel(type)),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (type) {
+                      if (type == null) {
+                        return;
+                      }
+                      setDialogState(() {
+                        selectedType = type;
+                        if (!_supportsOccurredAt(type)) {
+                          occurredAt = null;
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const Key('timeline-edit-input'),
+                    initialValue: item.text,
+                    autofocus: true,
+                    minLines: 1,
+                    maxLines: 6,
+                    onChanged: (value) => draft = value,
+                    decoration: const InputDecoration(labelText: 'متن'),
+                  ),
+                  if (supportsOccurredAt) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      key: const Key('timeline-edit-occurred-at'),
+                      onPressed: () async {
+                        final picker = widget.occurredAtPicker ?? _showOccurredAtPicker;
+                        final value = await picker(
+                          dialogContext,
+                          occurredAt ?? item.createdAt,
+                        );
+                        if (value == null || !dialogContext.mounted) {
+                          return;
+                        }
+                        setDialogState(() => occurredAt = value);
+                      },
+                      icon: const Icon(Icons.event),
+                      label: Text(
+                        occurredAt == null
+                            ? 'تاریخ و زمان (اختیاری)'
+                            : _formatDateTime(occurredAt!),
+                      ),
+                    ),
+                    if (occurredAt != null)
+                      TextButton(
+                        key: const Key('timeline-edit-occurred-at-clear'),
+                        onPressed: () => setDialogState(() => occurredAt = null),
+                        child: const Text('پاک کردن تاریخ و زمان'),
+                      ),
+                  ],
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('timeline-edit-reminder-at'),
+                    onPressed: () async {
+                      final picker = widget.reminderAtPicker ?? _showReminderAtPicker;
+                      final value = await picker(
+                        dialogContext,
+                        reminderAt ?? DateTime.now().add(const Duration(hours: 1)),
+                      );
+                      if (value == null || !dialogContext.mounted) {
+                        return;
+                      }
+                      setDialogState(() => reminderAt = value);
+                    },
+                    icon: const Icon(Icons.notifications_none),
+                    label: Text(
+                      reminderAt == null
+                          ? 'یادآور (اختیاری)'
+                          : _formatDateTime(reminderAt!),
+                    ),
+                  ),
+                  if (reminderAt != null)
+                    TextButton(
+                      key: const Key('timeline-edit-reminder-at-clear'),
+                      onPressed: () => setDialogState(() => reminderAt = null),
+                      child: const Text('پاک کردن یادآور'),
+                    ),
+                ],
+              ),
             ),
             actions: [
               if (widget.deleteTimelineItem != null)
@@ -618,6 +760,8 @@ class _TimelineHomeState extends State<TimelineHome> {
                         replacementType: selectedType == item.type ? null : selectedType,
                         replaceOccurredAt: supportsOccurredAt,
                         occurredAt: occurredAt,
+                        replaceReminderAt: false,
+                        reminderAt: reminderAt,
                         deleteRequested: true,
                       ),
                     );
@@ -636,6 +780,8 @@ class _TimelineHomeState extends State<TimelineHome> {
                     replacementType: selectedType == item.type ? null : selectedType,
                     replaceOccurredAt: supportsOccurredAt,
                     occurredAt: occurredAt,
+                    replaceReminderAt: reminderAt != item.reminderAt,
+                    reminderAt: reminderAt,
                   ),
                 ),
                 child: const Text('ذخیره'),
@@ -661,11 +807,10 @@ class _TimelineHomeState extends State<TimelineHome> {
           return;
         }
         if (!deleted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('مورد برای حذف پیدا نشد.')),
-          );
+          _showMessage('مورد برای حذف پیدا نشد.');
           return;
         }
+        final reminderWarning = await _cancelReminder(item.id);
         await _reload();
         if (!mounted) {
           return;
@@ -673,7 +818,7 @@ class _TimelineHomeState extends State<TimelineHome> {
         final restoreTimelineItem = widget.restoreTimelineItem;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('مورد حذف شد.'),
+            content: Text(reminderWarning ?? 'مورد حذف شد.'),
             action: restoreTimelineItem == null
                 ? null
                 : SnackBarAction(
@@ -685,66 +830,61 @@ class _TimelineHomeState extends State<TimelineHome> {
                           return;
                         }
                         if (!restored) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('این مورد دیگر قابل بازگردانی نیست.'),
-                            ),
-                          );
+                          _showMessage('این مورد دیگر قابل بازگردانی نیست.');
                           return;
                         }
+                        final warning = await _scheduleReminder(item);
                         await _reload();
                         if (!mounted) {
                           return;
                         }
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('مورد بازگردانده شد.')),
-                        );
+                        _showMessage(warning ?? 'مورد بازگردانده شد.');
                       } catch (_) {
-                        if (!mounted) {
-                          return;
-                        }
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('بازگردانی مورد انجام نشد.')),
-                        );
+                        _showMessage('بازگردانی مورد انجام نشد.');
                       }
                     },
                   ),
           ),
         );
       } catch (_) {
-        if (!mounted) {
-          return;
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('حذف مورد انجام نشد.')),
-        );
+        _showMessage('حذف مورد انجام نشد.');
       }
       return;
     }
 
+    if (editDraft.replaceReminderAt && !_isFutureReminder(editDraft.reminderAt)) {
+      _showMessage('زمان یادآور باید در آینده باشد.');
+      return;
+    }
+
+    late final TimelineItem updated;
     try {
-      await editTimelineItem.update(
+      updated = await editTimelineItem.update(
         id: item.id,
         text: editDraft.text,
         type: editDraft.replacementType,
         replaceOccurredAt: editDraft.replaceOccurredAt,
         occurredAt: editDraft.occurredAt,
+        replaceReminderAt: editDraft.replaceReminderAt,
+        reminderAt: editDraft.reminderAt,
       );
-      await _reload();
     } on ArgumentError {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('متن ویرایش نمی‌تواند خالی باشد.')),
-      );
+      _showMessage('متن ویرایش نمی‌تواند خالی باشد.');
+      return;
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ویرایش مورد انجام نشد.')),
-      );
+      _showMessage('ویرایش مورد انجام نشد.');
+      return;
+    }
+
+    String? reminderWarning;
+    if (updated.reminderAt != null) {
+      reminderWarning = await _scheduleReminder(updated);
+    } else if (item.reminderAt != null) {
+      reminderWarning = await _cancelReminder(item.id);
+    }
+    await _reload();
+    if (reminderWarning != null) {
+      _showMessage(reminderWarning);
     }
   }
 
