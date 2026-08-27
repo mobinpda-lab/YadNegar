@@ -13,21 +13,20 @@ Main includes real Timeline persistence/retrieval/edit/delete/undo/export and th
 ## PR #68 — Validated Backup
 Exact head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
 
-Fresh proof:
+Final fresh proof:
+- PR Ready
 - CI `33042505480`: Green
 - Android `33042505505`: Green
 - mergeability: true
 - lockfile final
-- branch structurally contains current main through `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
+- no head drift
+- branch contains current main through sync commit `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
 - Bismillah + Backup action preserved together
 
-No schema, TimelineRepository contract, second serializer, or second storage changes.
-
-Merge contract now:
-Ready → Fresh head/mergeability → expected-head merge on `8057eca7...` → post-main CI + Android.
+Immediate action: expected-head merge on `8057eca7...`, then post-main CI + Android proof.
 
 ## Docs lane
-`docs/current-state-backup-active` must final-sync onto resulting main, refresh proof, exact-head docs CI, then safe merge.
+`docs/current-state-backup-active` final-syncs onto resulting main after Product merge, refreshes proof, runs exact-head docs CI, then safe merges.
 
 ## Automation
 Issue #19 remains open for Platform-level required checks.
