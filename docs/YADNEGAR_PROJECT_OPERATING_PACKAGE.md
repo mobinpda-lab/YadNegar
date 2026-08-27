@@ -1,4 +1,4 @@
-# YADNEGAR PROJECT OPERATING PACKAGE v1.1
+# YADNEGAR PROJECT OPERATING PACKAGE v1.2
 ## مرجع عملیاتی واحد پروژه یادنگار
 
 **Project:** YadNegar / یادنگار  
@@ -11,15 +11,15 @@
 
 ## 0. اصول غیرقابل مذاکره
 1. GitHub مرجع عملیاتی حقیقت برای کد، Branch، Commit، PR، Workflow، CI، Build و مستندات است.
-2. هر Session مهم با Fresh Audit شروع می‌شود؛ حافظه و Conversation جای Audit را نمی‌گیرند.
-3. هدف، نرم‌افزار سالم در ساعت‌ها به‌جای روزهاست. سرعت از موازی‌سازی، Automation، reuse و حذف انتظار می‌آید؛ نه از حذف Gate.
-4. Laneهای مستقل باید همزمان حرکت کنند. Block یک Lane نباید Lane مستقل دیگر را متوقف کند.
+2. هر Session مهم با Fresh Audit شروع می‌شود؛ Conversation یا Documentation قدیمی جای Audit را نمی‌گیرد.
+3. هدف، نرم‌افزار سالم در ساعت‌ها به‌جای روزهاست. سرعت از Parallel Work، Automation، reuse و حذف انتظار می‌آید؛ نه از حذف Gate.
+4. Laneهای مستقل همزمان حرکت می‌کنند. Block یک Lane نباید Lane مستقل دیگر را متوقف کند.
 5. Evidence فقط برای Ref/SHA دقیق معتبر است. Green تاریخی برای Head جدید معتبر نیست.
-6. قبل از ساخت هر Model/Repository/Storage/AppShell/Workflow/Foundation، نمونه موجود Audit و reuse شود.
+6. قبل از ساخت Model/Repository/Storage/AppShell/Workflow/Foundation جدید، نمونه موجود Audit و reuse شود.
 7. Fake Build/Test/Persistence/Release Evidence ممنوع است.
-8. تغییرات پرریسک مستقیماً روی `main` انجام نشوند؛ Branch/PR مسیر پیش‌فرض است.
-9. تغییرات کوچک، قابل Review و قابل Rollback باشند.
-10. مستندات همزمان با Implementation جلو بروند و سند اجرایی رقیب ساخته نشود.
+8. تغییرات پرریسک مستقیماً روی `main` انجام نمی‌شوند؛ Branch/PR مسیر پیش‌فرض است.
+9. تغییرات کوچک، قابل Review، قابل Rollback و با Scope روشن باشند.
+10. مستندات همزمان با Implementation حرکت کنند و سند اجرایی رقیب ساخته نشود.
 
 ## 1. ترتیب مرجع حقیقت
 `GitHub Reality > approved architecture decisions > this canonical package > current execution docs > conversation memory`
@@ -38,7 +38,7 @@
 7. exact-head Validation گرفته شود.
 8. Merge فقط با Gate امن انجام شود.
 9. post-main proof گرفته شود.
-10. Docs همزمان sync و گزارش مالک کوتاه ارائه شود.
+10. Docs همزمان Sync و گزارش مالک کوتاه ارائه شود.
 
 ## 3. مدل کار موازی
 ### Lane A — Core / Data
@@ -55,16 +55,17 @@
 
 ### Lane C — Release / Platform
 - Android build/release candidate
-- artifact evidence
-- smoke/E2E/recovery
-- release governance/signing only after explicit audit
+- deterministic artifact evidence
+- emulator smoke/recovery
+- release governance
+- production signing فقط بعد از Audit امنیتی و تعیین مالک credentials
 
 ### Lane D — CI / Automation / Documentation
 - GitHub Actions
 - Analyze/Test/Build
 - stale-run cancellation
 - evidence capture
-- Current State / Handoff / Operation Plan
+- Current State / Handoff / Operation Plan / Canonical sync
 
 Rule:
 `Detect overlap → assign ownership → execute independently → validate → integrate`
@@ -78,7 +79,7 @@ Task زمانی Ready است که:
 - validation و evidence تعریف شده باشد
 - parallel-safety معلوم باشد
 
-ابهام کوچک نباید پروژه را متوقف کند؛ ابهام معماری/داده/امنیت قبل از تغییر پرریسک باید حل شود.
+ابهام کوچک نباید پروژه را متوقف کند؛ ابهام معماری، داده یا امنیت قبل از تغییر پرریسک باید حل شود.
 
 ## 5. Definition of Done
 `Working Change + Tests/Validation + Exact Evidence + Documentation + Safe Integration`
@@ -98,16 +99,15 @@ Feature جدید نباید Foundation موازی ایجاد کند مگر Audit
 Dependency direction:
 `Presentation → Application → Domain`
 
-Platform/Data implementations باید پشت boundary بمانند؛ Domain نباید مستقیم به Flutter plugin یا storage implementation وابسته شود.
+Platform/Data implementations پشت boundary می‌مانند؛ Domain مستقیم به Flutter plugin یا storage implementation وابسته نمی‌شود.
 
 ## 7. Data Governance
-Production storage اکنون schema v2 است و v1 را backward-compatible می‌خواند.
+Production storage schema v2 است و v1 را backward-compatible می‌خواند.
 
-هر schema/storage change مهم حسب مورد باید داشته باشد:
+هر schema/storage change مهم حسب مورد:
 `Versioning + Backward Compatibility + Migration/Safe Upgrade + Validation + Recovery/Rollback`
 
-داده کاربر برای ساده‌سازی توسعه نباید destructive rewrite شود.
-
+داده کاربر برای ساده‌سازی توسعه destructive rewrite نمی‌شود.
 Backup/Restore باید production parser/serializer/recovery path را reuse کند؛ raw overwrite و serializer دوم ممنوع است.
 
 ## 8. Reminder Governance
@@ -117,31 +117,32 @@ Reminder روی همان TimelineItem و storage موجود سوار است.
 - no sidecar Reminder database/repository
 - notification plugin بیرون Domain
 - persist-first: schedule/cancel failure نباید داده ذخیره‌شده را rollback کند
-- startup/Restore reconciliation از persisted Timeline انجام شود
+- startup/Restore reconciliation از persisted Timeline
 - recurring reminders فقط در Slice جدا پس از Audit
-- exact-alarm permission فقط اگر نیاز محصول و compatibility proof آن را توجیه کند
+- exact-alarm permission فقط با نیاز واقعی محصول و compatibility proof
 
 ## 9. CI / Quality
 Fast chain:
 `flutter pub get → flutter analyze → flutter test`
 
 Android/Product/Release chain حسب Scope:
-`Fast CI → Android Build → Artifact Verify/Upload → live mergeability → expected-head merge → post-main proof`
+`Fast CI → Android Build → Artifact Verify/Upload → Smoke/Recovery → live mergeability → expected-head merge → post-main proof`
 
 Workflow rules:
 - reuse موجود قبل از Workflow جدید
-- `concurrency/cancel-in-progress` برای جلوگیری از runهای stale
+- `concurrency/cancel-in-progress` برای runهای stale
 - artifact باید واقعی و قابل Verify باشد
-- build یک SHA به SHA دیگر نسبت داده نشود
+- build یا Green یک SHA به SHA دیگر نسبت داده نشود
+- PR validation نباید با push trigger تکراری شود مگر دلیل اثبات‌شده وجود داشته باشد
 
 ## 10. Git / PR Governance
 - Branch کوچک و هدفمند
 - PR یک هدف اصلی
 - Out-of-scope روشن
 - commits قابل Review/Rollback
-- هیچ stale merge
-- قبل از Merge، exact current head دوباره خوانده شود
-- Merge محصول/Release فقط با exact-head CI + Android و live mergeability
+- stale merge ممنوع
+- قبل از Merge exact current head دوباره خوانده شود
+- Merge محصول/Release فقط با exact-head Fast CI + Android/relevant jobs و live mergeability
 - Merge با `expected_head_sha`
 - بعد از Merge، main تازه Verify شود
 
@@ -150,7 +151,7 @@ Workflow rules:
 1. exact current head
 2. Fast CI Green همان Head
 3. Android/Release Gate Green همان Head
-4. relevant artifact steps Green
+4. relevant artifact/smoke/recovery steps Green
 5. live mergeability=true
 6. `expected_head_sha=exact head`
 7. post-main CI/Android proof
@@ -161,6 +162,8 @@ Workflow rules:
 3. live mergeability=true
 4. expected-head lock
 5. post-main Fast CI proof
+
+Historical Green برای Head جدید قابل انتقال نیست.
 
 ## 12. Documentation-as-Code
 Canonical Governance:
@@ -178,21 +181,35 @@ Persian Handoff:
 Comprehensive historical/product reference:
 `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
 
-Temporary active-state files باید پس از پایان Wave حذف شوند و به Canonical رقیب تبدیل نشوند.
+Comprehensive document یک Snapshot/reference است؛ Current State و GitHub Reality برای وضعیت روز مقدم‌اند.
+Temporary active-state files پس از پایان Wave حذف شوند و به Canonical رقیب تبدیل نشوند.
 
 ## 13. Verified Current Baseline — 2026-08-27
 Verified main:
-`f85d804a84a4033c94e2dc843a6aa87f2d848991`
+`9ffa1041c3205a35d0aa0744236e9e4dcbb28333`
 
-Post-main evidence:
-- YadNegar CI `33051308713`: success
-- YadNegar Android Build `33051308694`: success
-- APK build/verify/upload: success
+Integrated PR #83:
+`release: prove Android emulator smoke and storage recovery`
+
+Final exact head:
+`60d1f21ce3574e3b6c04478351136acf35e9e8e7`
+
+Pre-merge exact-head evidence:
+- YadNegar CI `33069328808`: success
+- YadNegar Android Build `33069328907`: success
+- `android-build`: success
+- `android-smoke-recovery`: success
+
+Post-main evidence on `9ffa1041...`:
+- YadNegar CI `33070027775`: success
+- YadNegar Android Build `33070027900`: success
+- `android-build`: success
+- `android-smoke-recovery`: success
 
 Main product flow:
-`Quick Capture → Persist → Timeline → Search/Filter → Edit → Delete/Undo → Export → Backup/Restore → Reminder`
+`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
-Verified main capabilities include:
+Verified capabilities include:
 - Persian RTL Timeline
 - Note/Event/Call/Idea/Activity
 - crash-recoverable JSON persistence
@@ -205,58 +222,50 @@ Verified main capabilities include:
 - Persian Reminder UX
 - Android local notifications
 - startup/Restore Reminder reconciliation
+- Debug APK artifact
+- release-mode candidate artifact with hash/size evidence
+- Android emulator startup proof
+- real `.bak` storage recovery proof
 
-## 14. Reminder Integration Record
-### PR #76 / Issue #75
-- final head `6ab46b5029b3070e43e1524431b821a766326eb2`
-- CI `33046525150`: success
-- Android `33046525158`: success
-- merged main `fceb383aad507eed354d4b044e3939aacf5328d0`
-- post-main CI `33046893279`: success
-- post-main Android `33046893295`: success
+## 14. Release Governance
+Wave 7 contract `E2E + build + artifact + smoke + recovery` is verified complete.
 
-### PR #78 / Issue #77
-- final head `22bc0d1d855c98521dc554a770ff41e8475f532b`
-- CI `33050851398`: success
-- Android `33050851419`: success
-- 106 tests passed
-- exact Runner-generated dependency lock
-- expected-head merge
-- merged main `f85d804a84a4033c94e2dc843a6aa87f2d848991`
-- post-main CI `33051308713`: success
-- post-main Android `33051308694`: success
+Current Release Governance lane builds on that foundation.
 
-Issue #77 is completed.
+Active Issue #84 / PR #85:
+`release: add deterministic release manifest evidence`
 
-## 15. Release Governance / Active Wave 7
-Roadmap after Reminder/Backup/Export is Release:
-`E2E + build + artifact + smoke + recovery`
-
-Active Issue #80 / PR #81:
-- extend existing Android workflow
-- preserve Debug artifact
-- produce release-mode Candidate artifact
-- verify non-empty output
-- emit SHA-256 and byte-size evidence
-- upload artifact + evidence
+Purpose:
+- preserve existing build/artifact/smoke/recovery gates
+- add deterministic `RELEASE_MANIFEST.txt`
+- record version, application id, exact source SHA, validation SHA, APK SHA-256, byte size and signing state
+- no duplicate workflow
+- no publishing mutation
 
 Current signing audit:
-Android `release` buildType uses the debug signing config. Therefore current candidate is **not production-signed** and must not be described as Play-Store-ready.
+Android `release` buildType uses debug signing config. Therefore current candidate is **not production-signed** and must not be described as Play-Store-ready.
 
-Production signing/key management is a separate security-sensitive Slice and requires explicit verified configuration.
+Production signing/key management is a separate security-sensitive Slice and requires explicit verified credentials ownership. Secrets/keystore must never be committed to repository.
 
-## 16. Automation Gap
-Issue #19 remains open. Required status check enforcement is not currently verified as writable through connected tooling.
+## 15. Automation Gap
+Issue #19 remains open.
 
-Until then, operational safety is enforced through exact-head proof + expected-head merge lock. Do not claim platform enforcement that does not exist.
+Live `main-protection` Ruleset:
+- PR required
+- deletion blocked
+- non-fast-forward blocked
+- required status checks are not yet configured at Platform level
 
-## 17. Reliability / Recovery
+Fresh tool discovery on 2026-08-27 still exposes Ruleset read but not Ruleset write.
+Until write is genuinely available, operational exact-head proof + expected-head lock remains mandatory. Do not claim platform enforcement that does not exist.
+
+## 16. Reliability / Recovery
 For important changes:
 `Detect → Classify → Contain → Recover → Validate → Document → Improve`
 
 Data/release changes require rollback/recovery thinking before integration. Backup without tested recovery is not sufficient proof.
 
-## 18. AI Decision Boundary
+## 17. AI Decision Boundary
 Routine, reversible, scoped engineering work can continue autonomously after Audit.
 
 Extra caution/owner decision when materially changing:
@@ -267,13 +276,13 @@ Extra caution/owner decision when materially changing:
 - irreversible release/publishing behavior
 - major visual redesign
 
-## 19. گزارش مالک
-Owner report باید کوتاه، غیر فنی و نتیجه‌محور باشد:
+## 18. گزارش مالک
+Owner report کوتاه، غیر فنی و نتیجه‌محور:
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
 
 Inference نباید به‌عنوان Fact گزارش شود.
 
-## 20. فرمول توسعه
+## 19. فرمول توسعه
 **Fast Delivery = Parallel Independent Work + Automation + Reuse + Fast Feedback + Controlled Integration + Evidence + Concurrent Documentation**
 
 **Professional Delivery = Speed + Quality + Architecture + Recovery + Traceability**
