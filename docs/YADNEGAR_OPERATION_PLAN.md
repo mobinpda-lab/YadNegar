@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 3.2 — Backup Verified / Restore Active Next
+## نسخه 3.3 — Restore Verified / Reminder Contract Active
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -18,7 +18,7 @@ Laneها:
 Block یک Lane، Lane مستقل را متوقف نمی‌کند.
 
 ## 2. main فعلی
-`edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
+`78b14a8f50b9b0ccee02174fd6739c2cabcead7d`
 
 Main شامل:
 - Timeline واحد
@@ -32,6 +32,7 @@ Main شامل:
 - Undo با conflict protection
 - Export visible Timeline
 - Backup معتبر و قابل‌حمل
+- Restore معتبر و rollback-safe
 - Bismillah centered header
 
 No duplicate Model / Repository / Storage / AppShell.
@@ -39,17 +40,13 @@ No duplicate Model / Repository / Storage / AppShell.
 ## 3. موج تکمیل‌شده — Bismillah Header
 PR #69
 
-Exact pre-merge head:
-`e3d485b5df4686224a2358855a3754707f794a59`
-
-Pre-merge proof:
-- CI `33041625126`: success پس از rerun همان Head برای یک timeout flaky قدیمی
+Exact pre-merge head: `e3d485b5df4686224a2358855a3754707f794a59`
+- CI `33041625126`: success
 - Android `33041625147`: success
 - mergeable=true
 - expected-head merge lock
 
-Merged main:
-`14bfd37a7304841db74133f5fd6524535350e49a`
+Merged main: `14bfd37a7304841db74133f5fd6524535350e49a`
 
 Post-main:
 - CI `33041864865`: success
@@ -58,18 +55,14 @@ Post-main:
 ## 4. موج تکمیل‌شده — Validated Backup
 PR #68 / Issue #67
 
-Exact final pre-merge head:
-`8057eca7ba4957d49bc51c54cbf278935744ccfa`
-
-Pre-merge proof:
+Exact final pre-merge head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
 - CI `33042505480`: success
 - Android `33042505505`: success
-- final `pubspec.lock` روی همان Head
+- final lockfile روی همان Head
 - live mergeable=true
 - expected-head merge lock
 
-Merged main:
-`edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
+Merged main: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
 Backup behavior:
 - validated snapshot bytes از concrete JSON repository
@@ -80,60 +73,95 @@ Backup behavior:
 - empty Timeline backup معتبر دارد
 - temp snapshot با production parser دوباره Validate می‌شود
 - Presentation Scope کوچک برای Backup action
-- `TimelineHome` دست‌نخورده
-- Share در composition root
-- `share_plus 10.1.4` exact-pinned و compatible با Flutter 3.35
-- branch با Bismillah main در sync commit `529df3fd6656705fab3756a878c45d8ec2ed1bbc` یکپارچه شد
+- `share_plus 10.1.4` exact-pinned
 
 Issue #67 closed completed.
 
-Post-main `edf0c72...`:
+Post-main:
 - CI `33042973852`: success
 - Android `33042973848`: success
-- Android build + verify + upload: success
 
-موج Backup fully verified است.
+## 5. موج تکمیل‌شده — Validated Restore
+PR #73 / Issue #70
 
-## 5. Lane A — Core/Data
-Foundation پایدار:
+Exact final pre-merge head: `fa8cfb2841eb761a062c8b9bbdd9dfee2bd0e600`
+- CI `33045126480`: success
+- Android `33045126515`: success
+- final lockfile روی همان Head
+- live mergeable=true
+- expected-head merge lock
+
+Merged main: `78b14a8f50b9b0ccee02174fd6739c2cabcead7d`
+
+Restore behavior:
+- candidate bytes قبل از write Validate می‌شوند
+- malformed / unsupported schema / duplicate IDs / blank / invalid UTF-8 قبل از mutation رد می‌شوند
+- production parser و همان staged `_writeAll` reuse می‌شود
+- `.tmp` / `.bak` و rollback موجود حفظ شده
+- raw overwrite و Storage دوم وجود ندارد
+- `file_picker 8.3.7` در composition boundary است
+- confirmation و feedback فارسی
+- TimelineHome همان `_reload()` را اجرا می‌کند و فیلترهای Search/Type/Date حفظ می‌شوند
+
+Issue #70 closed completed.
+
+Post-main:
+- CI `33045454060`: success
+- Android `33045454024`: success
+
+موج Restore fully verified است.
+
+## 6. Lane A — Core/Data
+Foundation main پایدار:
 - یک Timeline model
 - یک Repository contract
 - یک crash-recoverable JSON storage
 - schema-versioned parser/serializer production
-- validated snapshot path برای Backup
+- validated Backup/Restore path
 - staged `_writeAll` با `.tmp` / `.bak` و restore-on-failure
 
-Restore بعدی باید همین parser و write/rollback path را reuse کند؛ Foundation موازی ممنوع.
+Active Core Slice:
+Issue #75 / PR #76 — Reminder Data Contract.
 
-## 6. Lane B — Product/UX
-Backup Verify شده است.
+Audit:
+- TimelineItem main هنوز `reminderAt` ندارد
+- schema main هنوز v1 است
+- Reminder storage/model موازی وجود ندارد
 
-Next audited slice:
-Issue #70 — Restore/Import امن.
+Contract فعال:
+- optional `reminderAt` روی همان TimelineItem
+- write schema v2
+- read سازگار v1 و v2
+- v1 read بدون mutation؛ اولین write امن upgrade
+- reminderAt در Edit/Backup/Restore حفظ شود
+- timelineAt/order تغییر نکند
+- dependency جدید در این Slice ممنوع/غیرلازم
 
-Audit عملی #70:
-- candidate bytes قبل از هر write با production parser/schema Validate شوند
-- duplicate-id safety قبل از replacement
-- `_writeAll` موجود برای staged replacement + rollback reuse شود
-- `TimelineRepository` Domain contract لازم نیست تغییر کند
-- file selection فقط در platform/composition boundary
-- confirmation فارسی قبل از replacement
-- success/invalid/unsupported/duplicate/failure feedback فارسی
-- `TimelineHome` همان `_reload()` فعلی را بعد از Restore موفق اجرا کند تا Search/Type/Date state حفظ شود
-- raw overwrite ممنوع
+## 7. Lane B — Product/UX
+Restore Verify شده است.
 
-Backup post-main Green است؛ Branch #70 اکنون می‌تواند از `edf0c72...` شروع شود.
+Reminder UI/Notification هنوز شروع نشده و عمداً بعد از تثبیت Data Contract قرار دارد.
 
-## 7. Lane C — CI/Automation/Docs
-- docs branch: `docs/current-state-backup-active`
-- branch structurally روی merged Backup main `edf0c72...` Sync شده
-- Canonical docs کامل حفظ شده‌اند
-- final Backup evidence ثبت شده
-- مرحله بعد: Diff docs-only → PR → exact-head Fast CI → safe merge
+Slice بعد از Merge #76:
+- UX فارسی برای تعیین/پاک‌کردن reminderAt
+- audit plugin notification سازگار با Flutter 3.35
+- permission boundary پلتفرم
+- scheduling/cancel contract
+- widget/application tests
+- Android gate واقعی
+
+Recurring Reminder تا Audit جدا خارج Scope بماند.
+
+## 8. Lane C — CI/Automation/Docs
+- PR #74: `docs/current-state-restore-active`
+- branch structurally روی Restore main `78b14a8...` Sync شده
+- سه Canonical doc با evidence نهایی Restore و Product #75 refresh می‌شوند
+- فایل موقت Restore در final docs commit حذف می‌شود
+- مرحله بعد: docs-only diff → exact-head Fast CI → safe merge
 - Issue #62 recovered/closed
 - Issue #19 required-status Ruleset gap باز است
 
-## 8. Merge Contract
+## 9. Merge Contract
 1. exact current head
 2. Fast CI Green on that head
 3. Android Green on that head for Product changes
@@ -143,13 +171,14 @@ Backup post-main Green است؛ Branch #70 اکنون می‌تواند از `ed
 
 Historical Green هرگز برای Head جدید reuse نمی‌شود.
 
-## 9. Queue
+## 10. Queue
 ### Active
-1. docs/current-state-backup-active — final docs after Backup
-2. Issue #70 — validated Restore/Import with rollback
+1. PR #74 — canonical docs after Restore
+2. Issue #75 / PR #76 — Reminder schema-v2 data contract
 3. Issue #19 — Ruleset enforcement gap
 
 ### Completed recently
+- PR #73 / Issue #70 — validated Restore
 - PR #68 / Issue #67 — validated portable Backup
 - PR #69 — Bismillah header
 - PR #65 / Issue #64 — visible Timeline Export
@@ -157,7 +186,7 @@ Historical Green هرگز برای Head جدید reuse نمی‌شود.
 - PR #61 / Issue #57 — safe delete
 - Issue #62 — workflow registration incident recovered/closed
 
-## 10. خط قرمز
+## 11. خط قرمز
 - duplicate foundation
 - fake CI/build/persistence
 - stale merge evidence
@@ -167,16 +196,18 @@ Historical Green هرگز برای Head جدید reuse نمی‌شود.
 - ادعای Ruleset enforcement بدون proof
 - duplicate JSON serializer/parser
 - raw overwrite در Restore
-- mixing Reminder into Restore Slice
+- sidecar Reminder storage
+- افزودن Notification dependency قبل از compatibility audit
+- mixing recurring reminder into first Reminder contract slice
 
-## 11. قدم بعد
-1. Docs diff را کنترل کن و PR باز کن.
-2. Docs exact-head Fast CI Green → Fresh mergeability → expected-head merge → main Fast CI.
-3. هم‌زمان Branch #70 را از `edf0c72...` بساز و Core/Data Restore را با production parser + `_writeAll` reuse شروع کن.
-4. File picker dependency فقط بعد از compatibility proof و Android gate واقعی قطعی شود.
+## 12. قدم بعد
+1. PR #74 را با docs-only exact-head Fast CI نهایی کن.
+2. PR #76 exact-head CI + Android را بررسی کن.
+3. PR #76 Green → Fresh mergeability → expected-head merge → post-main proof.
+4. سپس Reminder UI/notification scheduling را در Slice مستقل شروع کن.
 5. #19 باز بماند تا Platform-level enforcement واقعاً writable شود.
 
-## 12. گزارش مالک
+## 13. گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
 
 کوتاه، غیر فنی، نتیجه‌محور.
