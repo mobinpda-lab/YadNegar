@@ -10,36 +10,54 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current main SHA: `8656564b57271947f6b45f0dbb206dbc4d3a3a38`
+Current main SHA: `6f3b1de0777263201a55faac9d1af1007d4d2e25`
 
-Main now includes completed Release Wave 7, deterministic Release Manifest evidence, and Candidate Readiness aggregation.
+Main now includes:
+- completed Release Wave 7
+- deterministic Release Manifest evidence
+- Candidate Readiness aggregation
+- deterministic Version + Release Notes Draft evidence
 
-### Integrated PR #88 / Issue #87
-`release: aggregate candidate readiness evidence`
-
+### Integrated PR #88 / Issue #87 — Candidate Readiness
 Final exact PR head:
 `32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
 
-Pre-merge exact-head proof:
+Pre-merge:
 - YadNegar CI `33073336472`: success
 - YadNegar Android Build `33073336417`: success
-- `android-build`: success
-- `android-smoke-recovery`: success
-- `release-readiness`: success
+- android-build: success
+- android-smoke-recovery: success
+- release-readiness: success
 
-Merge used exact `expected_head_sha` and produced main:
-`8656564b57271947f6b45f0dbb206dbc4d3a3a38`
-
-Post-main proof on this exact main:
+Post-main on `8656564b57271947f6b45f0dbb206dbc4d3a3a38`:
 - YadNegar CI `33074363600`: success
-- YadNegar Android Build `33074363581`: active at this documentation revision
-- exact `android-build` job `98524595734`: success, including debug APK and release-candidate APK build/upload
-- exact `android-smoke-recovery` job `98526444578`: in progress; downstream readiness must be fresh-read before any final post-main Green claim
+- YadNegar Android Build `33074363581`: success
+- android-build: success
+- android-smoke-recovery: success
+- release-readiness: success
 
 Issue #87 is closed/completed.
 
-### Previously integrated PR #85 / Issue #84
-Deterministic `RELEASE_MANIFEST.txt` is verified on main. PR #85 final head `2a456003899ec24ab310a86f5f521c68a97fb483`; post-main CI `33071541211` and Android `33071541182` both succeeded. Issue #84 is completed.
+### Integrated PR #90 / Issue #89 — Version + Release Notes Draft
+Final exact PR head:
+`f3aab864469135a4f1a038d00305630b36a2e9cc`
+
+Pre-merge exact-head proof:
+- YadNegar CI `33074488110`: success
+- YadNegar Android Build `33074488158`: success
+- android-build: success
+- android-smoke-recovery: success
+- release-readiness: success
+- release-draft: success
+
+Merge used exact `expected_head_sha` and produced current main:
+`6f3b1de0777263201a55faac9d1af1007d4d2e25`
+
+Post-main runs on this exact main:
+- YadNegar CI `33075537776`: active at this documentation revision
+- YadNegar Android Build `33075537814`: active at this documentation revision
+
+Do not report #90 post-main final Green until a fresh read proves the full chain complete.
 
 ## Verified Product / Release Baseline
 One shared Timeline flow:
@@ -66,43 +84,47 @@ Verified foundations:
 - Android emulator startup proof
 - production storage `.bak` recovery proof
 - deterministic `RELEASE_READINESS.txt`
+- deterministic `RELEASE_VERSION.txt`
+- deterministic `RELEASE_NOTES_DRAFT.md`
 
-No duplicate Timeline model/repository/storage/AppShell/Reminder database exists.
+No duplicate Timeline model/repository/storage/AppShell/Reminder database or duplicate Android workflow exists.
 
 ## Release Signing State
 Current Android release-mode build still uses the debug signing config.
 
 Correct status:
-`candidate verified / not production-signed / not Play-Store-ready`
+`candidate verified / production signing blocked / not Play-Store-ready`
 
 No secret or production keystore is committed to the repository.
 
-## Active Release Governance — Issue #89 / PR #90
-`release: generate deterministic version and release-notes draft`
+## Active Release Governance — Issue #91 / PR #92
+`release: prove tag availability and emit approval rollback package`
 
 Branch:
-`release/version-notes-draft`
+`release/approval-rollback-package`
 
-Exact current head at this documentation revision:
-`f3aab864469135a4f1a038d00305630b36a2e9cc`
+Exact current head:
+`1990e70dfe5662aac31ed8859d7906ff274c6371`
 
-Scope is isolated to two files:
-- `.github/scripts/release-draft.sh`
+Fresh compare after #90 merge proves the scope remains isolated to:
+- `.github/scripts/release-approval.sh`
 - `.github/workflows/android-build.yml`
 
 Purpose:
-- reuse exact-run Candidate + Readiness artifacts
-- derive version name and build number from verified manifest
-- propose, but never create, a version tag
-- emit `RELEASE_VERSION.txt`
-- emit `RELEASE_NOTES_DRAFT.md`
-- preserve the explicit Production-signing blocker
+- reuse exact-run Release Version + Readiness evidence
+- verify source SHA identity
+- check proposed remote tag availability without creating/moving refs
+- fail closed if the proposed tag exists or lookup cannot be verified
+- emit `RELEASE_APPROVAL.txt`
+- emit `ROLLBACK_PLAN.md`
+- keep approval explicitly blocked while Production signing remains unresolved
+- perform no tag/release/store/signing mutation
 
-Validation at this revision:
-- YadNegar CI `33074488110`: success
-- YadNegar Android Build `33074488158`: in progress; full Build → Smoke/Recovery → Readiness → Release Draft chain must be fresh-read before merge
+Exact-head validation started:
+- YadNegar CI `33075612499`
+- YadNegar Android Build `33075612644`
 
-PR #90 is mergeable at the latest fresh read, but merge is forbidden until both #88 post-main Android proof and all exact-head #90 gates are Green.
+Both were active at this documentation revision. Fresh-read is mandatory before any Green or merge claim.
 
 ## Active Documentation — PR #86
 Branch:
@@ -116,7 +138,7 @@ Purpose:
 ## Automation Gap
 Issue #19 remains open.
 
-`main` requires PR via the live Ruleset, but required status checks are not currently configured as Platform-level enforcement. Connected tooling still exposes Ruleset read, not Ruleset write.
+Live Ruleset requires PR and blocks deletion/non-fast-forward, but required status checks are not configured as Platform-level enforcement. Fresh tool discovery on 2026-08-27 still exposes Ruleset read only, not Ruleset write.
 
 Until real platform enforcement is writable, operational merge safety remains:
 `exact current head + exact-head quality + exact-head Android/relevant jobs + live mergeability + expected_head_sha + post-main proof`
@@ -124,6 +146,7 @@ Until real platform enforcement is writable, operational merge safety remains:
 ## Parallel Speed Rules
 - Product / Release / CI-Automation / Docs move simultaneously when independent
 - blocked Runner never stops an independent Lane
+- stacked preparation is allowed only when later fresh compare proves isolated scope
 - reuse before rebuild
 - small reversible PRs
 - no fake or stale evidence
@@ -131,13 +154,13 @@ Until real platform enforcement is writable, operational merge safety remains:
 - docs move concurrently with implementation
 
 ## Next Actions
-1. Fresh-read completion of post-main Android run `33074363581` for main `8656564b...`; require Smoke/Recovery + Readiness Green after already-verified APK build success.
-2. Validate PR #90 exact head `f3aab864...`: Fast CI + Android Build + Smoke/Recovery + Readiness + Release Draft Green.
-3. Merge #90 only after both previous conditions plus fresh head/mergeability and exact `expected_head_sha`.
-4. Verify #90 post-main.
-5. Final-refresh PR #86 from actual #90 outcome and merge docs-only safely.
+1. Fresh-read #90 post-main runs `33075537776` and `33075537814`; require full chain Green.
+2. Validate PR #92 exact head `1990e70d...`: Fast CI + Build + Smoke/Recovery + Readiness + Release Draft + Release Approval Green.
+3. Merge #92 only after #90 post-main Green plus fresh #92 head/mergeability and exact `expected_head_sha`.
+4. Verify #92 post-main.
+5. Final-refresh PR #86 from actual #92 outcome and merge docs-only safely.
 6. Keep Issue #19 open until required-check enforcement is genuinely writable.
-7. Production signing/tag/release/publish mutations require separate security/owner decisions.
+7. Production signing and any real tag/release/publish mutation remain owner/security decisions and are not automated by the current chain.
 
 ## Trigger
 `ادامه یادنگار`
