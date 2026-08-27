@@ -15,7 +15,7 @@ Current main: `14bfd37a7304841db74133f5fd6524535350e49a`
 `feat(backup): share validated Timeline backup snapshot`
 
 Current final-validation head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
-Status: Draft تا پایان Gateهای exact-head نهایی.
+Status: final exact-head CI و Android هر دو Green؛ مرحله بعد Ready + Fresh mergeability + expected-head merge.
 
 طراحی نهایی:
 - Snapshot از همان JSON storage موجود
@@ -55,12 +55,12 @@ Dependency-resolution اولیه روی همین Toolchain موفق بود:
 
 Final exact-head runs روی `8057eca7...`:
 - CI `33042505480`: Green
-- Android `33042505505`: در حال اجرا در آخرین Fresh Audit
+- Android `33042505505`: Green
 
-فقط نتیجه نهایی همین Head برای Merge معتبر است.
+فقط همین Head برای Merge معتبر است.
 
 ## Docs موازی
-Branch `docs/current-state-backup-active` وضعیت Backup و Bismillah را هم‌زمان ثبت می‌کند. Product settle → structural sync → final evidence → exact-head docs CI → merge.
+Branch `docs/current-state-backup-active` وضعیت Backup و Bismillah را هم‌زمان ثبت می‌کند. Product merge → structural sync → final evidence → exact-head docs CI → merge.
 
 ## Automation
 Issue #19 باز است: required status check در Ruleset هنوز Platform-level قابل‌نوشتن نیست.
@@ -68,14 +68,16 @@ Issue #19 باز است: required status check در Ruleset هنوز Platform-le
 Merge Product فقط با:
 `exact-head CI + Android + live mergeability + expected-head lock + post-main proof`
 
+## Next audited slice
+Issue #70 برای Restore/Import امن ثبت شده است؛ validation + rollback و reuse parser production. Branch فقط بعد از Merge و post-main proof #68 شروع شود.
+
 ## ادامه
-1. Android دقیق `8057eca7...` را Fresh بخوان.
-2. اگر Green شد، PR #68 را Ready کن.
-3. Head و mergeability را Fresh بخوان.
-4. فقط با expected-head lock همان SHA Merge کن.
-5. main جدید را با CI + Android Verify کن.
-6. Docs lane را روی main نهایی Structurally Sync و Merge کن.
-7. Restore/Import فقط بعد از Fresh Audit به‌عنوان Slice مستقل بررسی شود.
+1. PR #68 را Ready کن.
+2. Head و mergeability را Fresh بخوان.
+3. فقط با expected-head lock همان SHA Merge کن.
+4. main جدید را با CI + Android Verify کن.
+5. Docs lane را روی main نهایی Structurally Sync و Merge کن.
+6. سپس Issue #70 را به‌عنوان Slice مستقل شروع کن.
 
 ## Trigger
 `ادامه یادنگار`
