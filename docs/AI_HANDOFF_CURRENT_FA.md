@@ -5,36 +5,52 @@ GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعی
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current main: `8656564b57271947f6b45f0dbb206dbc4d3a3a38`
+Current main: `6f3b1de0777263201a55faac9d1af1007d4d2e25`
 
-## Release Wave 7 + Manifest — تکمیل‌شده
-Wave 7 شامل Build، Release Candidate، Artifact evidence، Android Emulator Smoke و Recovery واقعی storage است. PR #85 / Issue #84 نیز `RELEASE_MANIFEST.txt` deterministic را اضافه کرد و post-main آن کاملاً Green شد.
+## وضعیت Release تا اینجا
+Wave 7، Release Manifest، Candidate Readiness و Version/Release Notes Draft به‌ترتیب روی همان Android workflow موجود ساخته و Verify شده‌اند؛ Workflow موازی جدیدی ایجاد نشده است.
 
-## Candidate Readiness — تکمیل و Merge شده
-PR #88 / Issue #87:
-`release: aggregate candidate readiness evidence`
-
-Final exact head:
+### PR #88 / Issue #87 — Candidate Readiness
+Final head:
 `32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
 
-قبل از Merge:
+Pre-merge:
 - CI `33073336472`: success
 - Android `33073336417`: success
-- android-build: success
-- android-smoke-recovery: success
-- release-readiness: success
+- Build: success
+- Smoke/Recovery: success
+- Release Readiness: success
 
-Merge با `expected_head_sha` انجام شد و main به:
-`8656564b57271947f6b45f0dbb206dbc4d3a3a38`
+Post-main روی `8656564b...`:
+- CI `33074363600`: success
+- Android `33074363581`: success
+- Build: success
+- Smoke/Recovery: success
+- Release Readiness: success
+
+### PR #90 / Issue #89 — Version + Release Notes Draft
+Final head:
+`f3aab864469135a4f1a038d00305630b36a2e9cc`
+
+Pre-merge:
+- CI `33074488110`: success
+- Android `33074488158`: success
+- Build: success
+- Smoke/Recovery: success
+- Release Readiness: success
+- Release Draft: success
+
+با `expected_head_sha` Merge شد و main به:
+`6f3b1de0777263201a55faac9d1af1007d4d2e25`
 رسید.
 
-Post-main:
-- Fast CI `33074363600`: success
-- Android `33074363581`: هنگام این revision هنوز در حال اجراست؛ نتیجه نهایی Android/Readiness فقط بعد از Fresh-read گزارش شود.
+Post-main #90:
+- CI `33075537776`: هنگام این revision فعال
+- Android `33075537814`: هنگام این revision فعال
 
-Issue #87 بسته و Completed است.
+تا Fresh-read پایان این دو Run، Green نهایی post-main گزارش نشود.
 
-## وضعیت واقعی محصول و Release
+## وضعیت واقعی محصول
 Flow اصلی:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
@@ -51,6 +67,8 @@ Flow اصلی:
 - `RELEASE_MANIFEST.txt`
 - Emulator startup + storage recovery
 - `RELEASE_READINESS.txt`
+- `RELEASE_VERSION.txt`
+- `RELEASE_NOTES_DRAFT.md`
 
 هیچ Foundation/Workflow/Storage موازی ساخته نشده است.
 
@@ -62,32 +80,34 @@ Release-mode build هنوز با debug signing config امضا می‌شود.
 
 هیچ secret یا keystore واقعی داخل Repository ثبت نشده است.
 
-## Release Governance فعال — Issue #89 / PR #90
-`release: generate deterministic version and release-notes draft`
+## Release Governance فعال — Issue #91 / PR #92
+`release: prove tag availability and emit approval rollback package`
 
 Branch:
-`release/version-notes-draft`
+`release/approval-rollback-package`
 
 Head دقیق:
-`f3aab864469135a4f1a038d00305630b36a2e9cc`
+`1990e70dfe5662aac31ed8859d7906ff274c6371`
 
-Scope فقط دو فایل است:
-- `.github/scripts/release-draft.sh`
+Fresh compare بعد از Merge #90 نشان داد Scope فقط دو فایل است:
+- `.github/scripts/release-approval.sh`
 - `.github/workflows/android-build.yml`
 
 هدف:
-- Candidate + Readiness exact-run reuse شوند
-- version/build number از Manifest خوانده شود
-- Tag فقط proposal شود و هرگز ساخته نشود
-- `RELEASE_VERSION.txt` تولید شود
-- `RELEASE_NOTES_DRAFT.md` تولید شود
-- Production signing blocker حفظ شود
+- Release Version + Readiness همان Run reuse شوند
+- source SHA تطبیق داده شود
+- Tag پیشنهادی فقط از نظر وجود قبلی روی remote بررسی شود
+- هیچ Tag/Ref ساخته یا جابه‌جا نشود
+- `RELEASE_APPROVAL.txt` تولید شود
+- `ROLLBACK_PLAN.md` تولید شود
+- اگر Tag موجود بود یا lookup قابل Verify نبود، Gate fail-closed شود
+- Approval تا وقتی Production signing blocked است، صریحاً blocked بماند
 
-Validation فعلی:
-- CI `33074488110`: success
-- Android `33074488158`: active؛ Build/Smoke/Readiness/Release Draft باید همگی Fresh-read Green شوند
+Validation شروع‌شده:
+- CI `33075612499`
+- Android `33075612644`
 
-PR #90 در آخرین Fresh-read mergeable بود، اما Merge تا Green کامل post-main #88 و Gateهای #90 ممنوع است.
+نتیجه این Runها در این revision هنوز نهایی نیست.
 
 ## مستندسازی فعال — PR #86
 Branch:
@@ -99,13 +119,14 @@ Docs-only Merge:
 `exact head + Fast CI Green + live mergeability + expected_head_sha + post-main Fast CI`
 
 ## Automation
-Issue #19 باز است. PR روی main اجباری است، اما required status checks هنوز Platform-level enforce نشده‌اند و ابزار متصل Ruleset Write ارائه نمی‌کند.
+Issue #19 باز است. PR روی main اجباری است، اما required status checks هنوز Platform-level enforce نشده‌اند و Fresh tool discovery فقط Ruleset Read ارائه می‌کند.
 
 قانون عملی Merge:
 `exact head + exact-head CI + exact-head Android/relevant jobs + live mergeability + expected_head_sha + post-main proof`
 
 ## اصل سرعت
 - Release / Product / Automation / Docs موازی تا حد امن
+- stacked preparation فقط با Fresh compare و Scope تمیز
 - Runner blocked، Lane مستقل را متوقف نمی‌کند
 - Reuse قبل از Rebuild
 - PR کوچک و Rollback-friendly
@@ -114,13 +135,13 @@ Issue #19 باز است. PR روی main اجباری است، اما required st
 - Workflow/Foundation تکراری ممنوع
 
 ## ادامه
-1. post-main Android #88 روی main `8656564b...` Fresh-read و کامل Green شود.
-2. PR #90: Fast CI + Build + Smoke/Recovery + Readiness + Release Draft همگی روی Head دقیق Green شوند.
-3. #90 فقط با Fresh head/mergeability + `expected_head_sha` Merge شود.
-4. post-main #90 Verify شود.
-5. PR #86 یک Refresh نهایی Evidence بگیرد و docs-only امن Merge شود.
+1. post-main #90 روی main `6f3b1de...` کامل Green شود.
+2. PR #92: Fast CI + Build + Smoke/Recovery + Readiness + Release Draft + Release Approval همگی روی Head دقیق Green شوند.
+3. #92 فقط با Fresh head/mergeability + `expected_head_sha` Merge شود.
+4. post-main #92 Verify شود.
+5. PR #86 با نتیجه واقعی #92 نهایی و docs-only امن Merge شود.
 6. #19 باز بماند تا enforcement واقعاً writable شود.
-7. Tag/Release/Publish واقعی و Production signing بدون تصمیم/پیکربندی امن انجام نشود.
+7. Production signing و Tag/Release/Publish واقعی بدون تصمیم و پیکربندی امن انجام نشوند.
 
 ## Trigger
 `ادامه یادنگار`
