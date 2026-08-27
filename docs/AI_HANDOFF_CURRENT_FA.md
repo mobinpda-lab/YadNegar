@@ -4,7 +4,7 @@
 GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
 Repository: `mobinpda-lab/YadNegar`  
-Current main: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
+Current verified main: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
 ## وضعیت واقعی محصول
 Flow اصلی:
@@ -39,7 +39,7 @@ Post-main:
 - CI `33041864865`: success
 - Android `33041864841`: success
 
-## PR #68 / Issue #67 — Backup تکمیل شد
+## PR #68 / Issue #67 — Backup تکمیل و Verify شد
 Exact final pre-merge head:
 `8057eca7ba4957d49bc51c54cbf278935744ccfa`
 
@@ -70,9 +70,10 @@ Issue #67 بسته completed است.
 
 Post-main `edf0c72...`:
 - CI `33042973852`: success
-- Android `33042973848`: در آخرین Fresh Audit هنوز در حال Build بود
+- Android `33042973848`: success
+- Android Build / Verify / Upload APK: success
 
-تا Android همین main success نشود، موج Backup را post-main fully verified اعلام نکن.
+Backup wave fully verified است.
 
 ## Foundationهای تکمیل‌شده اخیر
 - #65 / #64 — visible Export
@@ -92,13 +93,13 @@ Post-main `edf0c72...`:
 ## Docs فعال
 Branch: `docs/current-state-backup-active`
 
-از نظر تاریخچه روی Backup main `edf0c72...` Sync شده است. قبل از Merge Docs:
-1. نتیجه نهایی Android post-main Backup ثبت شود
-2. Diff فقط Docs باشد
-3. PR کوچک Docs باز شود
-4. exact-head Fast CI Green
-5. Fresh head/mergeability
-6. expected-head merge lock
+از نظر تاریخچه روی Backup main `edf0c72...` Sync شده و Canonical history کامل حفظ شده است. Merge Docs:
+1. Diff فقط Docs باشد
+2. PR کوچک باز شود
+3. exact-head Fast CI Green
+4. Fresh head/mergeability
+5. expected-head merge lock
+6. docs-only main Fast CI Verify
 
 ## Automation
 Issue #62 بسته/recovered است.
@@ -115,23 +116,23 @@ Fresh Audit:
 - Restore implementation مستقل وجود ندارد
 - Issue تکراری مستقل برای Restore وجود نداشت
 - PR #68 Restore را عمداً خارج Scope گذاشت
-- فایل ورودی باید قبل از دست‌زدن به primary با production parser/schema Validate شود
-- replacement نهایی باید rollback داشته باشد
+- candidate bytes باید قبل از write با production parser/schema Validate شوند
+- `_writeAll` موجود already staged replacement + backup + rollback دارد و باید reuse شود
+- duplicate-id safety قبل از replacement بررسی شود
 - raw overwrite مستقیم ممنوع
 - file selection boundary نباید به Domain نشت کند
+- `TimelineHome` مالک `_reload()` و فیلترهای فعال است؛ Restore موفق باید همان reload path را reuse کند
 
-Branch #70 فقط بعد از Green شدن Android post-main Backup ساخته شود.
+Backup post-main proof کامل است؛ بنابراین Branch #70 می‌تواند از `edf0c72...` شروع شود، مستقل از Docs lane.
 
 ## اصل سرعت
 Product / CI-Automation / Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
 
 ## ادامه
-1. Android `33042973848` را Fresh Verify کن.
-2. Green → Backup wave fully verified.
-3. Docs branch را Final Refresh کن، Diff را کنترل کن، PR باز کن و exact-head CI بگیر.
-4. Docs Green → Fresh mergeability → expected-head Merge.
-5. سپس Issue #70 را از verified main به‌عنوان Slice مستقل شروع کن.
-6. #19 را باز نگه دار تا Ruleset write واقعی ممکن شود.
+1. Docs branch را Diff-check کن، PR باز کن و exact-head CI بگیر.
+2. Docs Green → Fresh mergeability → expected-head Merge → main Fast CI.
+3. هم‌زمان Issue #70 را از verified main شروع کن.
+4. #19 را باز نگه دار تا Ruleset write واقعی ممکن شود.
 
 ## Trigger
 `ادامه یادنگار`
