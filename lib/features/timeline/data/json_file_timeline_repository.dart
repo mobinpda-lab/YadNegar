@@ -17,7 +17,8 @@ class DuplicateTimelineItemIdException extends FormatException {
 class JsonFileTimelineRepository implements TimelineRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 2;
+  static const int schemaVersion = 3;
+  static const int reminderSchemaVersion = 2;
   static const int legacySchemaVersion = 1;
 
   final File file;
@@ -161,7 +162,9 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
 
     final version = decoded['schemaVersion'];
-    if (version != schemaVersion && version != legacySchemaVersion) {
+    if (version != schemaVersion &&
+        version != reminderSchemaVersion &&
+        version != legacySchemaVersion) {
       throw UnsupportedTimelineStorageSchemaException(version);
     }
 
@@ -253,9 +256,12 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
 
     final occurredAt = _optionalDateTime(value, 'occurredAt');
-    final reminderAt = sourceSchemaVersion >= schemaVersion
+    final reminderAt = sourceSchemaVersion >= reminderSchemaVersion
         ? _optionalDateTime(value, 'reminderAt')
         : null;
+    final reminderRecurrence = sourceSchemaVersion >= schemaVersion
+        ? _requiredReminderRecurrence(value, 'reminderRecurrence')
+        : TimelineReminderRecurrence.none;
 
     return TimelineItem(
       id: id,
@@ -264,6 +270,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       createdAt: createdAt,
       occurredAt: occurredAt,
       reminderAt: reminderAt,
+      reminderRecurrence: reminderRecurrence,
     );
   }
 
@@ -275,6 +282,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       'createdAt': item.createdAt.toIso8601String(),
       'occurredAt': item.occurredAt?.toIso8601String(),
       'reminderAt': item.reminderAt?.toIso8601String(),
+      'reminderRecurrence': item.reminderRecurrence.name,
     };
   }
 
@@ -308,6 +316,19 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw FormatException('Invalid $key value: $raw.');
     }
     return value;
+  }
+
+  TimelineReminderRecurrence _requiredReminderRecurrence(
+    Map<String, dynamic> json,
+    String key,
+  ) {
+    final name = _requiredString(json, key);
+    for (final candidate in TimelineReminderRecurrence.values) {
+      if (candidate.name == name) {
+        return candidate;
+      }
+    }
+    throw FormatException('Unknown Timeline reminder recurrence: $name.');
   }
 
   void _sortNewestFirst(List<TimelineItem> items) {
