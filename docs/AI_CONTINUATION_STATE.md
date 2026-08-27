@@ -18,12 +18,12 @@ Exact PR #81 final head:
 `b0e3bf3e2846eb22ed8ae71d7676a2ae8fb9d024`
 
 Pre-merge exact-head proof:
-- YadNegar CI / `quality` run `33051771284`: success
-- YadNegar Android Build / `android-build` run `33051771332`: success
+- quality run `33051771284`: success
+- android-build run `33051771332`: success
 
 Post-main proof on `59eea7a8451e646145d027629f07a110e50ffbf2`:
-- YadNegar CI / `quality` run `33066010366`: success
-- YadNegar Android Build / `android-build` run `33066010346`: success
+- quality run `33066010366`: success
+- android-build run `33066010346`: success
 - debug APK gate: success
 - release-mode candidate APK gate: success
 
@@ -81,25 +81,48 @@ Branch:
 `release/android-emulator-smoke-recovery`
 
 Current exact head:
-`1ffe17bd45b7dbaae5e75ab730fe21579b3267f7`
+`e54ea5442568a698c032b579fe0d747d188072dd`
 
 Current exact-head runs:
-- YadNegar CI run `33067893613`
-- YadNegar Android Build run `33067893659`
+- YadNegar CI `33068633979` — success
+- YadNegar Android Build `33068633930` — active; do not report Green until a fresh read proves all jobs complete
 
-At the time of this documentation update both are active and **must not be reported as Green until a fresh read confirms completion**.
+### First emulator attempt — exact evidence
+Previous head:
+`1ffe17bd45b7dbaae5e75ab730fe21579b3267f7`
 
-PR #83 scope:
-- reuse the existing Android workflow; no duplicate workflow
-- consume the exact current-run debug APK
+Runs:
+- YadNegar CI `33067893613`: success
+- Android run `33067893659`
+- `android-build`: success, including Debug + Release Candidate build/verify/upload
+- `android-smoke-recovery`: failure
+
+Failure cause from decoded job logs:
+- emulator installed, created and booted successfully
+- APK test script did **not** start
+- `reactivecircus/android-emulator-runner@v2` invokes its `script` with `/usr/bin/sh`
+- script used `set -euo pipefail`
+- `/usr/bin/sh` rejected `pipefail` with `Illegal option -o pipefail`
+
+This was CI shell incompatibility, not an application crash, storage failure or recovery failure.
+
+Exact fix:
+- change only the emulator script prologue from `set -euo pipefail` to portable `set -eu`
+- no Product/Core/storage behavior changed
+- no Gate bypassed
+- new exact-head CI/Android runs required from zero
+
+PR #83 scope remains:
+- reuse existing Android workflow; no duplicate workflow
+- consume exact current-run debug APK
 - boot Android emulator
 - install and launch `com.mobinpda.lab.yadnegar/.MainActivity`
-- seed a valid schema-v2 `timeline.json` through Android `run-as`
+- seed valid schema-v2 `timeline.json` through Android `run-as`
 - force-stop the app
-- simulate missing-primary + valid `.bak` recovery state
-- relaunch and prove the production repository startup path restores primary storage
-- preserve the seeded Timeline marker
-- prove `.bak` / `.tmp` staging cleanup
+- simulate missing-primary + valid `.bak` state
+- relaunch and prove production repository startup recovery restores primary storage
+- preserve seeded Timeline marker
+- prove `.bak` / `.tmp` cleanup
 - upload logcat, activity/storage and screenshot evidence
 - fail on YadNegar crash-buffer evidence
 
@@ -109,10 +132,10 @@ Release branches are intentionally not added to Android `push` triggers, so PR v
 ## Automation Gap
 Issue #19 remains open.
 
-Live repository Ruleset `main-protection` currently protects `main` from deletion/non-fast-forward and requires PRs, but required status checks are still not configured at the platform Ruleset level. Connected tooling currently exposes Ruleset read but not Ruleset write.
+Live repository Ruleset `main-protection` protects `main` from deletion/non-fast-forward and requires PRs, but required status checks are still not configured at the platform Ruleset level. Connected tooling exposes Ruleset read but not Ruleset write.
 
 Until that changes, operational merge safety remains:
-`exact current head + exact-head quality Green + exact-head android-build Green for Product/Release + relevant job/artifact Green + live mergeability + expected_head_sha + post-main proof`
+`exact current head + exact-head quality Green + exact-head android-build Green for Product/Release + relevant job/artifact/smoke Green + live mergeability + expected_head_sha + post-main proof`
 
 Do not claim platform enforcement that is not actually configured.
 
@@ -127,12 +150,12 @@ Do not claim platform enforcement that is not actually configured.
 - documentation moves with implementation
 
 ## Next Actions
-1. Fresh-read PR #83 exact head and both workflow runs.
-2. Require `quality`, `android-build`, and `android-smoke-recovery` success on the same head.
-3. Inspect smoke evidence if the emulator job fails; fix only the smallest real cause.
-4. When all exact-head gates are Green, fresh-read PR mergeability and merge only with `expected_head_sha=1ffe17bd45b7dbaae5e75ab730fe21579b3267f7` if the head has not moved.
-5. Verify resulting `main` checks and smoke/recovery proof after merge.
-6. Close Issue #82 through PR #83 integration and refresh canonical docs.
+1. Fresh-read Android run `33068633930` on exact head `e54ea5442568a698c032b579fe0d747d188072dd`.
+2. Require `android-build` and `android-smoke-recovery` success on that same head; Fast CI is already Green on the same head but must be re-read before merge.
+3. If Smoke fails, inspect decoded logs/evidence and fix only the smallest real cause.
+4. When all exact-head gates are Green, fresh-read PR #83 head + mergeability and merge only with matching `expected_head_sha`.
+5. Verify resulting `main` Fast CI + Android Build + smoke/recovery after merge.
+6. Close Issue #82 through PR integration and refresh canonical docs.
 7. Keep Issue #19 open until Ruleset required-status enforcement is genuinely writable and verified.
 8. Production signing/release governance remains a separate security-sensitive slice after a fresh signing audit.
 
