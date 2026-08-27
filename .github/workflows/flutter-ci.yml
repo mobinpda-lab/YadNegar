@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: yadnegar-ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
@@ -22,8 +22,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref }}
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -32,18 +30,6 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Commit exact resolved lockfile
-        if: github.event_name == 'pull_request'
-        run: |
-          if git diff --quiet -- pubspec.lock; then
-            echo "pubspec.lock is already exact."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pubspec.lock
-          git commit -m "chore: lock reminder notification dependencies"
-          git push origin HEAD:${{ github.head_ref }}
       - name: Analyze
         run: flutter analyze
       - name: Test
