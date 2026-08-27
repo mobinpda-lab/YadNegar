@@ -5,76 +5,75 @@ GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعی
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current main: `1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+Current main: `8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
 
 ## کجا هستیم
-موج Reminder تکرارشونده از نظر Product کامل و روی main ادغام شده است. هر دو گیت اصلی post-main یعنی Fast CI و Android نیز Green هستند. کار فعال فعلی فقط Sync نهایی مستندات در PR #98 و بعد بستن Parent Issue #93 است.
+موج Reminder تکرارشونده کامل شده و نمایش وضعیت Reminder روی کارت‌های Timeline نیز با PR #100 روی `main` ادغام شده است. Fast CI و کل زنجیره Android قبل و بعد از Merge سبز هستند.
 
-## انجام‌شده — PR #96 / Issue #94
-`recurrence contract + schema v3 migration`
+## Reminder Recurrence — Completed
+Parent #93 بسته شده است.
 
-Final head:
-`225c948eac7a95e63d5618254fab7e6213a5c835`
-
-انجام‌شده:
+### PR #96 / Issue #94
 - `none / daily / weekly`
 - schema v3
 - backward-compatible v1/v2 reads
-- no read-time rewrite
-- safe-write upgrade با همان tmp/bak recovery
-- reuse کامل Timeline model/repository/storage موجود
+- safe-write upgrade با همان recovery موجود
+- بدون Model/Repository/Storage موازی
 
-Pre-merge:
-- CI `33078963061`: success
-- Android `33078963046`: success
+### PR #97 / Issue #95
+- one-shot فعلی حفظ شده
+- daily بر اساس ساعت محلی دستگاه
+- weekly بر اساس روز هفته + ساعت محلی
+- timezone قبل از startup/Restore reconciliation
+- timezone failure => recurrence fail-closed
+- خطای notification داده ذخیره‌شده را rollback نمی‌کند
+- UI فارسی: `بدون تکرار / روزانه / هفتگی`
+- no exact-alarm permission
 
-Post-main:
-- CI `33079988610`: success
-- Android `33079988616`: success
-
-## انجام‌شده — PR #97 / Issue #95
-`Android scheduling + Persian recurrence UX`
-
-Final head:
-`79bc8d84e8bab563ab63a688448fbf26d3a51dad`
-
-رفتار نهایی:
-- بدون تکرار: one-shot فعلی حفظ شده
-- روزانه: ساعت محلی دستگاه
-- هفتگی: روز هفته + ساعت محلی دستگاه
-- reminder تکرارشونده قدیمی به occurrence بعدی آینده منتقل می‌شود
-- timezone دستگاه قبل از startup/Restore reconcile تعیین می‌شود
-- اگر timezone قابل تشخیص نباشد recurrence fail-closed است
-- خطای notification باعث rollback داده ذخیره‌شده نمی‌شود
-- انتخاب فارسی: `بدون تکرار / روزانه / هفتگی`
-- recurrence فقط وقتی reminder وجود دارد دیده می‌شود
-- persist-first حفظ شده
-- پاک‌کردن reminder، recurrence را هم none می‌کند
-- Delete/Undo همچنان cancel/reschedule امن دارد
-- exact-alarm permission اضافه نشده
-
-Pre-merge:
-- CI `33080762656`: success
-- Android `33080762586`: success
+## Reminder Status on Timeline — Issue #99 / PR #100
+Final product head:
+`32fd20609daa8d6fea74c325fecb14e096c0106d`
 
 Merged main:
-`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
 
-Post-main:
-- CI `33081668902`: success
-- Android `33081668913`: success
+رفتار نهایی کارت Timeline:
+- بدون Reminder => ردیف Reminder نمایش داده نمی‌شود
+- one-shot => تاریخ/ساعت Reminder
+- daily => `روزانه` + ساعت
+- weekly => `هفتگی` + نام روز فارسی + ساعت
+- نوع آیتم و زمان Timeline قبلی حفظ شده‌اند
+
+Scope واقعی فقط دو فایل بود:
+- `lib/features/timeline/presentation/timeline_screen.dart`
+- `test/features/timeline/presentation/timeline_reminder_status_test.dart`
+
+Pre-merge exact-head:
+- Fast CI `33086840280`: success
+- Android `33086840284`: success
+
+Post-main exact SHA:
+- Fast CI `33087745543`: success
+- Android `33087745462`: success
+- Build/Candidate: success
+- emulator Smoke/Recovery: success
+- Release Readiness: success
+- Release Draft: success
+- Approval/Rollback evidence: success
+
+Issue #99 فقط بعد از ادغام و Verify همین Sync مستندات بسته می‌شود.
 
 ## وضعیت واقعی محصول
 Flow اصلی:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
-Storage schema فعلی: v3  
-Compatibility: v1/v2 reads پشتیبانی می‌شوند.
+Storage schema: v3  
+Compatibility: v1/v2 reads فعال است.
 
 هیچ Timeline/Reminder DB/Repository/Storage/Scheduler موازی وجود ندارد.
 
 ## Release Safety
-وضعیت انتشار هنوز:
+وضعیت انتشار:
 `candidate verified / release governance verified / production signing blocked / not Play-Store-ready`
 
 هیچ Tag/Release/Play Store publish واقعی یا production secret/keystore ساخته نشده است.
@@ -85,30 +84,18 @@ Compatibility: v1/v2 reads پشتیبانی می‌شوند.
 قانون عملی Merge:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-## فعال — PR #98
-PR #98 چهار سند زنده/مرجع را با نتیجه واقعی Reminder sync می‌کند.
+## مستندات فعال
+Branch: `docs/timeline-reminder-status-live`
 
-Gate نهایی:
+هدف: ثبت نتیجه واقعی #99/#100 در چهار سند live/canonical.
+
+Gate Docs:
 1. exact docs head
 2. Fast CI Green همان Head
 3. live mergeability=true
 4. exact expected-head merge
 5. post-main Fast CI
-6. سپس Parent #93 بسته شود
-
-## قدم محصول بعدی — Issue #99
-`surface reminder status on Timeline cards`
-
-Scope برنامه‌ریزی‌شده فقط Presentation است:
-- reminder ندارد => چیزی نشان داده نشود
-- one-shot => خلاصه تاریخ/ساعت
-- daily => `روزانه` + ساعت
-- weekly => `هفتگی` + روز/ساعت
-- widget test متمرکز
-
-بدون schema/repository/storage/scheduler/navigation جدید.
-
-شروع Implementation فقط بعد از بسته‌شدن کامل #93.
+6. سپس Close #99
 
 ## اصل Maximum Parallel
 - Product / Release / Automation / Docs تا حد امن موازی
@@ -120,10 +107,10 @@ Scope برنامه‌ریزی‌شده فقط Presentation است:
 - مستندسازی هم‌زمان
 
 ## ادامه
-1. PR #98 را با exact-head Fast CI نهایی و Merge کن.
-2. post-main Fast CI آن را Verify کن.
-3. Parent #93 را Close کن.
-4. Issue #99 را از main تازه به PR کوچک UI تبدیل کن.
+1. Docs sync را با exact-head Gate Merge کن.
+2. post-main Fast CI مستندات را Verify کن.
+3. #99 را Completed ببند.
+4. معماری Search/Filter فعلی را Fresh Audit کن و اسلایس کوچک بعدی را فقط با reuse موجود باز کن.
 5. #19 تا Ruleset Write واقعی باز بماند.
 
 ## Trigger
