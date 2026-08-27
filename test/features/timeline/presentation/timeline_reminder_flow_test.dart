@@ -47,8 +47,55 @@ void main() {
     final stored = await repository.findById('reminder-quick-1');
     expect(stored, isNotNull);
     expect(stored!.reminderAt, reminderAt);
+    expect(stored.reminderRecurrence, TimelineReminderRecurrence.none);
     expect(scheduler.scheduledIds, <String>['reminder-quick-1']);
     expect(scheduler.persistenceWasVisibleAtSchedule, isTrue);
+    expect(scheduler.persistenceRecurrenceWasVisibleAtSchedule, isTrue);
+  });
+
+  testWidgets('Quick Capture persists daily recurrence before scheduling',
+      (tester) async {
+    final repository = _MemoryTimelineRepository();
+    final scheduler = _RecordingReminderScheduler(repository);
+    final reminderAt = DateTime(2030, 2, 3, 7, 45);
+
+    await tester.pumpWidget(
+      _buildApp(
+        repository: repository,
+        scheduler: scheduler,
+        createdAt: DateTime(2026, 8, 27, 10),
+        id: 'reminder-daily-1',
+        reminderAtPicker: (context, initialDateTime) async => reminderAt,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('quick-capture-action')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('quick-capture-reminder-at')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const Key('quick-capture-reminder-recurrence')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('روزانه').last);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('quick-capture-input')),
+      'مرور روزانه',
+    );
+    await tester.tap(find.byKey(const Key('quick-capture-save')));
+    await tester.pumpAndSettle();
+
+    final stored = await repository.findById('reminder-daily-1');
+    expect(stored, isNotNull);
+    expect(stored!.reminderAt, reminderAt);
+    expect(stored.reminderRecurrence, TimelineReminderRecurrence.daily);
+    expect(scheduler.lastScheduledRecurrence, TimelineReminderRecurrence.daily);
+    expect(scheduler.persistenceWasVisibleAtSchedule, isTrue);
+    expect(scheduler.persistenceRecurrenceWasVisibleAtSchedule, isTrue);
   });
 
   testWidgets('Edit can clear reminder and cancels only after durable save',
@@ -60,6 +107,7 @@ void main() {
       text: 'کار دارای یادآور',
       createdAt: DateTime(2026, 8, 27, 10),
       reminderAt: reminderAt,
+      reminderRecurrence: TimelineReminderRecurrence.daily,
     );
     final repository = _MemoryTimelineRepository(<TimelineItem>[seed]);
     final scheduler = _RecordingReminderScheduler(repository);
@@ -89,8 +137,49 @@ void main() {
     final stored = await repository.findById(seed.id);
     expect(stored, isNotNull);
     expect(stored!.reminderAt, isNull);
+    expect(stored.reminderRecurrence, TimelineReminderRecurrence.none);
     expect(scheduler.cancelledIds, <String>[seed.id]);
     expect(scheduler.persistenceWasVisibleAtCancel, isTrue);
+  });
+
+  testWidgets('Edit persists weekly recurrence before rescheduling',
+      (tester) async {
+    final seed = TimelineItem(
+      id: 'reminder-edit-weekly',
+      type: TimelineItemType.note,
+      text: 'پیگیری دوره‌ای',
+      createdAt: DateTime(2026, 8, 27, 10),
+      reminderAt: DateTime(2030, 3, 4, 16, 15),
+      reminderRecurrence: TimelineReminderRecurrence.daily,
+    );
+    final repository = _MemoryTimelineRepository(<TimelineItem>[seed]);
+    final scheduler = _RecordingReminderScheduler(repository);
+
+    await tester.pumpWidget(
+      _buildApp(
+        repository: repository,
+        scheduler: scheduler,
+        createdAt: seed.createdAt,
+        id: 'unused',
+        withEdit: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('timeline-item-reminder-edit-weekly')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-edit-reminder-recurrence')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('هفتگی').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('timeline-edit-save')));
+    await tester.pumpAndSettle();
+
+    final stored = await repository.findById(seed.id);
+    expect(stored, isNotNull);
+    expect(stored!.reminderRecurrence, TimelineReminderRecurrence.weekly);
+    expect(scheduler.lastScheduledRecurrence, TimelineReminderRecurrence.weekly);
+    expect(scheduler.persistenceRecurrenceWasVisibleAtSchedule, isTrue);
   });
 
   testWidgets('editing text reschedules existing reminder with fresh body data',
@@ -176,6 +265,7 @@ void main() {
       text: 'کار قابل بازگردانی',
       createdAt: DateTime(2026, 8, 27, 10),
       reminderAt: DateTime(2030, 1, 6, 13),
+      reminderRecurrence: TimelineReminderRecurrence.weekly,
     );
     final repository = _MemoryTimelineRepository(<TimelineItem>[seed]);
     final scheduler = _RecordingReminderScheduler(repository);
@@ -207,6 +297,7 @@ void main() {
 
     expect(await repository.findById(seed.id), isNotNull);
     expect(scheduler.scheduledIds, <String>[seed.id]);
+    expect(scheduler.lastScheduledRecurrence, TimelineReminderRecurrence.weekly);
   });
 }
 
@@ -278,15 +369,20 @@ class _RecordingReminderScheduler implements TimelineReminderScheduler {
   final List<String> scheduledIds = <String>[];
   final List<String> cancelledIds = <String>[];
   bool persistenceWasVisibleAtSchedule = false;
+  bool persistenceRecurrenceWasVisibleAtSchedule = false;
   bool persistenceWasVisibleAtCancel = false;
   String? lastScheduledText;
+  TimelineReminderRecurrence? lastScheduledRecurrence;
 
   @override
   Future<TimelineReminderScheduleResult> schedule(TimelineItem item) async {
     final persisted = await repository.findById(item.id);
     persistenceWasVisibleAtSchedule = persisted?.reminderAt == item.reminderAt;
+    persistenceRecurrenceWasVisibleAtSchedule =
+        persisted?.reminderRecurrence == item.reminderRecurrence;
     scheduledIds.add(item.id);
     lastScheduledText = item.text;
+    lastScheduledRecurrence = item.reminderRecurrence;
     return scheduleResult;
   }
 

@@ -32,12 +32,14 @@ class _QuickCaptureDraft {
     required this.type,
     this.occurredAt,
     this.reminderAt,
+    this.reminderRecurrence = TimelineReminderRecurrence.none,
   });
 
   final String text;
   final TimelineItemType type;
   final DateTime? occurredAt;
   final DateTime? reminderAt;
+  final TimelineReminderRecurrence reminderRecurrence;
 }
 
 class _EditTimelineDraft {
@@ -45,9 +47,11 @@ class _EditTimelineDraft {
     required this.text,
     required this.replaceOccurredAt,
     required this.replaceReminderAt,
+    required this.replaceReminderRecurrence,
     this.replacementType,
     this.occurredAt,
     this.reminderAt,
+    this.reminderRecurrence = TimelineReminderRecurrence.none,
     this.deleteRequested = false,
   });
 
@@ -57,6 +61,8 @@ class _EditTimelineDraft {
   final DateTime? occurredAt;
   final bool replaceReminderAt;
   final DateTime? reminderAt;
+  final bool replaceReminderRecurrence;
+  final TimelineReminderRecurrence reminderRecurrence;
   final bool deleteRequested;
 }
 
@@ -446,6 +452,7 @@ class _TimelineHomeState extends State<TimelineHome> {
     var selectedType = TimelineItemType.note;
     DateTime? occurredAt;
     DateTime? reminderAt;
+    var reminderRecurrence = TimelineReminderRecurrence.none;
 
     final captureDraft = await showDialog<_QuickCaptureDraft>(
       context: context,
@@ -544,12 +551,37 @@ class _TimelineHomeState extends State<TimelineHome> {
                         : _formatDateTime(reminderAt!),
                   ),
                 ),
-                if (reminderAt != null)
+                if (reminderAt != null) ...[
+                  const SizedBox(height: 8),
+                  const Text('تکرار یادآور'),
+                  DropdownButton<TimelineReminderRecurrence>(
+                    key: const Key('quick-capture-reminder-recurrence'),
+                    value: reminderRecurrence,
+                    isExpanded: true,
+                    items: TimelineReminderRecurrence.values
+                        .map(
+                          (recurrence) => DropdownMenuItem<TimelineReminderRecurrence>(
+                            value: recurrence,
+                            child: Text(_recurrenceLabel(recurrence)),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (recurrence) {
+                      if (recurrence == null) {
+                        return;
+                      }
+                      setDialogState(() => reminderRecurrence = recurrence);
+                    },
+                  ),
                   TextButton(
                     key: const Key('quick-capture-reminder-at-clear'),
-                    onPressed: () => setDialogState(() => reminderAt = null),
+                    onPressed: () => setDialogState(() {
+                      reminderAt = null;
+                      reminderRecurrence = TimelineReminderRecurrence.none;
+                    }),
                     child: const Text('پاک کردن یادآور'),
                   ),
+                ],
               ],
             ),
           ),
@@ -566,6 +598,7 @@ class _TimelineHomeState extends State<TimelineHome> {
                   type: selectedType,
                   occurredAt: occurredAt,
                   reminderAt: reminderAt,
+                  reminderRecurrence: reminderRecurrence,
                 ),
               ),
               child: const Text('ثبت'),
@@ -590,6 +623,7 @@ class _TimelineHomeState extends State<TimelineHome> {
         type: captureDraft.type,
         occurredAt: captureDraft.occurredAt,
         reminderAt: captureDraft.reminderAt,
+        reminderRecurrence: captureDraft.reminderRecurrence,
       );
     } on ArgumentError {
       _showMessage('متن ثبت سریع نمی‌تواند خالی باشد.');
@@ -616,6 +650,7 @@ class _TimelineHomeState extends State<TimelineHome> {
     var selectedType = item.type;
     var occurredAt = item.occurredAt;
     var reminderAt = item.reminderAt;
+    var reminderRecurrence = item.reminderRecurrence;
 
     final editDraft = await showDialog<_EditTimelineDraft>(
       context: context,
@@ -715,12 +750,37 @@ class _TimelineHomeState extends State<TimelineHome> {
                           : _formatDateTime(reminderAt!),
                     ),
                   ),
-                  if (reminderAt != null)
+                  if (reminderAt != null) ...[
+                    const SizedBox(height: 8),
+                    const Text('تکرار یادآور'),
+                    DropdownButton<TimelineReminderRecurrence>(
+                      key: const Key('timeline-edit-reminder-recurrence'),
+                      value: reminderRecurrence,
+                      isExpanded: true,
+                      items: TimelineReminderRecurrence.values
+                          .map(
+                            (recurrence) => DropdownMenuItem<TimelineReminderRecurrence>(
+                              value: recurrence,
+                              child: Text(_recurrenceLabel(recurrence)),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (recurrence) {
+                        if (recurrence == null) {
+                          return;
+                        }
+                        setDialogState(() => reminderRecurrence = recurrence);
+                      },
+                    ),
                     TextButton(
                       key: const Key('timeline-edit-reminder-at-clear'),
-                      onPressed: () => setDialogState(() => reminderAt = null),
+                      onPressed: () => setDialogState(() {
+                        reminderAt = null;
+                        reminderRecurrence = TimelineReminderRecurrence.none;
+                      }),
                       child: const Text('پاک کردن یادآور'),
                     ),
+                  ],
                 ],
               ),
             ),
@@ -762,6 +822,8 @@ class _TimelineHomeState extends State<TimelineHome> {
                         occurredAt: occurredAt,
                         replaceReminderAt: false,
                         reminderAt: reminderAt,
+                        replaceReminderRecurrence: false,
+                        reminderRecurrence: reminderRecurrence,
                         deleteRequested: true,
                       ),
                     );
@@ -782,6 +844,9 @@ class _TimelineHomeState extends State<TimelineHome> {
                     occurredAt: occurredAt,
                     replaceReminderAt: reminderAt != item.reminderAt,
                     reminderAt: reminderAt,
+                    replaceReminderRecurrence:
+                        reminderRecurrence != item.reminderRecurrence,
+                    reminderRecurrence: reminderRecurrence,
                   ),
                 ),
                 child: const Text('ذخیره'),
@@ -867,6 +932,8 @@ class _TimelineHomeState extends State<TimelineHome> {
         occurredAt: editDraft.occurredAt,
         replaceReminderAt: editDraft.replaceReminderAt,
         reminderAt: editDraft.reminderAt,
+        replaceReminderRecurrence: editDraft.replaceReminderRecurrence,
+        reminderRecurrence: editDraft.reminderRecurrence,
       );
     } on ArgumentError {
       _showMessage('متن ویرایش نمی‌تواند خالی باشد.');
@@ -895,6 +962,14 @@ class _TimelineHomeState extends State<TimelineHome> {
       TimelineItemType.call => 'تماس',
       TimelineItemType.idea => 'ایده',
       TimelineItemType.activity => 'فعالیت',
+    };
+  }
+
+  String _recurrenceLabel(TimelineReminderRecurrence recurrence) {
+    return switch (recurrence) {
+      TimelineReminderRecurrence.none => 'بدون تکرار',
+      TimelineReminderRecurrence.daily => 'روزانه',
+      TimelineReminderRecurrence.weekly => 'هفتگی',
     };
   }
 

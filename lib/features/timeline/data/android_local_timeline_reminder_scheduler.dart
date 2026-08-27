@@ -7,8 +7,10 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
   AndroidLocalTimelineReminderScheduler({
     required FlutterLocalNotificationsPlugin notifications,
     required DateTime Function() clock,
+    required bool localTimezoneReady,
   })  : _notifications = notifications,
-        _clock = clock;
+        _clock = clock,
+        _localTimezoneReady = localTimezoneReady;
 
   static const String _payloadPrefix = 'yadnegar:timeline:';
   static const String _channelId = 'timeline_reminders';
@@ -17,11 +19,24 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
 
   final FlutterLocalNotificationsPlugin _notifications;
   final DateTime Function() _clock;
+  final bool _localTimezoneReady;
 
   @override
   Future<TimelineReminderScheduleResult> schedule(TimelineItem item) async {
     final reminderAt = item.reminderAt;
-    if (reminderAt == null || !reminderAt.isAfter(_clock())) {
+    if (reminderAt == null) {
+      await cancel(item.id);
+      return TimelineReminderScheduleResult.skippedPast;
+    }
+
+    if (item.reminderRecurrence != TimelineReminderRecurrence.none &&
+        !_localTimezoneReady) {
+      await cancel(item.id);
+      throw StateError('Local timezone is required for recurring reminders.');
+    }
+
+    final scheduledAt = _nextScheduledAt(item);
+    if (scheduledAt == null) {
       await cancel(item.id);
       return TimelineReminderScheduleResult.skippedPast;
     }
@@ -30,7 +45,7 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
       return TimelineReminderScheduleResult.permissionDenied;
     }
 
-    await _scheduleWithoutPermission(item);
+    await _scheduleWithoutPermission(item, scheduledAt: scheduledAt);
     return TimelineReminderScheduleResult.scheduled;
   }
 
@@ -61,11 +76,17 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
       }
     }
 
-    final now = _clock();
     for (final item in items) {
-      final reminderAt = item.reminderAt;
-      if (reminderAt != null && reminderAt.isAfter(now)) {
-        await _scheduleWithoutPermission(item);
+      if (item.reminderAt == null) {
+        continue;
+      }
+      if (item.reminderRecurrence != TimelineReminderRecurrence.none &&
+          !_localTimezoneReady) {
+        throw StateError('Local timezone is required for recurring reminders.');
+      }
+      final scheduledAt = _nextScheduledAt(item);
+      if (scheduledAt != null) {
+        await _scheduleWithoutPermission(item, scheduledAt: scheduledAt);
       }
     }
   }
@@ -86,12 +107,102 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
     return granted ?? true;
   }
 
-  Future<void> _scheduleWithoutPermission(TimelineItem item) async {
+  tz.TZDateTime? _nextScheduledAt(TimelineItem item) {
     final reminderAt = item.reminderAt;
     if (reminderAt == null) {
-      return;
+      return null;
     }
 
+    if (item.reminderRecurrence == TimelineReminderRecurrence.none) {
+      if (!reminderAt.isAfter(_clock())) {
+        return null;
+      }
+      return tz.TZDateTime.from(reminderAt.toUtc(), tz.UTC);
+    }
+
+    if (!_localTimezoneReady) {
+      return null;
+    }
+
+    final now = tz.TZDateTime.from(_clock().toUtc(), tz.local);
+    final anchor = reminderAt.isUtc
+        ? tz.TZDateTime.from(reminderAt, tz.local)
+        : tz.TZDateTime(
+            tz.local,
+            reminderAt.year,
+            reminderAt.month,
+            reminderAt.day,
+            reminderAt.hour,
+            reminderAt.minute,
+            reminderAt.second,
+            reminderAt.millisecond,
+            reminderAt.microsecond,
+          );
+
+    switch (item.reminderRecurrence) {
+      case TimelineReminderRecurrence.none:
+        return null;
+      case TimelineReminderRecurrence.daily:
+        var candidate = tz.TZDateTime(
+          tz.local,
+          now.year,
+          now.month,
+          now.day,
+          anchor.hour,
+          anchor.minute,
+          anchor.second,
+          anchor.millisecond,
+          anchor.microsecond,
+        );
+        if (!candidate.isAfter(now)) {
+          candidate = tz.TZDateTime(
+            tz.local,
+            now.year,
+            now.month,
+            now.day + 1,
+            anchor.hour,
+            anchor.minute,
+            anchor.second,
+            anchor.millisecond,
+            anchor.microsecond,
+          );
+        }
+        return candidate;
+      case TimelineReminderRecurrence.weekly:
+        var daysUntil = (anchor.weekday - now.weekday) % DateTime.daysPerWeek;
+        var candidate = tz.TZDateTime(
+          tz.local,
+          now.year,
+          now.month,
+          now.day + daysUntil,
+          anchor.hour,
+          anchor.minute,
+          anchor.second,
+          anchor.millisecond,
+          anchor.microsecond,
+        );
+        if (!candidate.isAfter(now)) {
+          daysUntil += DateTime.daysPerWeek;
+          candidate = tz.TZDateTime(
+            tz.local,
+            now.year,
+            now.month,
+            now.day + daysUntil,
+            anchor.hour,
+            anchor.minute,
+            anchor.second,
+            anchor.millisecond,
+            anchor.microsecond,
+          );
+        }
+        return candidate;
+    }
+  }
+
+  Future<void> _scheduleWithoutPermission(
+    TimelineItem item, {
+    required tz.TZDateTime scheduledAt,
+  }) async {
     final pending = await _notifications.pendingNotificationRequests();
     final payload = _payloadFor(item.id);
     int? existingId;
@@ -110,7 +221,6 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
     }
 
     final notificationId = existingId ?? _allocateNotificationId(item.id, usedIds);
-    final scheduledAt = tz.TZDateTime.from(reminderAt.toUtc(), tz.UTC);
 
     await _notifications.zonedSchedule(
       notificationId,
@@ -127,8 +237,19 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: _matchDateTimeComponents(item.reminderRecurrence),
       payload: payload,
     );
+  }
+
+  DateTimeComponents? _matchDateTimeComponents(
+    TimelineReminderRecurrence recurrence,
+  ) {
+    return switch (recurrence) {
+      TimelineReminderRecurrence.none => null,
+      TimelineReminderRecurrence.daily => DateTimeComponents.time,
+      TimelineReminderRecurrence.weekly => DateTimeComponents.dayOfWeekAndTime,
+    };
   }
 
   int _allocateNotificationId(String timelineItemId, Set<int> usedIds) {
