@@ -19,10 +19,9 @@ class TimelineItem {
     required this.text,
     required this.createdAt,
     this.occurredAt,
-    DateTime? reminderAt,
+    this.reminderAt,
     TimelineReminderRecurrence reminderRecurrence = TimelineReminderRecurrence.none,
-  })  : reminderAt = reminderAt,
-        reminderRecurrence = reminderAt == null
+  }) : reminderRecurrence = reminderAt == null
             ? TimelineReminderRecurrence.none
             : reminderRecurrence;
 
