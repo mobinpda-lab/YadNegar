@@ -1,5 +1,5 @@
 # سند جامع پروژه یادنگار (YadNegar)
-## نسخه 1.3 — مرجع جامع محصول، مهندسی، اجرا و تداوم
+## نسخه 1.4 — مرجع جامع محصول، مهندسی، اجرا و تداوم
 
 **Project:** YadNegar / یادنگار  
 **Repository:** `mobinpda-lab/YadNegar`  
@@ -26,7 +26,7 @@ Green تاریخی برای Head جدید قابل انتقال نیست.
 
 ## 2. وضعیت Verify‌شده فعلی — 2026-08-27
 Current product main:
-`3428c1798a43fd39fadd5f47673d1bd0366583ca`
+`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
 
 Main اکنون یک Flutter product واقعی با Foundation واحد و Flow زیر است:
 `Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
@@ -36,6 +36,8 @@ Backward compatibility: v1/v2 reads
 UI: Persian RTL
 
 Foundation موازی برای Timeline/Storage/Reminder/AppShell وجود ندارد.
+
+Timeline اکنون علاوه بر Search/Type/Date، فیلتر Presence یادآور دارد و پنج نوع canonical آیتم با Material icon متمایز نمایش داده می‌شوند.
 
 ---
 
@@ -119,7 +121,7 @@ Persian UX:
 
 ---
 
-## 7. Reminder Product Waves
+## 7. Product Waves
 ### Recurring Reminder — #93
 - PR #96 / Issue #94: recurrence contract + schema v3 + v1/v2 compatibility
 - PR #97 / Issue #95: device-local daily/weekly scheduling + Persian UX
@@ -127,26 +129,21 @@ Persian UX:
 - parent #93 completed
 
 ### Timeline Reminder Status — #99 / PR #100
-Product merged to:
-`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
-
-Final docs PR #101 merged to:
-`fb2a02624421ba135de87357817d13922fed7abf`
-
-Issue #99 is completed and closed.
+- وضعیت Reminder مستقیماً روی کارت Timeline نمایش داده می‌شود.
+- final docs PR #101 integrated
+- Issue #99 completed
 
 ### Reminder Presence Filter — #102 / PR #103
 Final product head:
 `256c2f05a5ce0d4bfaba6c9a711e7470d78f932a`
 
-Merged main:
+Product merged to:
 `3428c1798a43fd39fadd5f47673d1bd0366583ca`
 
-Scope واقعی فقط:
-- `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_reminder_filter_test.dart`
+Final docs PR #105 merged to:
+`4d6dc18021b5d327b3a55972288df2b2a4d1c197`
 
-رفتار:
+Behavior:
 - `همه موارد`
 - `دارای یادآور`
 - `بدون یادآور`
@@ -154,13 +151,53 @@ Scope واقعی فقط:
 - Clear موجود، فیلتر Reminder را هم Reset می‌کند
 - Export موارد visible فعلی را استفاده می‌کند
 
-Pre-merge evidence:
-- Fast CI `33092820178`: success
-- Android `33092820203`: success across Build/Candidate, Emulator Smoke/Recovery, Readiness, deterministic Release Draft, Approval/Rollback evidence
+Final proof:
+- product Fast CI `33092820178`: success
+- product Android `33092820203`: success full chain
+- product post-main Fast CI `33093725156`: success
+- product post-main Android `33093725042`: success full chain
+- docs exact-head Fast CI `33095665307`: success
+- docs post-main Fast CI `33095853727`: success
 
-Post-main evidence روی SHA دقیق فعلی:
-- Fast CI `33093725156`: success
-- Android `33093725042`: success across the same full chain
+Issue #102 completed.
+
+### Timeline Type Icons — #104 / PR #106
+Final product head:
+`042491caadb405a31473b51986c263a6f9ba5d5c`
+
+Merged main:
+`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
+
+Scope واقعی فقط:
+- `lib/features/timeline/presentation/timeline_screen.dart`
+- `test/features/timeline/presentation/timeline_type_icon_test.dart`
+
+Mapping:
+- note => `Icons.note_outlined`
+- event => `Icons.event_outlined`
+- call => `Icons.call_outlined`
+- idea => `Icons.lightbulb_outline`
+- activity => `Icons.check_circle_outline`
+
+Existing Persian type text, timestamp, Reminder status and Reminder presence filter unchanged.
+
+Pre-merge proof:
+- Fast CI `33095681567`: success
+- Android `33095681514`: success full chain
+
+Post-main proof on exact current product main:
+- Fast CI `33096491732`: success
+- Android `33096491859`: success full chain
+  - Build/Candidate: success
+  - emulator Smoke/Recovery: success
+  - Release Readiness: success
+  - deterministic Release Draft: success
+  - Approval/Rollback evidence: success
+
+Final documentation branch:
+`docs/timeline-type-icons-live`
+
+Issue #104 closes only after docs exact-head CI, exact-head merge, and docs post-main Fast CI are verified.
 
 ---
 
@@ -253,42 +290,35 @@ Laneهای مستقل:
 4. exact `expected_head_sha`
 5. post-main Fast CI
 
+Historical Green برای Head جدید معتبر نیست.
+
 ---
 
-## 12. وضعیت مستندات فعال #102
+## 12. وضعیت مستندات فعال #104
 Branch:
-`docs/timeline-reminder-filter-live`
+`docs/timeline-type-icons-live`
 
-این Branch چهار سند live/canonical را با outcome واقعی PR #103 و post-main Green همگام می‌کند.
+هدف: چهار سند live/canonical را با outcome واقعی PR #106 و post-main Green همگام کند.
 
 پس از ادغام و Verify:
-- Issue #102 بسته می‌شود.
-- #104 به Lane ادغام محصول منتقل می‌شود.
+- Issue #104 completed/closed
+- Product queue از Fresh GitHub Reality دوباره ساخته می‌شود
+- Issue #19 تا Ruleset Write واقعی باز می‌ماند
 
 ---
 
-## 13. Slice بعدی — #104
-Issue #104:
-`product: differentiate Timeline item types with icons`
+## 13. انتخاب Slice بعدی
+هیچ Feature جدید صرفاً برای پرکردن Backlog ساخته نمی‌شود.
 
-Branch:
-`product/timeline-type-icons`
+روش:
+1. Fresh Audit محصول و open issues
+2. پیدا کردن یک نیاز کوچک با reuse بالا
+3. اثبات اینکه schema/storage/scheduler/foundation جدید لازم نیست
+4. Issue با Definition of Done روشن
+5. Branch از main تازه
+6. focused tests + exact-head gates
 
-هدف: پنج نوع فعلی Timeline با Material iconهای موجود سریع‌تر قابل اسکن شوند.
-
-Scope مجاز:
-- presentation-only
-- استفاده از `TimelineItem.type`
-- focused widget tests
-
-ممنوع:
-- schema/model contract change
-- repository/storage change
-- scheduler/platform change
-- navigation/foundation change
-- dependency یا asset pipeline جدید
-
-آماده‌سازی موازی مجاز است؛ Integration فقط پس از تکمیل Docs #102، Fresh compare مستقل و exact-head gates.
+Candidate فقط بعد از Audit کد پذیرفته می‌شود.
 
 ---
 
