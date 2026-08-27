@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 3.2 — Backup Integrated / Restore Next
+## نسخه 3.2 — Backup Verified / Restore Active Next
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -89,9 +89,10 @@ Issue #67 closed completed.
 
 Post-main `edf0c72...`:
 - CI `33042973852`: success
-- Android `33042973848`: در آخرین Fresh Audit هنوز Build در حال اجرا بود
+- Android `33042973848`: success
+- Android build + verify + upload: success
 
-موج Backup فقط بعد از Green شدن Android همین main fully verified محسوب می‌شود.
+موج Backup fully verified است.
 
 ## 5. Lane A — Core/Data
 Foundation پایدار:
@@ -100,31 +101,35 @@ Foundation پایدار:
 - یک crash-recoverable JSON storage
 - schema-versioned parser/serializer production
 - validated snapshot path برای Backup
+- staged `_writeAll` با `.tmp` / `.bak` و restore-on-failure
 
-Restore بعدی باید همین parser/recovery semantics را reuse کند؛ Foundation موازی ممنوع.
+Restore بعدی باید همین parser و write/rollback path را reuse کند؛ Foundation موازی ممنوع.
 
 ## 6. Lane B — Product/UX
-Backup وارد main شده است.
+Backup Verify شده است.
 
 Next audited slice:
 Issue #70 — Restore/Import امن.
 
-قواعد UX/محصولی اولیه #70:
-- file selection در boundary پلتفرم
-- validation کامل قبل از تغییر primary data
+Audit عملی #70:
+- candidate bytes قبل از هر write با production parser/schema Validate شوند
+- duplicate-id safety قبل از replacement
+- `_writeAll` موجود برای staged replacement + rollback reuse شود
+- `TimelineRepository` Domain contract لازم نیست تغییر کند
+- file selection فقط در platform/composition boundary
 - confirmation فارسی قبل از replacement
-- success/invalid/unsupported/failure feedback فارسی
-- reload Timeline بعد از restore موفق
+- success/invalid/unsupported/duplicate/failure feedback فارسی
+- `TimelineHome` همان `_reload()` فعلی را بعد از Restore موفق اجرا کند تا Search/Type/Date state حفظ شود
 - raw overwrite ممنوع
 
-Branch #70 فقط پس از post-main proof کامل Backup.
+Backup post-main Green است؛ Branch #70 اکنون می‌تواند از `edf0c72...` شروع شود.
 
 ## 7. Lane C — CI/Automation/Docs
 - docs branch: `docs/current-state-backup-active`
 - branch structurally روی merged Backup main `edf0c72...` Sync شده
-- Canonical docs کامل حفظ می‌شوند؛ Snapshot فشرده جایگزین تاریخچه نمی‌شود
-- final refresh باید نتیجه Android post-main را ثبت کند
-- سپس Diff فقط Docs + exact-head Fast CI + safe merge
+- Canonical docs کامل حفظ شده‌اند
+- final Backup evidence ثبت شده
+- مرحله بعد: Diff docs-only → PR → exact-head Fast CI → safe merge
 - Issue #62 recovered/closed
 - Issue #19 required-status Ruleset gap باز است
 
@@ -140,12 +145,9 @@ Historical Green هرگز برای Head جدید reuse نمی‌شود.
 
 ## 9. Queue
 ### Active
-1. post-main Android proof برای Backup main `edf0c72...`
-2. docs/current-state-backup-active
+1. docs/current-state-backup-active — final docs after Backup
+2. Issue #70 — validated Restore/Import with rollback
 3. Issue #19 — Ruleset enforcement gap
-
-### Next
-4. Issue #70 — validated Restore/Import with rollback
 
 ### Completed recently
 - PR #68 / Issue #67 — validated portable Backup
@@ -168,12 +170,11 @@ Historical Green هرگز برای Head جدید reuse نمی‌شود.
 - mixing Reminder into Restore Slice
 
 ## 11. قدم بعد
-1. Android `33042973848` را Fresh بخوان.
-2. Green → Backup wave fully verified.
-3. Canonical docs را با final proof Refresh کن.
-4. Diff docs-only → PR → exact-head Fast CI → expected-head merge.
-5. Issue #70 را از verified main شروع کن.
-6. #19 باز بماند تا Platform-level enforcement واقعاً writable شود.
+1. Docs diff را کنترل کن و PR باز کن.
+2. Docs exact-head Fast CI Green → Fresh mergeability → expected-head merge → main Fast CI.
+3. هم‌زمان Branch #70 را از `edf0c72...` بساز و Core/Data Restore را با production parser + `_writeAll` reuse شروع کن.
+4. File picker dependency فقط بعد از compatibility proof و Android gate واقعی قطعی شود.
+5. #19 باز بماند تا Platform-level enforcement واقعاً writable شود.
 
 ## 12. گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
