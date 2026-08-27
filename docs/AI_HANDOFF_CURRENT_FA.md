@@ -5,29 +5,38 @@ GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعی
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main: `9ffa1041c3205a35d0aa0744236e9e4dcbb28333`
+Current verified main: `a29fe46ba9c9c50be107e36b6c618ddc1a0c6e95`
 
-## Wave 7 — تکمیل‌شده
-PR #83 با Head دقیق زیر Merge شد:
-`60d1f21ce3574e3b6c04478351136acf35e9e8e7`
+## Release Wave 7 — تکمیل‌شده
+Wave 7 شامل Build، Release Candidate، Artifact evidence، Android Emulator Smoke و Recovery واقعی storage است و روی main اثبات شده است.
 
-Exact-head قبل از Merge:
-- CI `33069328808`: success
-- Android `33069328907`: success
+## Release Manifest — تکمیل‌شده
+PR #85 / Issue #84:
+`release: add deterministic release manifest evidence`
+
+Final exact head:
+`2a456003899ec24ab310a86f5f521c68a97fb483`
+
+قبل از Merge:
+- CI `33070804473`: success
+- Android `33070804465`: success
+- Build: success
+- Release Candidate + Manifest: success
+- Smoke/Recovery: success
+
+Merge با `expected_head_sha` انجام شد.
+
+Post-main روی `a29fe46...`:
+- Fast CI `33071541211`: success
+- Android `33071541182`: success
 - android-build: success
 - android-smoke-recovery: success
-- Debug APK + Release Candidate: success
-- Emulator startup + recovery واقعی storage: success
 
-Merge با `expected_head_sha` انجام شد و Issue #82 بسته شد.
-
-Post-main روی `9ffa1041...`:
-- Fast CI `33070027775`: success
-- Android `33070027900`: هنگام این commit هنوز فعال است؛ تا Fresh-read پایان Run، Green نهایی گزارش نشود.
+Issue #84 بسته و تکمیل شده است.
 
 ## وضعیت واقعی محصول
 Flow اصلی:
-`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup/Restore → Reminder`
+`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
 روی main:
 - Note/Event/Call/Idea/Activity روی یک TimelineItem مشترک
@@ -43,53 +52,66 @@ Flow اصلی:
 - startup/Restore reconciliation
 - Fast CI
 - Debug APK artifact
-- Release Candidate artifact + hash/size evidence
+- Release Candidate artifact
+- SHA-256 + size evidence
+- `RELEASE_MANIFEST.txt`
+- source SHA واقعی جدا از validation SHA
 - Android Emulator startup proof
 - Recovery واقعی primary از `.bak`
 
 هیچ Timeline model/repository/storage/AppShell/Reminder DB موازی وجود ندارد.
 
-## Release Candidate
+## وضعیت امضای Release
 Release-mode build هنوز با debug signing config امضا می‌شود.
 
-بنابراین وضعیت صحیح:
-`release-mode candidate / not production-signed / not Play-Store-ready`
+وضعیت صحیح:
+`candidate verified / not production-signed / not Play-Store-ready`
 
-هیچ secret یا keystore واقعی نباید داخل Repository ثبت شود.
+هیچ secret یا keystore واقعی داخل Repository ثبت نشده و نباید ثبت شود.
 
-## Release Governance فعال — Issue #84 / PR #85
-`release: add deterministic release manifest evidence`
+## Release Governance فعال — Issue #87 / PR #88
+`release: aggregate candidate readiness evidence`
 
 Branch:
-`release/deterministic-release-manifest`
+`release/candidate-readiness-evidence`
 
-Initial head:
-`cb8bd2d23dfc06bdb8f8ab20869dabb8edbfd340`
+Head دقیق هنگام این بروزرسانی:
+`32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
 
 هدف:
 - همان Android workflow reuse شود
-- Build/Artifact/Smoke/Recovery حفظ شوند
-- `RELEASE_MANIFEST.txt` به artifact موجود اضافه شود
-- version، application id، exact SHA، APK SHA-256، size و signing state ثبت شوند
-- بدون secret، tag، publish یا ادعای Production
+- Build/Manifest/Smoke/Recovery حفظ شوند
+- Job جدید `release-readiness` بعد از Gateهای قبلی اجرا شود
+- Candidate و Smoke evidence همان Run دانلود و بررسی شوند
+- `RELEASE_READINESS.txt` ساخته و Upload شود
+- تا وقتی debug signing وجود دارد، Production signing صریحاً blocked گزارش شود
 
-Runs فعال روی Head اولیه:
-- CI `33070352421`
-- Android `33070352464`
+Runs شروع‌شده روی همین Head:
+- CI `33073336472`
+- Android `33073336417`
 
-قبل از Merge باید Fresh-read شوند.
+در زمان این commit هنوز نتیجه نهایی این Runها قطعی نشده بود؛ قبل از هر Merge باید Fresh-read شوند.
+
+## مستندسازی فعال — PR #86
+Branch:
+`docs/release-wave7-final`
+
+Current State، Handoff، Operation Plan و Canonical Governance هم‌زمان با کار عملی GitHub Sync می‌شوند.
+
+Docs-only Merge فقط با:
+`exact head + Fast CI Green + live mergeability + expected_head_sha + post-main Fast CI`
 
 ## Automation
 Issue #19 باز است.
 
-Ruleset `main-protection` PR را اجباری می‌کند و deletion/non-fast-forward را می‌بندد، اما required status checks هنوز Platform-level تنظیم نشده‌اند. ابزار متصل در Fresh audit تاریخ 2026-08-27 فقط Ruleset Read دارد.
+Ruleset فعلی PR را اجباری می‌کند، اما required status checks هنوز Platform-level enforce نشده‌اند و ابزار متصل Ruleset Write ارائه نمی‌کند.
 
 قانون عملی Merge:
 `exact head + exact-head CI + exact-head Android/relevant jobs + live mergeability + expected_head_sha + post-main proof`
 
 ## اصل سرعت
 - Release / Product / Automation / Docs تا حد امن موازی
-- Runner مسدود Lane مستقل را متوقف نمی‌کند
+- Block شدن Runner، Lane مستقل را متوقف نمی‌کند
 - Reuse قبل از Rebuild
 - PR کوچک و قابل Rollback
 - مستندسازی هم‌زمان با Implementation
@@ -97,12 +119,13 @@ Ruleset `main-protection` PR را اجباری می‌کند و deletion/non-fas
 - Workflow و Foundation تکراری ممنوع
 
 ## ادامه
-1. Android post-main روی `9ffa1041...` Fresh-read شود.
-2. PR #85 روی Head دقیق Validate شود.
-3. مستندات نهایی با Evidence واقعی Sync و docs-only PR ساخته شود.
-4. Merge فقط با expected-head lock.
-5. #19 باز بماند تا enforcement واقعاً writable شود.
-6. Production signing فقط در Slice امنیتی جدا بعد از تعیین مالکیت keystore/credentials.
+1. PR #88 روی Head دقیق Validate شود.
+2. Fast CI + Build + Smoke/Recovery + Release Readiness باید Green باشند.
+3. Merge فقط بعد از Fresh head/mergeability و با `expected_head_sha`.
+4. بعد از Merge، main دوباره Verify شود.
+5. PR #86 با نتیجه واقعی #88 یک بار نهایی و سپس docs-only Merge شود.
+6. #19 باز بماند تا enforcement واقعاً writable شود.
+7. Production signing فقط در Slice امنیتی جدا بعد از تعیین مالکیت امن keystore/credentials.
 
 ## Trigger
 `ادامه یادنگار`
