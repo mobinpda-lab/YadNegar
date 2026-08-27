@@ -86,6 +86,8 @@ jobs:
 
       - name: Verify release-candidate artifact and emit evidence
         shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           apk="build/app/outputs/flutter-apk/app-release.apk"
@@ -102,6 +104,7 @@ jobs:
 
           test -n "$version"
           test -n "$application_id"
+          test -n "${SOURCE_SHA:-}"
           test -n "${GITHUB_SHA:-}"
 
           {
@@ -114,7 +117,8 @@ jobs:
             printf 'artifact=app-release.apk\n'
             printf 'version=%s\n' "$version"
             printf 'application_id=%s\n' "$application_id"
-            printf 'source_sha=%s\n' "$GITHUB_SHA"
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'validation_sha=%s\n' "$GITHUB_SHA"
             printf 'apk_sha256=%s\n' "$apk_sha"
             printf 'bytes=%s\n' "$bytes"
             printf 'signing=%s\n' "$signing"
