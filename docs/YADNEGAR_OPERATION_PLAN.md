@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 3.7 — Release Manifest Verified / Readiness Gate Active
+## نسخه 3.8 — Release Draft Integrated / Approval Gate Active
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -8,7 +8,7 @@
 هدف: تولید نرم‌افزار Verify‌شده در ساعت‌ها به‌جای روزها.
 
 چرخه:
-`Fresh Audit → Reuse → Small PR → Tests → exact-head CI/Android → expected-head merge → post-main proof → docs sync → next slice`
+`Fresh Audit → Reuse → Small/Stacked Safe Slice → Tests → exact-head CI/Android → expected-head merge → post-main proof → docs sync → next slice`
 
 Laneها:
 - Core/Data
@@ -16,37 +16,49 @@ Laneها:
 - Release/Platform
 - CI/Automation/Documentation
 
-Block یک Lane، Lane مستقل را متوقف نمی‌کند.
+Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked preparation فقط وقتی مجاز است که بعد از Merge وابستگی، Fresh compare Scope مستقل را اثبات کند.
 
 ## 2. main فعلی
-Verified main:
-`a29fe46ba9c9c50be107e36b6c618ddc1a0c6e95`
+Current main:
+`6f3b1de0777263201a55faac9d1af1007d4d2e25`
 
-این main شامل:
+Main شامل:
 - Release Candidate gate
 - deterministic SHA/size evidence
 - Android Emulator/Recovery gate
 - deterministic `RELEASE_MANIFEST.txt`
+- deterministic `RELEASE_READINESS.txt`
+- deterministic `RELEASE_VERSION.txt`
+- deterministic `RELEASE_NOTES_DRAFT.md`
 است.
 
-### آخرین Integration — PR #85 / Issue #84
-Final PR head:
-`2a456003899ec24ab310a86f5f521c68a97fb483`
+### Integration — PR #88 / Issue #87
+Candidate Readiness روی Head `32d2b6de...` با CI `33073336472` و Android `33073336417` کامل Green شد و با expected-head lock Merge شد.
+
+Post-main روی `8656564b...`:
+- CI `33074363600`: success
+- Android `33074363581`: success
+- Build: success
+- Smoke/Recovery: success
+- Release Readiness: success
+
+### آخرین Integration — PR #90 / Issue #89
+Version + Release Notes Draft روی Head:
+`f3aab864469135a4f1a038d00305630b36a2e9cc`
 
 Pre-merge:
-- CI `33070804473`: success
-- Android `33070804465`: success
+- CI `33074488110`: success
+- Android `33074488158`: success
 - Build: success
-- Manifest: success
 - Smoke/Recovery: success
+- Readiness: success
+- Release Draft: success
 
-Post-main روی `a29fe46...`:
-- CI `33071541211`: success
-- Android `33071541182`: success
-- android-build: success
-- android-smoke-recovery: success
+Merge با exact `expected_head_sha` انجام شد و main به `6f3b1de...` رسید.
 
-Issue #84 completed است.
+Post-main:
+- CI `33075537776`: active هنگام این revision
+- Android `33075537814`: active هنگام این revision
 
 ## 3. Product Foundation — Stable
 Main شامل:
@@ -67,51 +79,47 @@ Main شامل:
 هیچ Model / Repository / Storage / AppShell / Reminder DB موازی وجود ندارد.
 
 ## 4. Release Foundation — Verified
-Verified chain:
-`Fast CI → Debug APK → Release Candidate → SHA/size → Release Manifest → Emulator Smoke → Real Storage Recovery`
+زنجیره فعلی:
+`Fast CI → Debug APK → Release Candidate → SHA/size → Release Manifest → Emulator Smoke → Real Storage Recovery → Release Readiness → Version/Release Notes Draft`
 
-Manifest اطلاعات زیر را به‌صورت deterministic ثبت می‌کند:
-- app version
-- application id
-- exact source SHA
-- validation SHA
-- APK SHA-256
-- byte size
-- signing state
-- release class
+Evidenceها exact-run و exact-source-SHA هستند. source SHA با temporary validation SHA اشتباه نمی‌شود.
 
 Current release mode هنوز debug-signed است و Production-signed نیست.
 
 ## 5. Release Governance — Active
-### Active Slice — Issue #87 / PR #88
-`release: aggregate candidate readiness evidence`
+### Active Slice — Issue #91 / PR #92
+`release: prove tag availability and emit approval rollback package`
 
 Branch:
-`release/candidate-readiness-evidence`
+`release/approval-rollback-package`
 
-Exact head هنگام این بروزرسانی:
-`32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
+Exact head:
+`1990e70dfe5662aac31ed8859d7906ff274c6371`
+
+Fresh compare بعد از Merge #90 Scope را به دو فایل محدود کرد:
+- `.github/scripts/release-approval.sh`
+- `.github/workflows/android-build.yml`
 
 Scope:
-- reuse همان Android workflow
-- حفظ Build/Manifest/Smoke/Recovery
-- افزودن dependent job به نام `release-readiness`
-- دانلود exact-run Candidate evidence
-- دانلود exact-run Smoke/Recovery evidence
-- تطبیق Manifest با source Head SHA
-- Verify کردن startup/recovery/storage marker/staging cleanup
-- تولید `RELEASE_READINESS.txt`
-- گزارش صریح Production signing blocker
+- reuse Release Version + Readiness exact-run
+- تطبیق source SHA
+- بررسی availability Tag پیشنهادی از remote بدون mutation
+- fail-closed روی Tag collision یا lookup نامعتبر
+- تولید `RELEASE_APPROVAL.txt`
+- تولید `ROLLBACK_PLAN.md`
+- ثبت `approval_state=blocked-production-signing`
+- ثبت اینکه هیچ Tag/Release/Publish/Signing mutation انجام نشده است
 
-Validation فعلی:
-- Fast CI `33073336472`: success
-- Android `33073336417`: active هنگام این revision؛ Fresh-read الزامی است
+Validation شروع‌شده:
+- Fast CI `33075612499`
+- Android `33075612644`
 
 Out of scope:
-- keystore/secret واقعی
-- Production signing
+- ساخت/جابجایی Tag
+- GitHub Release
 - Play Store publish
-- tag/release mutation
+- Production signing
+- secret/keystore
 - Product/Core behavior change
 
 ## 6. Automation / Docs
@@ -124,7 +132,7 @@ Ruleset فعلی:
 - non-fast-forward blocked
 - required status checks هنوز Platform-level enforce نشده‌اند
 
-Connected tooling در Fresh audit فعلی Ruleset Write ارائه نمی‌کند.
+Fresh tool discovery همچنان فقط Ruleset Read دارد؛ Write واقعی در دسترس نیست.
 
 ### Documentation
 Active docs PR:
@@ -146,10 +154,11 @@ Docs-only PR فقط بعد از exact-head Fast CI و Fresh mergeability Merge �
 1. exact current head
 2. Fast CI Green همان Head
 3. Android Build Green همان Head
-4. relevant artifact/smoke/recovery/readiness jobs Green
-5. live mergeability=true
-6. merge با `expected_head_sha`
-7. post-main proof
+4. relevant artifact/manifest/smoke/recovery/readiness/draft/approval jobs Green
+5. dependency post-main Green در Sliceهای stacked
+6. live mergeability=true
+7. merge با `expected_head_sha`
+8. post-main proof
 
 ### Docs-only
 1. exact current head
@@ -168,22 +177,24 @@ Historical Green برای Head جدید معتبر نیست.
 - direct risky main edit
 - secret/keystore داخل Repository
 - production-signing claim بدون verified signing config
-- Play Store claim بدون publish proof
+- Tag/Release/Play Store mutation بدون تصمیم Owner/Security
 - دورزدن Gate برای سرعت
 
 ## 9. Queue
 ### Active
-1. PR #88 / Issue #87 — aggregate Candidate readiness evidence
-2. PR #86 — concurrent canonical/current-state documentation sync
-3. Issue #19 — required-status enforcement gap
+1. post-main proof برای PR #90 روی main `6f3b1de...`
+2. PR #92 / Issue #91 — tag availability + approval/rollback evidence
+3. PR #86 — concurrent documentation sync
+4. Issue #19 — required-status enforcement gap
 
 ### Next
-4. post-main proof برای هر Merge
-5. Release Notes/Version/Tag governance فقط با Evidence واقعی و بدون Publish خودکار
-6. Production signing در Slice امنیتی جدا بعد از تعیین مالکیت keystore/credentials
+5. post-main proof برای #92 در صورت Merge
+6. docs-only final integration
+7. Production signing فقط در Slice امنیتی جدا بعد از تعیین مالکیت keystore/credentials
+8. هر Tag/Release/Publish واقعی فقط پس از Production signing و تصمیم صریح مالک
 
 ## 10. اصل سرعت
-`Parallel Independent Work + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Concurrent Documentation`
+`Parallel Independent Work + Safe Stacked Preparation + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Concurrent Documentation`
 
 ## 11. گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
