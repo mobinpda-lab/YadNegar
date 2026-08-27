@@ -1,4 +1,4 @@
-# YADNEGAR PROJECT OPERATING PACKAGE v1.6
+# YADNEGAR PROJECT OPERATING PACKAGE v1.7
 ## مرجع عملیاتی واحد پروژه یادنگار
 
 **Project:** YadNegar / یادنگار  
@@ -135,6 +135,10 @@ Recurring reminder behavior:
 - device timezone قبل از reconciliation تعیین شود
 - اگر timezone قابل Verify نیست، recurrence fail-closed باشد؛ UTC fallback ساختگی ممنوع است
 
+Presentation rule after recurrence foundation:
+- reminder state may be surfaced directly on Timeline cards by reusing existing `TimelineItem` fields
+- no second read/query/storage path is needed for reminder summaries
+
 ## 8. CI / Quality
 Fast chain:
 `flutter pub get → flutter analyze → flutter test`
@@ -201,7 +205,7 @@ GitHub Reality و Current State برای وضعیت روز مقدم‌اند.
 
 ## 12. Verified Current Baseline — 2026-08-27
 Current main:
-`dc58de0e9d4b6aaa90a800a894404e9db86cf4f5`
+`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
 
 Product flow:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
@@ -215,33 +219,44 @@ Final head:
 Pre-merge:
 - CI `33078963061`: success
 - Android `33078963046`: success
-- Build / Smoke-Recovery / Readiness / Draft / Approval: success
 
-Merged with exact expected-head lock.
-
-Post-main on `dc58de0e...`:
+Post-main:
 - CI `33079988610`: success
 - Android `33079988616`: success
-- Build / Smoke-Recovery / Readiness / Draft / Approval: success
 
-Current main therefore includes schema v3 + recurrence contract while preserving v1/v2 compatibility.
-
-### Active Product Slice — PR #97 / Issue #95
-Exact head at this canonical revision:
+### Scheduler + Persian UX — PR #97 / Issue #95
+Final head:
 `79bc8d84e8bab563ab63a688448fbf26d3a51dad`
 
-Scope:
-- existing Android reminder scheduler
-- existing Quick Capture/Edit dialogs
-- device timezone initialization
-- `flutter_timezone`
-- existing reminder-flow tests
-
-Validation:
+Pre-merge:
 - CI `33080762656`: success
-- Android `33080762586`: Build Green; Smoke/Recovery active at this revision
+- Android `33080762586`: success
 
-No final Android Green or Merge claim may be made without Fresh-read.
+Merged main:
+`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
+
+Post-main:
+- CI `33081668902`: success
+- Android `33081668913`: success
+
+Current main therefore includes the complete safe `none/daily/weekly` recurring-reminder behavior using device-local timezone and the existing Timeline/Reminder foundations.
+
+### Active Docs Closure — PR #98
+PR #98 synchronizes all four canonical/live docs with the completed product outcome.
+
+It must pass a fresh exact-head Fast CI after the final factual refresh, merge with exact expected-head lock, and receive post-main Fast CI proof before parent #93 closes.
+
+### Next Product Candidate — Issue #99
+`product: surface reminder status on Timeline cards`
+
+Planned scope:
+- presentation-only reuse of existing reminder fields
+- one-shot date/time summary
+- daily clock summary
+- weekly weekday/clock summary
+- focused widget tests
+
+No schema/repository/storage/scheduler/navigation foundation change.
 
 ## 13. Release Safety Boundary
 Android release build still uses debug signing config:
