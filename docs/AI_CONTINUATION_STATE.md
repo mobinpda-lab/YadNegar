@@ -7,12 +7,12 @@ Last updated: 2026-08-27
 
 Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim. Historical Green never transfers to a new head.
 
-## Verified Main
+## Verified Product Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current product main SHA: `3428c1798a43fd39fadd5f47673d1bd0366583ca`
+Current product main SHA: `9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
 
-Main contains the recurring-reminder foundation, reminder status on Timeline cards, and reminder-presence filtering.
+Main contains the recurring-reminder foundation, reminder status and reminder-presence filtering on Timeline, plus distinct icons for all five canonical Timeline item types.
 
 ## Completed Reminder Waves
 ### Recurring Reminder — #93
@@ -23,35 +23,42 @@ Main contains the recurring-reminder foundation, reminder status on Timeline car
 
 ### Timeline Reminder Status — #99 / PR #100
 Product merged to `8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`.
-Final docs PR #101 merged to `fb2a02624421ba135de87357817d13922fed7abf` and post-main Fast CI passed.
+Final docs PR #101 merged and post-main verified.
 Issue #99 is closed/completed.
 
 ### Reminder Presence Filter — #102 / PR #103
+Product merged to `3428c1798a43fd39fadd5f47673d1bd0366583ca`.
+Final docs PR #105 merged to `4d6dc18021b5d327b3a55972288df2b2a4d1c197`.
+Docs post-main Fast CI `33095853727`: success.
+Issue #102 is closed/completed.
+
+## Timeline Type Icons — #104 / PR #106
 Final product head:
-`256c2f05a5ce0d4bfaba6c9a711e7470d78f932a`
+`042491caadb405a31473b51986c263a6f9ba5d5c`
 
 Merged main:
-`3428c1798a43fd39fadd5f47673d1bd0366583ca`
+`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
 
-Integrated behavior:
-- `همه موارد`
-- `دارای یادآور`
-- `بدون یادآور`
-- composes with existing Search/Type/Date results
-- clear-filters also resets reminder presence
-- export uses currently visible filtered items
+Integrated mapping:
+- note => `Icons.note_outlined`
+- event => `Icons.event_outlined`
+- call => `Icons.call_outlined`
+- idea => `Icons.lightbulb_outline`
+- activity => `Icons.check_circle_outline`
+
+Existing Persian type labels, Timeline timestamp, reminder status and reminder-presence filter remain unchanged.
 
 Product scope remained limited to:
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_reminder_filter_test.dart`
+- `test/features/timeline/presentation/timeline_type_icon_test.dart`
 
 Exact-head pre-merge proof:
-- Fast CI `33092820178`: success
-- Android `33092820203`: success across Build/Candidate, emulator Smoke/Recovery, Readiness, Release Draft, Approval/Rollback evidence
+- Fast CI `33095681567`: success
+- Android `33095681514`: success across Build/Candidate, emulator Smoke/Recovery, Readiness, Release Draft, Approval/Rollback evidence
 
-Post-main proof on exact main `3428c1798a43fd39fadd5f47673d1bd0366583ca`:
-- Fast CI `33093725156`: success
-- Android `33093725042`: success across the full release-governance chain
+Post-main proof on exact main `9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`:
+- Fast CI `33096491732`: success
+- Android `33096491859`: success across the full release-governance chain
 
 ## Product / Data Foundation
 Main flow:
@@ -79,10 +86,10 @@ Live `main-protection` ruleset requires PR and blocks deletion/non-fast-forward.
 Until enforcement is writable:
 `exact current head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-## Active Documentation — #102
-Branch: `docs/timeline-reminder-filter-live`
+## Active Documentation — #104
+Branch: `docs/timeline-type-icons-live`
 
-Purpose: synchronize the four live/canonical project documents with the completed #102 / PR #103 outcome and exact post-main evidence.
+Purpose: synchronize the four live/canonical project documents with the completed #104 / PR #106 product outcome and exact post-main evidence.
 
 Docs-only merge contract:
 1. exact current docs head
@@ -90,13 +97,7 @@ Docs-only merge contract:
 3. live mergeability=true
 4. exact `expected_head_sha`
 5. post-main Fast CI proof
-6. close #102 only after that proof
-
-## Next Product Slice — #104
-Issue #104: differentiate Timeline item types with existing Material icons.
-Branch: `product/timeline-type-icons`
-
-Scope is presentation-only and may be prepared in parallel, but must not integrate before #102 documentation is merged and verified. No schema/storage/scheduler/navigation/dependency changes are allowed.
+6. close #104 only after that proof
 
 ## Maximum Parallel Rules
 - Product / Release / Automation / Docs move simultaneously when independent
@@ -109,12 +110,11 @@ Scope is presentation-only and may be prepared in parallel, but must not integra
 - docs move concurrently with implementation
 
 ## Next Actions
-1. Finish #102 docs sync and run exact-head Fast CI.
-2. Merge docs with live mergeability + exact expected-head lock.
-3. Verify docs post-main Fast CI and close #102.
-4. Continue #104 focused implementation/testing in its independent branch.
-5. Keep #19 open until required-check enforcement is genuinely writable.
-6. Production signing and real tag/release/publish remain separate Owner/Security decisions.
+1. Integrate this #104 docs synchronization with exact-head evidence.
+2. Verify docs post-main Fast CI and close #104.
+3. Fresh-audit the resulting open issue/product queue before selecting another slice.
+4. Keep #19 open until required-check enforcement is genuinely writable.
+5. Production signing and real tag/release/publish remain separate Owner/Security decisions.
 
 ## Trigger
 `ادامه یادنگار`
