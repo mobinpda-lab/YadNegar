@@ -1,4 +1,4 @@
-# YADNEGAR PROJECT OPERATING PACKAGE v1.3
+# YADNEGAR PROJECT OPERATING PACKAGE v1.4
 ## مرجع عملیاتی واحد پروژه یادنگار
 
 **Project:** YadNegar / یادنگار  
@@ -20,6 +20,7 @@
 8. تغییرات پرریسک مستقیماً روی `main` انجام نمی‌شوند؛ Branch/PR مسیر پیش‌فرض است.
 9. تغییرات کوچک، قابل Review، قابل Rollback و با Scope روشن باشند.
 10. مستندات همزمان با Implementation حرکت کنند و سند اجرایی رقیب ساخته نشود.
+11. Stacked preparation برای کاهش زمان انتظار مجاز است، اما Merge وابسته فقط بعد از Fresh compare، Scope مستقل، Gate کامل وابستگی و post-main proof انجام می‌شود.
 
 ## 1. ترتیب مرجع حقیقت
 `GitHub Reality > approved architecture decisions > this canonical package > current execution docs > conversation memory`
@@ -55,7 +56,7 @@
 
 ### Lane C — Release / Platform
 - Android build/release candidate
-- deterministic artifact/manifest/readiness evidence
+- deterministic artifact/manifest/readiness/version/release-notes/approval evidence
 - emulator smoke/recovery
 - release governance
 - production signing فقط بعد از Audit امنیتی و تعیین مالک credentials
@@ -79,7 +80,7 @@ Task زمانی Ready است که:
 - validation و evidence تعریف شده باشد
 - parallel-safety معلوم باشد
 
-ابهام کوچک نباید پروژه را متوقف کند؛ ابهام معماری، داده یا امنیت قبل از تغییر پرریسک باید حل شود.
+ابهام کوچک نباید پروژه را متوقف کند؛ ابهام معماری، داده، امنیت یا انتشار قبل از تغییر پرریسک باید حل شود.
 
 ## 5. Definition of Done
 `Working Change + Tests/Validation + Exact Evidence + Documentation + Safe Integration`
@@ -125,8 +126,8 @@ Reminder روی همان TimelineItem و storage موجود سوار است.
 Fast chain:
 `flutter pub get → flutter analyze → flutter test`
 
-Release chain:
-`Fast CI → Android Build → Debug APK → Release Candidate → Manifest → Smoke/Recovery → Release Readiness → live mergeability → expected-head merge → post-main proof`
+Release chain فعلی:
+`Fast CI → Android Build → Debug APK → Release Candidate → Manifest → Smoke/Recovery → Release Readiness → Version/Release Notes Draft → Approval/Rollback Evidence → live mergeability → expected-head merge → post-main proof`
 
 Workflow rules:
 - reuse موجود قبل از Workflow جدید
@@ -134,7 +135,10 @@ Workflow rules:
 - artifact باید واقعی و قابل Verify باشد
 - build/Green یک SHA به SHA دیگر نسبت داده نشود
 - source Head SHA از temporary PR validation SHA تفکیک شود
-- downstream readiness باید exact-run artifacts را مصرف کند، نه artifact تاریخی
+- downstream jobs باید exact-run artifacts را مصرف کنند، نه artifact تاریخی
+- proposed tag فقط proposal است تا زمانی که Owner/Security mutation واقعی را تأیید کند
+- tag availability check حق ساخت یا حرکت ref ندارد
+- production approval وقتی signing blocked است باید blocked گزارش شود
 - PR validation نباید با push trigger تکراری شود مگر دلیل اثبات‌شده وجود داشته باشد
 
 ## 10. Git / PR Governance
@@ -147,16 +151,18 @@ Workflow rules:
 - Merge محصول/Release فقط با exact-head Fast CI + Android/relevant jobs و live mergeability
 - Merge با `expected_head_sha`
 - بعد از Merge، main تازه Verify شود
+- stacked branch قبل از Merge باید نسبت به main جدید Fresh compare شود و فقط Scope خودش را نشان دهد
 
 ## 11. Merge Contract
 ### Product / Release
 1. exact current head
 2. Fast CI Green همان Head
 3. Android/Release Gate Green همان Head
-4. relevant artifact/manifest/smoke/recovery/readiness jobs Green
-5. live mergeability=true
-6. `expected_head_sha=exact head`
-7. post-main CI/Android proof
+4. relevant artifact/manifest/smoke/recovery/readiness/draft/approval jobs Green
+5. اگر Slice stacked است، dependency post-main Green و Fresh compare Scope مستقل
+6. live mergeability=true
+7. `expected_head_sha=exact head`
+8. post-main CI/Android proof
 
 ### Docs-only
 1. exact current head
@@ -184,35 +190,42 @@ Comprehensive historical/product reference:
 `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
 
 Comprehensive document یک Snapshot/reference است؛ Current State و GitHub Reality برای وضعیت روز مقدم‌اند.
-Temporary active-state files پس از پایان Wave حذف شوند و به Canonical رقیب تبدیل نشوند.
 
 ## 13. Verified Current Baseline — 2026-08-27
-Verified main:
-`a29fe46ba9c9c50be107e36b6c618ddc1a0c6e95`
+Current main:
+`6f3b1de0777263201a55faac9d1af1007d4d2e25`
 
-Latest integrated Release Governance PR:
-PR #85 / Issue #84 — `release: add deterministic release manifest evidence`
+### Integrated Candidate Readiness — PR #88 / Issue #87
+Final head:
+`32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
 
-Final exact PR head:
-`2a456003899ec24ab310a86f5f521c68a97fb483`
+Pre-merge exact-head:
+- CI `33073336472`: success
+- Android `33073336417`: success
+- Build / Smoke-Recovery / Readiness: success
 
-Pre-merge evidence:
-- YadNegar CI `33070804473`: success
-- YadNegar Android Build `33070804465`: success
-- android-build: success
-- Manifest generation/upload: success
-- android-smoke-recovery: success
+Post-main on `8656564b...`:
+- CI `33074363600`: success
+- Android `33074363581`: success
+- Build / Smoke-Recovery / Readiness: success
 
-Post-main evidence on `a29fe46...`:
-- YadNegar CI `33071541211`: success
-- YadNegar Android Build `33071541182`: success
-- android-build: success
-- android-smoke-recovery: success
+### Integrated Version + Release Notes Draft — PR #90 / Issue #89
+Final head:
+`f3aab864469135a4f1a038d00305630b36a2e9cc`
+
+Pre-merge exact-head:
+- CI `33074488110`: success
+- Android `33074488158`: success
+- Build / Smoke-Recovery / Readiness / Release Draft: success
+
+Merged with exact expected-head lock to current main `6f3b1de...`.
+
+Post-main runs `33075537776` and `33075537814` were active at this canonical revision and require Fresh-read before final Green claim.
 
 Main product flow:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
 
-Verified release capabilities:
+Verified release capabilities now include:
 - Debug APK artifact
 - release-mode Candidate APK
 - SHA-256 + byte-size evidence
@@ -222,35 +235,41 @@ Verified release capabilities:
 - explicit signing state
 - Android emulator startup proof
 - real `.bak` storage recovery proof
+- deterministic `RELEASE_READINESS.txt`
+- deterministic `RELEASE_VERSION.txt`
+- deterministic `RELEASE_NOTES_DRAFT.md`
 
-## 14. Release Governance
-Wave 7 contract `E2E + build + artifact + smoke + recovery` is verified complete.
+## 14. Release Governance — Active
+Active Issue #91 / PR #92:
+`release: prove tag availability and emit approval rollback package`
 
-Manifest Slice PR #85 / Issue #84 is verified complete and post-main Green.
+Exact head:
+`1990e70dfe5662aac31ed8859d7906ff274c6371`
 
-Active Issue #87 / PR #88:
-`release: aggregate candidate readiness evidence`
-
-Current exact head at this canonical revision:
-`32d2b6de7649377642fa5fdaac42b0c5ee0cf239`
+Fresh compare after #90 merge proves Scope remains isolated to:
+- `.github/scripts/release-approval.sh`
+- `.github/workflows/android-build.yml`
 
 Purpose:
-- preserve existing build/artifact/manifest/smoke/recovery gates
-- add dependent `release-readiness` job
-- consume exact-run Candidate + Smoke artifacts
-- verify Manifest source SHA against current source Head
-- require startup/recovery/storage marker/staging cleanup proof
-- emit `RELEASE_READINESS.txt`
-- explicitly report Production signing blocked while debug signing remains
+- preserve all existing gates
+- consume exact-run Release Version + Readiness evidence
+- verify exact source SHA
+- verify proposed tag availability from remote without mutation
+- fail closed on collision/lookup ambiguity
+- emit `RELEASE_APPROVAL.txt`
+- emit `ROLLBACK_PLAN.md`
+- explicitly keep approval blocked while debug signing remains
 
-Validation at this revision:
-- Fast CI `33073336472`: success
-- Android `33073336417`: active; final claim requires Fresh-read
+Exact-head runs started:
+- CI `33075612499`
+- Android `33075612644`
 
 Current signing audit:
 Android `release` buildType uses debug signing config. Therefore current candidate is **not production-signed** and must not be described as Play-Store-ready.
 
 Production signing/key management is a separate security-sensitive Slice and requires explicit verified credentials ownership. Secrets/keystore must never be committed to repository.
+
+Tag creation, GitHub Release creation and store publication are irreversible/release mutations and require explicit owner/security approval after signing readiness.
 
 ## 15. Automation Gap
 Issue #19 remains open.
@@ -261,7 +280,7 @@ Live `main-protection` Ruleset:
 - non-fast-forward blocked
 - required status checks are not yet configured at Platform level
 
-Connected tooling still exposes Ruleset read but not Ruleset write.
+Fresh tool discovery still exposes Ruleset read but not Ruleset write.
 Until write is genuinely available, operational exact-head proof + expected-head lock remains mandatory. Do not claim platform enforcement that does not exist.
 
 ## 16. Reliability / Recovery
@@ -269,6 +288,8 @@ For important changes:
 `Detect → Classify → Contain → Recover → Validate → Document → Improve`
 
 Data/release changes require rollback/recovery thinking before integration. Backup without tested recovery is not sufficient proof.
+
+Pre-release automation that performs no tag/release/publish mutation must state that rollback is currently a no-mutation stop. Before future real publication, a verified previous production release/tag/artifact reference is required as the rollback target.
 
 ## 17. AI Decision Boundary
 Routine, reversible, scoped engineering work can continue autonomously after Audit.
@@ -278,7 +299,7 @@ Extra caution/owner decision when materially changing:
 - major architecture
 - destructive migration/data loss risk
 - security/signing secrets
-- irreversible release/publishing behavior
+- irreversible tag/release/publishing behavior
 - major visual redesign
 
 ## 18. گزارش مالک
@@ -288,7 +309,7 @@ Owner report کوتاه، غیر فنی و نتیجه‌محور:
 Inference نباید به‌عنوان Fact گزارش شود.
 
 ## 19. فرمول توسعه
-**Fast Delivery = Parallel Independent Work + Automation + Reuse + Fast Feedback + Controlled Integration + Evidence + Concurrent Documentation**
+**Fast Delivery = Parallel Independent Work + Safe Stacked Preparation + Automation + Reuse + Fast Feedback + Controlled Integration + Evidence + Concurrent Documentation**
 
 **Professional Delivery = Speed + Quality + Architecture + Recovery + Traceability**
 
