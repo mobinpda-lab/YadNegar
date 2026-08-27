@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 4.4 — Timeline Type Icons Complete
+## نسخه 4.5 — Shared Timeline Type Presentation Integrated
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -20,7 +20,7 @@ Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked prepa
 
 ## 2. main فعلی
 Current product main:
-`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
+`885b988d996e7daf8e79e82ebe25b2d55e14f95a`
 
 Main شامل:
 - Timeline foundation واحد
@@ -32,6 +32,7 @@ Main شامل:
 - فیلتر Reminder presence: همه / دارای یادآور / بدون یادآور
 - Search/Type/Date composition + clear/export behavior
 - آیکن متمایز برای پنج نوع canonical Timeline
+- mapping مشترک label/icon برای کارت، فیلتر نوع، Quick Capture و Edit
 - Release Governance غیرمخرب کامل
 است.
 
@@ -44,7 +45,7 @@ Main شامل:
 
 هیچ Tag، GitHub Release، Play Store publish یا production keystore/secret ساخته نشده است.
 
-## 4. Completed Reminder Waves
+## 4. Completed Product Waves
 ### Recurring Reminder — #93
 - PR #96 / Issue #94: recurrence contract + schema v3 + v1/v2 compatibility
 - PR #97 / Issue #95: daily/weekly device-local scheduling + Persian UX
@@ -60,33 +61,49 @@ Docs PR #105 merged to `4d6dc18021b5d327b3a55972288df2b2a4d1c197`.
 Docs post-main Fast CI `33095853727`: success.
 Issue #102 completed.
 
-## 5. Timeline Type Icons — #104 / PR #106
+### Timeline Type Card Icons — #104 / PR #106 + Docs #107
+Product merged to `9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`.
+Docs PR #107 merged to `09d3bf13a8f4a7525b7619247095f4974774de67`.
+Docs post-main Fast CI `33098163806`: success.
+Issue #104 completed.
+
+## 5. Shared Timeline Type Presentation — #108 / PR #109
 Final product head:
-`042491caadb405a31473b51986c263a6f9ba5d5c`
+`e6195dc11eebbed7db9b83fcefc7bf52c7bd9268`
 
 Merged main:
-`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
+`885b988d996e7daf8e79e82ebe25b2d55e14f95a`
 
 Scope واقعی:
+- `lib/features/timeline/presentation/timeline_home.dart`
+- `lib/features/timeline/presentation/timeline_item_type_presentation.dart`
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_type_icon_test.dart`
+- `test/features/timeline/presentation/timeline_type_selector_icon_test.dart`
+
+Reuse:
+- یک mapping presentation برای Persian label + Material icon
+- استفاده در Timeline card
+- استفاده در type filter
+- استفاده در Quick Capture selector
+- استفاده در Edit selector
+- حذف mappingهای خصوصی/تکراری قبلی
 
 Mapping:
-- note => `Icons.note_outlined`
-- event => `Icons.event_outlined`
-- call => `Icons.call_outlined`
-- idea => `Icons.lightbulb_outline`
-- activity => `Icons.check_circle_outline`
+- note => `Icons.note_outlined` + `یادداشت`
+- event => `Icons.event_outlined` + `رویداد`
+- call => `Icons.call_outlined` + `تماس`
+- idea => `Icons.lightbulb_outline` + `ایده`
+- activity => `Icons.check_circle_outline` + `فعالیت`
 
-رفتار قبلی type label / timestamp / reminder status / reminder filter حفظ شده است.
+Pre-merge exact-head:
+- CI `33099191968`: success
+- Android `33099192004`: success full chain
+- live mergeability=true
+- expected-head merge: success
 
-Pre-merge:
-- CI `33095681567`: success
-- Android `33095681514`: success across full chain
-
-Post-main:
-- CI `33096491732`: success
-- Android `33096491859`: success
+Post-main exact SHA `885b988d...`:
+- CI `33103519511`: success
+- Android `33103519546`: success full chain
 - Build/Candidate/Smoke-Recovery/Readiness/Release-Draft/Approval all success
 
 ## 6. Product Foundation
@@ -105,26 +122,27 @@ Ruleset `main-protection` فعال است و PR را اجباری می‌کند 
 قانون عملی تا enforcement واقعی:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-### Active Docs Sync — #104
+### Active Docs Sync — #108
 Branch:
-`docs/timeline-type-icons-live`
+`docs/timeline-type-selector-icons-live`
 
-هدف: چهار سند Current State / Persian Handoff / Operation Plan / Comprehensive Reference را با outcome واقعی #104/#106 همگام کند.
+Branch قبل از Product Merge ساخته شد ولی هیچ Write نداشت؛ پس از Merge بدون Force به exact main `885b988d...` Fast-forward شد و سپس چهار سند canonical با Evidence واقعی به‌روزرسانی شدند.
 
 Merge Contract:
-1. exact docs head
-2. Fast CI Green همان Head
-3. live mergeability=true
-4. exact `expected_head_sha`
-5. post-main Fast CI
-6. Close #104 فقط بعد از proof
+1. fresh compare = docs-only
+2. exact docs head
+3. Fast CI Green همان Head
+4. live mergeability=true
+5. exact `expected_head_sha`
+6. post-main Fast CI
+7. Close #108 فقط بعد از proof
 
 ## 8. Merge Contract
 ### Product / Release
 1. exact current head
 2. Fast CI Green همان Head
 3. Android/relevant gates Green همان Head
-4. stacked dependency post-main Green + Fresh isolated compare
+4. Fresh compare برای Scope/Dependency
 5. live mergeability=true
 6. exact `expected_head_sha`
 7. post-main proof
@@ -151,11 +169,11 @@ Historical Green برای Head جدید معتبر نیست.
 
 ## 10. Queue
 ### Active
-1. Docs sync نهایی برای #104/#106
+1. Docs sync نهایی #108
 2. Issue #19 — required-status enforcement gap
 
 ### Next Product Discovery
-پس از تکمیل Docs #104، Queue و کد باید Fresh Audit شوند. Slice بعدی فقط در صورت Scope کوچک، مستقل و reuse-first باز می‌شود؛ Foundation جدید صرفاً برای پر کردن backlog ممنوع است.
+Open product backlog دیگری وجود ندارد. پس از تکمیل Docs #108، Queue و کد باید Fresh Audit شوند. Slice بعدی فقط در صورت Scope کوچک، مستقل و reuse-first باز می‌شود؛ Foundation جدید صرفاً برای پر کردن backlog ممنوع است.
 
 ### Security-separated
 Production signing / real tag / release / publish فقط با Owner/Security decision صریح.
