@@ -21,7 +21,7 @@ Home header also includes centered `بسم الله الرحمن الرحیم` a
 
 Branch: `feature/timeline-backup-share`  
 Current final-validation head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`  
-Status: Draft until final exact-head gates complete.
+Status: exact-head CI and Android are Green; next step is Ready + Fresh mergeability + expected-head merge.
 
 Implemented:
 - concrete JSON repository exposes validated snapshot bytes without changing `TimelineRepository`
@@ -31,7 +31,7 @@ Implemented:
 - timestamped snapshot is written to temporary storage and re-validated with production parser
 - Persian Backup action is delivered through a small presentation scope; `TimelineHome` remains untouched
 - `share_plus` is exact-pinned to `10.1.4` for Flutter 3.35 compatibility
-- `pubspec.lock` is now synchronized to the exact package set resolved by CI
+- `pubspec.lock` is synchronized to the exact package set resolved by CI
 - real-file and widget coverage added
 - branch was merged structurally onto current main through sync commit `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
 - Bismillah header and Backup action are both preserved in the combined `TimelineScreen`
@@ -42,20 +42,10 @@ Dependency-resolution proof before lock commit:
 - 85 tests passed
 
 Final exact-head workflows on `8057eca7ba4957d49bc51c54cbf278935744ccfa`:
-- YadNegar CI `33042505480`: active
-- YadNegar Android Build `33042505505`: active
+- YadNegar CI `33042505480`: Green
+- YadNegar Android Build `33042505505`: Green
 
-Only the final results on this exact head count as merge evidence.
-
-## Dependency / Toolchain Audit
-- Flutter CI: 3.35.0
-- AGP: 8.9.1
-- Gradle: 8.12
-- current app source/target compatibility: Java 11
-- `share_plus 10.1.4` resolved successfully on the actual CI toolchain
-- newer major versions require newer Flutter/Android toolchains and are intentionally not used
-
-No Toolchain upgrade is allowed unless exact Android evidence proves it is necessary.
+Only this exact head counts as merge evidence.
 
 ## Documentation Lane
 Branch: `docs/current-state-backup-active`
@@ -67,14 +57,16 @@ Issue #19 remains open because Platform-level required status checks are not wri
 Merge contract:
 `exact current head + exact-head CI Green + exact-head Android Green for product + live mergeability + expected_head_sha + post-main proof`
 
+## Next Audited Slice
+Issue #70: validated Timeline Restore/Import with production parser reuse, pre-write validation and rollback. Do not create the feature branch until PR #68 is merged and post-main verified.
+
 ## Next Actions
-1. Read final CI and Android results on `8057eca7...`.
-2. If both Green, mark PR #68 Ready.
-3. Fresh-read exact head and live mergeability.
-4. Merge with `expected_head_sha=8057eca7...` only if there is no drift.
-5. Verify resulting main with Fast CI + Android.
-6. Final-sync/merge this Docs lane.
-7. Fresh-audit Restore/Import as a separate future slice; do not reuse Backup merge evidence for it.
+1. Mark PR #68 Ready.
+2. Fresh-read exact head and live mergeability.
+3. Merge with `expected_head_sha=8057eca7...` only if there is no drift.
+4. Verify resulting main with Fast CI + Android.
+5. Final-sync/merge this Docs lane.
+6. Start Issue #70 only after the previous steps are proven.
 
 ## Trigger
 `ادامه یادنگار`
