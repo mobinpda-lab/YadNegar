@@ -10,10 +10,10 @@ Fresh-audit GitHub before every write, merge, SHA/status claim, or progress clai
 ## Verified Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current verified main SHA: `40415af1f064a7ef7298ce9993ee949c52664bff`
+Current main SHA: `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
 Main contains one shared Timeline flow:
-`Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete → Undo → Export`
+`Quick Capture → JSON Persistence → Timeline → Search/Filter → View/Edit → Delete → Undo → Export → Backup Share`
 
 Capabilities:
 - Note / Event / Call / Idea / Activity on one TimelineItem
@@ -25,67 +25,63 @@ Capabilities:
 - safe delete with confirmation
 - Undo with conflict/no-overwrite protection
 - copy the currently visible Timeline items as readable Persian text
+- create and share a validated portable Timeline backup snapshot
 - Fast CI + Android APK build/verify/upload
 
 No duplicate Timeline Model / Repository / Storage / App Shell exists.
 
-## Integrated — PR #65 / Issue #64
-`feat(export): copy visible Timeline items to clipboard`
+## Integrated — PR #68 / Issue #67
+`feat(backup): share validated Timeline backup snapshot`
 
-Exact pre-merge head: `114fca4cdfd2269d5d4ff906ce96afe0590a7162`
-- YadNegar CI `33026398124`: success
-- YadNegar Android Build `33026398078`: success
-- Android build / verify / artifact upload: success
-- live mergeable: true
-- merge used `expected_head_sha`
+Exact pre-merge head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`
+- YadNegar CI `33042505480`: success
+- YadNegar Android Build `33042505505`: success
+- merged through PR #68 to main as `edf0c72ba5ccf97ce5229c1e3a74095bff7237d6`
 
-Merged main: `40415af1f064a7ef7298ce9993ee949c52664bff`
+Backup design:
+- reuses `JsonFileTimelineRepository` and its production parser/encoder
+- no second serializer, schema, storage foundation, or TimelineRepository contract
+- recovers staging state before snapshot creation
+- supports a valid empty Timeline snapshot without creating primary user storage
+- re-validates the finished snapshot with the production repository parser
+- shares through pinned compatible `share_plus`
+- Restore/Import remains intentionally out of scope
 
-Post-main proof:
-- YadNegar CI `33026680361`: success
-- YadNegar Android Build `33026680302`: success
-- Android build / verify / artifact upload: success
+Post-main exact-ref evidence for `edf0c72...`:
+- YadNegar CI `33042973852`: success
+- YadNegar Android Build `33042973848`: still in progress at this audit
 
-Export design:
-- `ExportTimelineText` is a pure formatter
-- exports the exact currently visible Timeline items
-- Search / Type / Date filters are preserved naturally
-- no second Repository query or duplicate filter logic
-- Clipboard stays at the presentation edge
-- no dependency / Repository contract / schema / storage change
+Do not claim final post-main Android proof until run `33042973848` completes successfully.
 
-Issue #64 is closed completed.
+## Current Product — Issue #70
+`feat(backup): restore a validated Timeline snapshot safely`
 
-## Documentation — PR #66
-Branch: `docs/current-state-wave6-export`
+Approved scope from the live issue:
+- reuse the existing production parser/schema for validation
+- validate completely before changing primary data
+- preserve previous primary state and rollback if final replacement fails
+- reload Timeline from the production Repository after successful restore
+- Persian feedback for success / invalid backup / unsupported schema / failure
+- real-file tests for valid restore, malformed JSON, unsupported schema, rollback, and unchanged primary on rejection
+- widget/integration coverage for selection/confirmation/reload
 
-The branch is structurally synchronized onto exported main `40415af...` and its live diff is documentation-only:
-- `docs/AI_CONTINUATION_STATE.md`
-- `docs/AI_HANDOFF_CURRENT_FA.md`
-- `docs/YADNEGAR_OPERATION_PLAN.md`
+Safety gate:
+- start the product branch only after PR #68 post-main proof is complete, including Android Build success on exact main `edf0c72...`
+- no raw file copy into primary storage
+- no second parser/serializer
+- no duplicate Repository/Schema/App Shell
+- Reminder/notification remains out of scope
 
-A fresh exact-head docs CI is required after this final state refresh, then Ready + live mergeability + `expected_head_sha` merge lock.
+## Documentation Lane
+Branch: `docs/current-state-post-backup`
+
+This lane exists only to synchronize the two canonical continuation/handoff docs with live GitHub after PR #68. It is independent of the in-progress Android post-main build and must not cancel, replace, or interfere with that workflow.
 
 ## Automation
-Issue #62 remains closed recovered. PR #65 registered both standard workflows normally; no duplicate workflow/carrier was required.
-
 Issue #19 remains open. `main-protection` requires PR and prevents deletion/non-fast-forward, but Platform-level required status checks are still not writable through the connected GitHub tooling.
 
 Operational merge contract:
 `exact current head + exact-head CI Green + exact-head Android Green for product + live mergeability + expected_head_sha lock + post-main proof`
-
-## Next Product — Issue #67
-`feat(backup): share a validated Timeline backup snapshot`
-
-Fresh audit:
-- primary data is `Application Support/timeline.json`
-- existing JSON storage is schema-versioned and crash-recoverable
-- backup must reuse validated/recovered storage bytes rather than reimplement serialization
-- Restore/Import is a separate future slice
-- Reminder remains higher risk due to permission/scheduling/data-contract work
-- sharing dependency/toolchain compatibility must be audited before any dependency is added
-
-No Backup branch should start until PR #66 is final-merged.
 
 ## Parallel Speed Rules
 - verified software in hours through coordinated independent lanes
@@ -95,12 +91,13 @@ No Backup branch should start until PR #66 is final-merged.
 - no duplicate foundations
 - no fake build/test/persistence evidence
 - no stale merge evidence
+- never cancel useful in-flight workflows merely to simplify an audit
 
 ## Next Actions
-1. Get fresh exact-head CI for final PR #66 docs head.
-2. If Green, mark Ready, re-read head/mergeability and merge #66 with expected-head lock.
-3. Verify resulting docs-only main with Fast CI.
-4. Begin Issue #67 only after Android/Gradle/share compatibility audit is complete.
+1. Let Android Build `33042973848` continue uninterrupted and verify its final exact-main result.
+2. Run/verify exact-head CI for this docs-only branch and merge only if current head is green and live mergeability is safe.
+3. After Android post-main proof for `edf0c72...` is green, begin Issue #70 on a fresh branch from current main.
+4. Keep Restore implementation inside existing persistence/application boundaries; introduce platform file-picking only at the edge.
 5. Keep #19 open until required status enforcement is genuinely writable and verified.
 
 ## Trigger
