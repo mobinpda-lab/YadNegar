@@ -1,16 +1,29 @@
 # YadNegar — Live AI Handoff
 
 ## مرجع حقیقت
-GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
+GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعیت، Fresh Audit الزامی است. Green تاریخی برای Head جدید معتبر نیست.
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current verified main: `f85d804a84a4033c94e2dc843a6aa87f2d848991`
+Current verified main: `9ffa1041c3205a35d0aa0744236e9e4dcbb28333`
 
-Post-main روی همین SHA:
-- CI `33051308713`: success
-- Android `33051308694`: success
-- APK build/verify/upload: success
+## Wave 7 — تکمیل‌شده
+PR #83 با Head دقیق زیر Merge شد:
+`60d1f21ce3574e3b6c04478351136acf35e9e8e7`
+
+Exact-head قبل از Merge:
+- CI `33069328808`: success
+- Android `33069328907`: success
+- android-build: success
+- android-smoke-recovery: success
+- Debug APK + Release Candidate: success
+- Emulator startup + recovery واقعی storage: success
+
+Merge با `expected_head_sha` انجام شد و Issue #82 بسته شد.
+
+Post-main روی `9ffa1041...`:
+- Fast CI `33070027775`: success
+- Android `33070027900`: هنگام این commit هنوز فعال است؛ تا Fresh-read پایان Run، Green نهایی گزارش نشود.
 
 ## وضعیت واقعی محصول
 Flow اصلی:
@@ -22,117 +35,74 @@ Flow اصلی:
 - JSON persistence واقعی، schema-versioned و crash-recoverable
 - Search + Type + Date Range
 - occurredAt capture/edit
-- اصلاح Type، حذف امن و Undo بدون overwrite
-- Export خوانای Timeline فعلی
-- Backup معتبر و Restore امن
-- `reminderAt` اختیاری روی schema v2 با سازگاری خواندن v1
-- انتخاب/پاک‌کردن یادآور در Quick Capture/Edit
-- اعلان محلی واقعی Android
-- schedule/cancel فقط بعد از Persist موفق
-- حذف Reminder را cancel می‌کند و Undo دوباره schedule می‌کند
-- Edit متن، اعلان pending را با متن جدید refresh می‌کند
-- startup و Restore، Reminderهای ذخیره‌شده را از همان TimelineRepository reconcile می‌کنند
-- هیچ Reminder database/repository موازی وجود ندارد
-- Fast CI + Android APK Build/Verify/Upload واقعی
+- Delete امن + Undo
+- Export
+- Backup معتبر + Restore امن
+- reminderAt اختیاری روی schema v2 با read سازگار v1
+- Reminder فارسی + Android local notifications
+- startup/Restore reconciliation
+- Fast CI
+- Debug APK artifact
+- Release Candidate artifact + hash/size evidence
+- Android Emulator startup proof
+- Recovery واقعی primary از `.bak`
 
-## Reminder Data Contract — PR #76 / Issue #75
-Final head: `6ab46b5029b3070e43e1524431b821a766326eb2`
-- CI `33046525150`: success
-- Android `33046525158`: success
-- merged main: `fceb383aad507eed354d4b044e3939aacf5328d0`
-- post-main CI `33046893279`: success
-- post-main Android `33046893295`: success
+هیچ Timeline model/repository/storage/AppShell/Reminder DB موازی وجود ندارد.
 
-نتیجه:
-- `reminderAt` روی همان TimelineItem
-- write schema v2 و read سازگار v1
-- upgrade فقط روی اولین write امن
-- حفظ reminderAt در Edit/Backup/Restore
-- ترتیب Timeline بدون تغییر
+## Release Candidate
+Release-mode build هنوز با debug signing config امضا می‌شود.
 
-## Reminder UI/Notification — PR #78 / Issue #77
-Final head: `22bc0d1d855c98521dc554a770ff41e8475f532b`
-- CI `33050851398`: success
-- Android `33050851419`: success
-- 106 تست پاس شد
-- lockfile دقیق توسط GitHub Actions با Flutter 3.35 تولید و commit شد
-- mergeability=true
-- merge با expected-head lock
+بنابراین وضعیت صحیح:
+`release-mode candidate / not production-signed / not Play-Store-ready`
 
-Merged main:
-`f85d804a84a4033c94e2dc843a6aa87f2d848991`
+هیچ secret یا keystore واقعی نباید داخل Repository ثبت شود.
 
-Post-main:
-- CI `33051308713`: success
-- Android `33051308694`: success
+## Release Governance فعال — Issue #84 / PR #85
+`release: add deterministic release manifest evidence`
 
-Reminder design:
-- `flutter_local_notifications 19.5.0`
-- `timezone 0.10.1`
-- Plugin بیرون Domain و در platform/data edge
-- inexact scheduling؛ exact-alarm permission در MVP لازم نیست
-- permission اعلان فقط در مسیر مرتبط درخواست می‌شود
-- notification id collision-aware بدون sidecar DB
-- recurring reminder خارج Scope است
+Branch:
+`release/deterministic-release-manifest`
 
-Issue #77 closed/completed است.
+Initial head:
+`cb8bd2d23dfc06bdb8f8ab20869dabb8edbfd340`
 
-## Foundationهای تکمیل‌شده و غیرقابل تکرار
-- Restore #73/#70
-- Backup #68/#67
-- Export #65/#64
-- Undo #63/#59
-- Delete #61/#57
-- edit Type #56/#55
-- edit occurredAt #54/#53
-- Timeline date context #52/#51
-- Quick Capture occurredAt #49/#48
-- Date Range #47/#46
-- crash-recoverable persistence #42/#41
-- CI dedupe #45
-- typography #44
+هدف:
+- همان Android workflow reuse شود
+- Build/Artifact/Smoke/Recovery حفظ شوند
+- `RELEASE_MANIFEST.txt` به artifact موجود اضافه شود
+- version، application id، exact SHA، APK SHA-256، size و signing state ثبت شوند
+- بدون secret، tag، publish یا ادعای Production
 
-## Docs فعال — PR #79
-Branch: `docs/current-state-reminder-contract-final`
+Runs فعال روی Head اولیه:
+- CI `33070352421`
+- Android `33070352464`
 
-Branch structurally روی main Reminder `f85d804...` sync شده است. Final diff باید فقط Docs باشد. فایل موقت Reminder باید حذف شود و چهار سند Canonical با وضعیت نهایی Refresh شوند. سپس exact-head Fast CI، Fresh mergeability و expected-head merge lock.
-
-## Release فعال — Issue #80 / PR #81
-Roadmap واقعی بعد از Wave 6، **Wave 7 Release** است.
-
-Branch: `release/android-release-candidate-gate`  
-PR #81 initial head: `b0e3bf3e2846eb22ed8ae71d7676a2ae8fb9d024`
-
-Slice فعلی:
-- همان Android workflow موجود reuse می‌شود
-- Debug APK حفظ می‌شود
-- Release-mode candidate APK ساخته می‌شود
-- artifact باید non-empty باشد
-- SHA-256 و byte size ثبت می‌شود
-- candidate + evidence آپلود می‌شوند
-
-Fresh signing audit:
-`android/app/build.gradle.kts` هنوز release را با debug signing config امضا می‌کند. بنابراین Candidate فعلی **Production-signed نیست** و نباید Play-Store-ready گزارش شود.
-
-بعد از پایداری این Gate، Emulator smoke/recovery یک Slice کوچک جدا خواهد بود.
+قبل از Merge باید Fresh-read شوند.
 
 ## Automation
-Issue #19 باز است. required status check در Ruleset هنوز واقعاً writable/verified نیست.
+Issue #19 باز است.
 
-قانون Merge:
-`exact current head + exact-head CI + exact-head Android برای Product/Release + live mergeability + expected_head_sha + post-main proof`
+Ruleset `main-protection` PR را اجباری می‌کند و deletion/non-fast-forward را می‌بندد، اما required status checks هنوز Platform-level تنظیم نشده‌اند. ابزار متصل در Fresh audit تاریخ 2026-08-27 فقط Ruleset Read دارد.
 
-Green تاریخی برای Head جدید معتبر نیست.
+قانون عملی Merge:
+`exact head + exact-head CI + exact-head Android/relevant jobs + live mergeability + expected_head_sha + post-main proof`
 
 ## اصل سرعت
-Product / Release / CI-Automation / Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی، cancel stale runs و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
+- Release / Product / Automation / Docs تا حد امن موازی
+- Runner مسدود Lane مستقل را متوقف نمی‌کند
+- Reuse قبل از Rebuild
+- PR کوچک و قابل Rollback
+- مستندسازی هم‌زمان با Implementation
+- هیچ Evidence مصنوعی یا stale
+- Workflow و Foundation تکراری ممنوع
 
 ## ادامه
-1. PR #79 را docs-only نهایی و merge کن.
-2. PR #81 را روی Head دقیق با CI و Android validate کن؛ هر دو Debug و Release Candidate باید ساخته/Verify/Upload شوند.
-3. Green → Fresh mergeability → expected-head Merge → post-main proof.
-4. سپس Android emulator smoke/recovery را به‌عنوان Slice بعدی Wave 7 شروع کن.
-5. #19 باز بماند تا enforcement واقعاً قابل‌نوشتن و Verify شود.
+1. Android post-main روی `9ffa1041...` Fresh-read شود.
+2. PR #85 روی Head دقیق Validate شود.
+3. مستندات نهایی با Evidence واقعی Sync و docs-only PR ساخته شود.
+4. Merge فقط با expected-head lock.
+5. #19 باز بماند تا enforcement واقعاً writable شود.
+6. Production signing فقط در Slice امنیتی جدا بعد از تعیین مالکیت keystore/credentials.
 
 ## Trigger
 `ادامه یادنگار`
