@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 4.3 — Reminder Presence Filter Complete
+## نسخه 4.4 — Timeline Type Icons Complete
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -20,7 +20,7 @@ Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked prepa
 
 ## 2. main فعلی
 Current product main:
-`3428c1798a43fd39fadd5f47673d1bd0366583ca`
+`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
 
 Main شامل:
 - Timeline foundation واحد
@@ -31,6 +31,7 @@ Main شامل:
 - نمایش مستقیم وضعیت Reminder روی کارت Timeline
 - فیلتر Reminder presence: همه / دارای یادآور / بدون یادآور
 - Search/Type/Date composition + clear/export behavior
+- آیکن متمایز برای پنج نوع canonical Timeline
 - Release Governance غیرمخرب کامل
 است.
 
@@ -51,36 +52,41 @@ Main شامل:
 - parent #93 completed
 
 ### Timeline Reminder Status — #99 / PR #100
-Product merged to `8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`.
-Docs PR #101 merged to `fb2a02624421ba135de87357817d13922fed7abf` and post-main Fast CI passed.
-Issue #99 completed.
+Product + final docs verified; Issue #99 completed.
 
-## 5. Reminder Presence Filter — #102 / PR #103
+### Reminder Presence Filter — #102 / PR #103
+Product merged to `3428c1798a43fd39fadd5f47673d1bd0366583ca`.
+Docs PR #105 merged to `4d6dc18021b5d327b3a55972288df2b2a4d1c197`.
+Docs post-main Fast CI `33095853727`: success.
+Issue #102 completed.
+
+## 5. Timeline Type Icons — #104 / PR #106
 Final product head:
-`256c2f05a5ce0d4bfaba6c9a711e7470d78f932a`
+`042491caadb405a31473b51986c263a6f9ba5d5c`
 
 Merged main:
-`3428c1798a43fd39fadd5f47673d1bd0366583ca`
+`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
 
 Scope واقعی:
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_reminder_filter_test.dart`
+- `test/features/timeline/presentation/timeline_type_icon_test.dart`
 
-رفتار:
-- همه موارد
-- دارای یادآور
-- بدون یادآور
-- compose با Search/Type/Date فعلی
-- clear موجود همه فیلترها را Reset می‌کند
-- export موارد visible فعلی را استفاده می‌کند
+Mapping:
+- note => `Icons.note_outlined`
+- event => `Icons.event_outlined`
+- call => `Icons.call_outlined`
+- idea => `Icons.lightbulb_outline`
+- activity => `Icons.check_circle_outline`
+
+رفتار قبلی type label / timestamp / reminder status / reminder filter حفظ شده است.
 
 Pre-merge:
-- CI `33092820178`: success
-- Android `33092820203`: success across full chain
+- CI `33095681567`: success
+- Android `33095681514`: success across full chain
 
 Post-main:
-- CI `33093725156`: success
-- Android `33093725042`: success
+- CI `33096491732`: success
+- Android `33096491859`: success
 - Build/Candidate/Smoke-Recovery/Readiness/Release-Draft/Approval all success
 
 ## 6. Product Foundation
@@ -99,11 +105,11 @@ Ruleset `main-protection` فعال است و PR را اجباری می‌کند 
 قانون عملی تا enforcement واقعی:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-### Active Docs Sync — #102
+### Active Docs Sync — #104
 Branch:
-`docs/timeline-reminder-filter-live`
+`docs/timeline-type-icons-live`
 
-هدف: چهار سند Current State / Persian Handoff / Operation Plan / Comprehensive Reference را با outcome واقعی #102/#103 همگام کند.
+هدف: چهار سند Current State / Persian Handoff / Operation Plan / Comprehensive Reference را با outcome واقعی #104/#106 همگام کند.
 
 Merge Contract:
 1. exact docs head
@@ -111,7 +117,7 @@ Merge Contract:
 3. live mergeability=true
 4. exact `expected_head_sha`
 5. post-main Fast CI
-6. Close #102 فقط بعد از proof
+6. Close #104 فقط بعد از proof
 
 ## 8. Merge Contract
 ### Product / Release
@@ -145,12 +151,11 @@ Historical Green برای Head جدید معتبر نیست.
 
 ## 10. Queue
 ### Active
-1. Docs sync نهایی برای #102/#103
-2. Issue #104 — distinct Timeline type icons، presentation-only
-3. Issue #19 — required-status enforcement gap
+1. Docs sync نهایی برای #104/#106
+2. Issue #19 — required-status enforcement gap
 
-### #104 Integration Dependency
-Branch `product/timeline-type-icons` می‌تواند موازی آماده و تست شود، اما Merge فقط بعد از ادغام/Verify مستندات #102 و Fresh compare مستقل مجاز است.
+### Next Product Discovery
+پس از تکمیل Docs #104، Queue و کد باید Fresh Audit شوند. Slice بعدی فقط در صورت Scope کوچک، مستقل و reuse-first باز می‌شود؛ Foundation جدید صرفاً برای پر کردن backlog ممنوع است.
 
 ### Security-separated
 Production signing / real tag / release / publish فقط با Owner/Security decision صریح.

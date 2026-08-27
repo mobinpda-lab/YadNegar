@@ -5,12 +5,12 @@ GitHub Reality مقدم است. قبل از هر Write/Merge/گزارش وضعی
 
 Repository: `mobinpda-lab/YadNegar`  
 Default branch: `main`  
-Current product main: `3428c1798a43fd39fadd5f47673d1bd0366583ca`
+Current product main: `9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
 
 ## کجا هستیم
-موج Reminder تکرارشونده کامل است، وضعیت Reminder روی کارت Timeline نمایش داده می‌شود و فیلتر «همه / دارای یادآور / بدون یادآور» نیز با PR #103 روی `main` ادغام شده است.
+موج Reminder تکرارشونده، نمایش وضعیت Reminder و فیلتر «همه / دارای یادآور / بدون یادآور» کامل شده‌اند. اکنون PR #106 نیز پنج نوع Timeline را با آیکن‌های متفاوت روی `main` قابل‌تشخیص کرده و post-main Fast CI/Android آن کامل سبز است.
 
-## Reminder Recurrence — Completed
+## Reminder Foundation — Completed
 Parent #93 بسته شده است.
 
 - PR #96 / Issue #94: recurrence contract `none / daily / weekly` + schema v3 + backward-compatible v1/v2 reads
@@ -18,34 +18,44 @@ Parent #93 بسته شده است.
 - بدون Repository/Storage/Scheduler موازی و بدون exact-alarm permission
 
 ## Reminder Status — #99 / PR #100
-محصول روی `8de412fa8aaefa7ecb23c9f7fbbb2f423070c318` ادغام شد و Docs PR #101 روی `fb2a02624421ba135de87357817d13922fed7abf` تکمیل و Verify شد. Issue #99 بسته است.
+محصول و مستندات نهایی ادغام و Verify شده‌اند. Issue #99 بسته است.
 
 ## Reminder Presence Filter — #102 / PR #103
-Final product head:
-`256c2f05a5ce0d4bfaba6c9a711e7470d78f932a`
-
-Merged main:
+Product main:
 `3428c1798a43fd39fadd5f47673d1bd0366583ca`
 
+Docs main after PR #105:
+`4d6dc18021b5d327b3a55972288df2b2a4d1c197`
+
+Docs post-main Fast CI `33095853727`: success. Issue #102 بسته است.
+
+## Timeline Type Icons — #104 / PR #106
+Final product head:
+`042491caadb405a31473b51986c263a6f9ba5d5c`
+
+Merged main:
+`9728306e7a5baa5fb8258d6cb3350cc4e0305c5c`
+
 رفتار نهایی:
-- `همه موارد`
-- `دارای یادآور`
-- `بدون یادآور`
-- ترکیب با Search/Type/Date قبلی
-- Clear موجود، فیلتر Reminder را هم Reset می‌کند
-- Export فقط موارد قابل‌مشاهده فعلی را خروجی می‌دهد
+- یادداشت => note outline
+- رویداد => event outline
+- تماس => call outline
+- ایده => lightbulb outline
+- فعالیت => check-circle outline
+
+نوع فارسی آیتم، زمان Timeline، وضعیت Reminder و فیلتر Reminder قبلی بدون تغییر مانده‌اند.
 
 Scope واقعی فقط دو فایل بود:
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_reminder_filter_test.dart`
+- `test/features/timeline/presentation/timeline_type_icon_test.dart`
 
 Pre-merge exact-head:
-- Fast CI `33092820178`: success
-- Android `33092820203`: success
+- Fast CI `33095681567`: success
+- Android `33095681514`: success across full chain
 
 Post-main exact SHA:
-- Fast CI `33093725156`: success
-- Android `33093725042`: success
+- Fast CI `33096491732`: success
+- Android `33096491859`: success
 - Build/Candidate: success
 - emulator Smoke/Recovery: success
 - Release Readiness: success
@@ -73,10 +83,10 @@ Compatibility: v1/v2 reads فعال است.
 قانون عملی Merge:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-## مستندات فعال #102
-Branch: `docs/timeline-reminder-filter-live`
+## مستندات فعال #104
+Branch: `docs/timeline-type-icons-live`
 
-هدف: ثبت outcome واقعی #102/#103 و post-main Green در چهار سند live/canonical.
+هدف: ثبت outcome واقعی #104/#106 و post-main Green در چهار سند live/canonical.
 
 Gate Docs:
 1. exact docs head
@@ -84,13 +94,7 @@ Gate Docs:
 3. live mergeability=true
 4. exact expected-head merge
 5. post-main Fast CI
-6. سپس Close #102
-
-## اسلایس بعدی — #104
-Issue #104 برای تفکیک آیکن پنج نوع Timeline ثبت شده است.
-Branch: `product/timeline-type-icons`
-
-فقط Presentation + focused widget test مجاز است؛ بدون تغییر Schema/Storage/Scheduler/Navigation/Dependency. آماده‌سازی موازی مجاز است ولی Merge فقط بعد از تکمیل Docs #102.
+6. سپس Close #104
 
 ## اصل Maximum Parallel
 - Product / Release / Automation / Docs تا حد امن موازی
@@ -102,11 +106,10 @@ Branch: `product/timeline-type-icons`
 - مستندسازی هم‌زمان
 
 ## ادامه
-1. Docs #102 را کامل و exact-head Verify کن.
-2. Docs را با expected-head lock ادغام و post-main Fast CI را Verify کن.
-3. #102 را Completed ببند.
-4. #104 را با focused tests + exact-head gates ادامه بده.
-5. #19 تا Ruleset Write واقعی باز بماند.
+1. Docs #104 را exact-head Verify و Merge کن.
+2. post-main Fast CI مستندات را Verify کن و #104 را Completed ببند.
+3. Queue واقعی را Fresh Audit کن و فقط بعد از اثبات Scope مستقل Slice بعدی را انتخاب کن.
+4. #19 تا Ruleset Write واقعی باز بماند.
 
 ## Trigger
 `ادامه یادنگار`
