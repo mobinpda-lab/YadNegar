@@ -21,25 +21,19 @@ Home header also includes centered `بسم الله الرحمن الرحیم` a
 
 Branch: `feature/timeline-backup-share`  
 Current final-validation head: `8057eca7ba4957d49bc51c54cbf278935744ccfa`  
-Status: exact-head CI and Android are Green; next step is Ready + Fresh mergeability + expected-head merge.
+Status: exact-head CI and Android are Green; live mergeability was true in the latest Fresh Audit. Next step: Ready + Fresh read + expected-head merge.
 
 Implemented:
-- concrete JSON repository exposes validated snapshot bytes without changing `TimelineRepository`
-- existing recovery/validation path runs before snapshot generation
-- existing JSON encoder is reused; no second serializer or schema
-- valid empty snapshot works without creating primary user storage
-- timestamped snapshot is written to temporary storage and re-validated with production parser
-- Persian Backup action is delivered through a small presentation scope; `TimelineHome` remains untouched
-- `share_plus` is exact-pinned to `10.1.4` for Flutter 3.35 compatibility
-- `pubspec.lock` is synchronized to the exact package set resolved by CI
-- real-file and widget coverage added
-- branch was merged structurally onto current main through sync commit `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
-- Bismillah header and Backup action are both preserved in the combined `TimelineScreen`
-
-Dependency-resolution proof before lock commit:
-- Flutter 3.35 dependency resolution succeeded
-- Analyze succeeded
-- 85 tests passed
+- validated snapshot bytes from the existing concrete JSON repository
+- existing recovery/parser/serializer reused; no second schema/storage
+- valid empty snapshot without creating primary user storage
+- timestamped temp snapshot re-validated with production parser
+- Persian Backup action via a small presentation scope
+- `share_plus 10.1.4` exact pin compatible with Flutter 3.35
+- exact CI-resolved package set committed in `pubspec.lock`
+- real-file and widget coverage
+- structural sync onto current main through `529df3fd6656705fab3756a878c45d8ec2ed1bbc`
+- Bismillah header and Backup action both preserved in combined `TimelineScreen`
 
 Final exact-head workflows on `8057eca7ba4957d49bc51c54cbf278935744ccfa`:
 - YadNegar CI `33042505480`: Green
@@ -49,7 +43,7 @@ Only this exact head counts as merge evidence.
 
 ## Documentation Lane
 Branch: `docs/current-state-backup-active`
-Tracks Product in parallel. Keep unmerged until Product settles; final-sync onto resulting main, refresh evidence, exact-head docs CI, then safe merge.
+Keep unmerged until Product settles; final-sync onto resulting main, refresh evidence, exact-head docs CI, then safe merge.
 
 ## Automation
 Issue #19 remains open because Platform-level required status checks are not writable through the connected GitHub tooling.
