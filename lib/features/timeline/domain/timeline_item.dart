@@ -6,6 +6,12 @@ enum TimelineItemType {
   activity,
 }
 
+enum TimelineReminderRecurrence {
+  none,
+  daily,
+  weekly,
+}
+
 class TimelineItem {
   const TimelineItem({
     required this.id,
@@ -14,7 +20,10 @@ class TimelineItem {
     required this.createdAt,
     this.occurredAt,
     this.reminderAt,
-  });
+    TimelineReminderRecurrence reminderRecurrence = TimelineReminderRecurrence.none,
+  }) : reminderRecurrence = reminderAt == null
+            ? TimelineReminderRecurrence.none
+            : reminderRecurrence;
 
   final String id;
   final TimelineItemType type;
@@ -22,6 +31,7 @@ class TimelineItem {
   final DateTime createdAt;
   final DateTime? occurredAt;
   final DateTime? reminderAt;
+  final TimelineReminderRecurrence reminderRecurrence;
 
   DateTime get timelineAt => occurredAt ?? createdAt;
 }
