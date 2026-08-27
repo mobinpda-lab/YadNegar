@@ -228,14 +228,18 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     value: widget.selectedFilterType,
                     hint: const Text('همه انواع'),
                     isExpanded: true,
-                    items: TimelineItemType.values
-                        .map(
-                          (type) => DropdownMenuItem<TimelineItemType>(
-                            value: type,
-                            child: TimelineItemTypeOption(type: type),
-                          ),
-                        )
-                        .toList(growable: false),
+                    items: <DropdownMenuItem<TimelineItemType>>[
+                      const DropdownMenuItem<TimelineItemType>(
+                        value: null,
+                        child: Text('همه انواع'),
+                      ),
+                      ...TimelineItemType.values.map(
+                        (type) => DropdownMenuItem<TimelineItemType>(
+                          value: type,
+                          child: TimelineItemTypeOption(type: type),
+                        ),
+                      ),
+                    ],
                     onChanged: widget.onTypeFilterChanged,
                   ),
                 ),
