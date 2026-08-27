@@ -49,6 +49,7 @@ class EditTimelineItem {
           : replaceOccurredAt
               ? occurredAt
               : existing.occurredAt,
+      reminderAt: existing.reminderAt,
     );
 
     await repository.upsert(updated);
