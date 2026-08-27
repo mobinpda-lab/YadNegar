@@ -21,6 +21,8 @@ class EditTimelineItem {
     DateTime? occurredAt,
     bool replaceReminderAt = false,
     DateTime? reminderAt,
+    bool replaceReminderRecurrence = false,
+    TimelineReminderRecurrence? reminderRecurrence,
   }) async {
     final normalizedId = id.trim();
     if (normalizedId.isEmpty) {
@@ -40,6 +42,12 @@ class EditTimelineItem {
     final targetType = type ?? existing.type;
     final changedToTypeWithoutOccurredAt =
         type != null && !_supportsOccurredAt(targetType);
+    final targetReminderAt = replaceReminderAt ? reminderAt : existing.reminderAt;
+    final targetReminderRecurrence = targetReminderAt == null
+        ? TimelineReminderRecurrence.none
+        : replaceReminderRecurrence
+            ? (reminderRecurrence ?? TimelineReminderRecurrence.none)
+            : existing.reminderRecurrence;
 
     final updated = TimelineItem(
       id: existing.id,
@@ -51,7 +59,8 @@ class EditTimelineItem {
           : replaceOccurredAt
               ? occurredAt
               : existing.occurredAt,
-      reminderAt: replaceReminderAt ? reminderAt : existing.reminderAt,
+      reminderAt: targetReminderAt,
+      reminderRecurrence: targetReminderRecurrence,
     );
 
     await repository.upsert(updated);
