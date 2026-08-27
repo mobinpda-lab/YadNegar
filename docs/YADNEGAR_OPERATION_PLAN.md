@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 4.2 — Timeline Reminder Status Complete
+## نسخه 4.3 — Reminder Presence Filter Complete
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -19,8 +19,8 @@ Laneها:
 Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked preparation فقط با Fresh compare و اثبات Scope مستقل قابل Merge است.
 
 ## 2. main فعلی
-Current main:
-`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
+Current product main:
+`3428c1798a43fd39fadd5f47673d1bd0366583ca`
 
 Main شامل:
 - Timeline foundation واحد
@@ -29,6 +29,8 @@ Main شامل:
 - daily/weekly Android reminder scheduling با timezone محلی دستگاه
 - Persian recurrence UX
 - نمایش مستقیم وضعیت Reminder روی کارت Timeline
+- فیلتر Reminder presence: همه / دارای یادآور / بدون یادآور
+- Search/Type/Date composition + clear/export behavior
 - Release Governance غیرمخرب کامل
 است.
 
@@ -41,47 +43,44 @@ Main شامل:
 
 هیچ Tag، GitHub Release، Play Store publish یا production keystore/secret ساخته نشده است.
 
-## 4. Recurring Reminder Wave — Completed
-Parent #93 بسته است.
+## 4. Completed Reminder Waves
+### Recurring Reminder — #93
+- PR #96 / Issue #94: recurrence contract + schema v3 + v1/v2 compatibility
+- PR #97 / Issue #95: daily/weekly device-local scheduling + Persian UX
+- #98 docs sync
+- parent #93 completed
 
-### PR #96 / Issue #94
-- recurrence contract: `none / daily / weekly`
-- schema v3
-- v1/v2 backward compatibility
-- safe-write migration با recovery موجود
+### Timeline Reminder Status — #99 / PR #100
+Product merged to `8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`.
+Docs PR #101 merged to `fb2a02624421ba135de87357817d13922fed7abf` and post-main Fast CI passed.
+Issue #99 completed.
 
-### PR #97 / Issue #95
-- daily/weekly device-local scheduling
-- Persian recurrence UX
-- timezone-safe reconciliation
-- fail-closed recurrence on timezone resolution failure
-- persist-first behavior
-- no exact-alarm permission
-
-## 5. Timeline Reminder Status — Issue #99 / PR #100
+## 5. Reminder Presence Filter — #102 / PR #103
 Final product head:
-`32fd20609daa8d6fea74c325fecb14e096c0106d`
+`256c2f05a5ce0d4bfaba6c9a711e7470d78f932a`
 
 Merged main:
-`8de412fa8aaefa7ecb23c9f7fbbb2f423070c318`
+`3428c1798a43fd39fadd5f47673d1bd0366583ca`
 
 Scope واقعی:
 - `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_reminder_status_test.dart`
+- `test/features/timeline/presentation/timeline_reminder_filter_test.dart`
 
 رفتار:
-- no reminder => no row
-- one-shot => date/time
-- daily => `روزانه` + clock
-- weekly => `هفتگی` + Persian weekday + clock
+- همه موارد
+- دارای یادآور
+- بدون یادآور
+- compose با Search/Type/Date فعلی
+- clear موجود همه فیلترها را Reset می‌کند
+- export موارد visible فعلی را استفاده می‌کند
 
 Pre-merge:
-- CI `33086840280`: success
-- Android `33086840284`: success
+- CI `33092820178`: success
+- Android `33092820203`: success across full chain
 
 Post-main:
-- CI `33087745543`: success
-- Android `33087745462`: success
+- CI `33093725156`: success
+- Android `33093725042`: success
 - Build/Candidate/Smoke-Recovery/Readiness/Release-Draft/Approval all success
 
 ## 6. Product Foundation
@@ -95,16 +94,16 @@ Compatibility: v1/v2 reads پشتیبانی می‌شوند.
 
 ## 7. Automation / Documentation
 ### Issue #19
-Ruleset فعلی PR را اجباری می‌کند و deletion/non-fast-forward را می‌بندد، اما required status checks هنوز Platform-level enforce نشده‌اند. Connected tooling Ruleset Write ندارد.
+Ruleset `main-protection` فعال است و PR را اجباری می‌کند و deletion/non-fast-forward را می‌بندد، اما required status checks هنوز Platform-level enforce نشده‌اند. Connected tooling Ruleset Write ندارد.
 
 قانون عملی تا enforcement واقعی:
 `exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
 
-### Active Docs Sync
+### Active Docs Sync — #102
 Branch:
-`docs/timeline-reminder-status-live`
+`docs/timeline-reminder-filter-live`
 
-هدف: چهار سند Current State / Persian Handoff / Operation Plan / Comprehensive Reference را با outcome واقعی #99/#100 همگام کند.
+هدف: چهار سند Current State / Persian Handoff / Operation Plan / Comprehensive Reference را با outcome واقعی #102/#103 همگام کند.
 
 Merge Contract:
 1. exact docs head
@@ -112,7 +111,7 @@ Merge Contract:
 3. live mergeability=true
 4. exact `expected_head_sha`
 5. post-main Fast CI
-6. Close #99 فقط بعد از proof
+6. Close #102 فقط بعد از proof
 
 ## 8. Merge Contract
 ### Product / Release
@@ -146,17 +145,15 @@ Historical Green برای Head جدید معتبر نیست.
 
 ## 10. Queue
 ### Active
-1. docs sync برای outcome #99/#100
-2. Issue #19 — required-status enforcement gap
+1. Docs sync نهایی برای #102/#103
+2. Issue #104 — distinct Timeline type icons، presentation-only
+3. Issue #19 — required-status enforcement gap
 
-### Next Product Discovery
-3. Fresh Audit معماری Search/Filter موجود
-4. انتخاب یک Slice کوچک و reuse-first که به schema/storage/scheduler جدید نیاز نداشته باشد
-5. ایجاد Issue/Branch فقط بعد از اثبات Scope مستقل
-6. exact-head CI/Android + expected-head merge + post-main proof + concurrent docs
+### #104 Integration Dependency
+Branch `product/timeline-type-icons` می‌تواند موازی آماده و تست شود، اما Merge فقط بعد از ادغام/Verify مستندات #102 و Fresh compare مستقل مجاز است.
 
 ### Security-separated
-7. Production signing / real tag / release / publish فقط با Owner/Security decision صریح
+Production signing / real tag / release / publish فقط با Owner/Security decision صریح.
 
 ## 11. اصل سرعت
 `Maximum Parallel = Independent Lanes + Safe Stacked Preparation + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Concurrent Documentation`
