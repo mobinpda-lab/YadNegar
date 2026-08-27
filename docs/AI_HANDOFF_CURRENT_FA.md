@@ -4,82 +4,66 @@
 GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
 Repository: `mobinpda-lab/YadNegar`  
-Current verified main: `40415af1f064a7ef7298ce9993ee949c52664bff`
+Current main: `ecd088c7d880b925cbb3240ad7ee0230a911d42e`
 
-## وضعیت واقعی محصول
-Flow اصلی:
+## محصول روی main
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo → Export`
 
-روی main:
-- Note/Event/Call/Idea/Activity روی یک TimelineItem
-- فارسی و RTL
-- JSON persistence واقعی و crash-recoverable
-- Search + Type + Date Range
-- occurredAt capture/edit
-- اصلاح Type
-- حذف امن
-- Undo با no-overwrite conflict protection
-- کپی خروجی خوانا از آیتم‌های فعلی Timeline
-- Fast CI + Android APK Build/Verify/Upload واقعی
+Export و مستندات موج قبلی کامل و post-main Verify شده‌اند.
 
-Foundation موازی Model/Repository/Storage/AppShell وجود ندارد.
+## Product فعال — PR #68 / Issue #67
+`feat(backup): share validated Timeline backup snapshot`
 
-## PR #65 / Issue #64 — تکمیل شد
-Export visible Timeline به Clipboard وارد main شد.
+Initial PR head: `65dd346b6203efa8a1d70a5908024c252d49dfba`
+Status: Draft
 
-Exact pre-merge head: `114fca4cdfd2269d5d4ff906ce96afe0590a7162`
-- CI `33026398124`: success
-- Android `33026398078`: success
-- build/verify/upload APK: success
-- live mergeable=true
-- merge با expected-head lock
+طراحی فعلی:
+- Snapshot از همان JSON storage موجود
+- recovery/validation قبل از Snapshot
+- reuse همان serializer داخلی؛ serializer/schema دوم نداریم
+- Timeline خالی backup معتبر می‌دهد بدون ساخت primary user storage
+- snapshot موقت دوباره با production parser Validate می‌شود
+- UI فارسی Backup از طریق Presentation Scope کوچک
+- TimelineHome برای این Feature تغییر نکرده
+- Share فقط در composition root
+- `share_plus 10.1.4` exact-pinned تا با Flutter 3.35 سازگار بماند
+- Restore/Import و Reminder خارج Scope هستند
 
-Merged main: `40415af1f064a7ef7298ce9993ee949c52664bff`
+تست‌ها:
+- real-file valid snapshot + primary unchanged
+- recovery-before-snapshot
+- valid empty snapshot
+- widget success/error/absence of backup action
 
-Post-main:
-- CI `33026680361`: success
-- Android `33026680302`: success با build/verify/upload APK
+## Dependency Gate
+Toolchain فعلی:
+- Flutter 3.35.0
+- AGP 8.9.1
+- Gradle 8.12
+- app Java source/target 11
 
-طراحی Export:
-- Formatter خالص
-- همان آیتم‌های visible کپی می‌شوند
-- Search/Type/Date طبیعی حفظ می‌شوند
-- query دوم و dependency/schema/storage جدید وجود ندارد
+اولین CI/Android PR #68 برای resolve/compile feedback است. Lockfile فعلی هنوز final نیست. بعد از مشخص‌شدن dependency set واقعی، `pubspec.lock` Sync می‌شود و فقط Gateهای Head جدید معتبر خواهند بود.
 
-Issue #64 بسته شده است.
+Initial runs:
+- CI `33027569106`: active
+- Android `33027569115`: active
 
-## Docs فعال — PR #66
-Branch: `docs/current-state-wave6-export`
-
-از نظر تاریخچه روی main Export‌شده Sync شده و فقط سه فایل مستندات را تغییر می‌دهد. پس از این Final Refresh باید exact-head CI جدید بگیرد؛ سپس Ready + Fresh mergeability + expected-head merge lock.
+## Docs موازی
+Branch `docs/current-state-backup-active` فقط وضعیت فعال Backup را ثبت می‌کند. Product settle → structural sync → final evidence → exact-head docs CI → merge.
 
 ## Automation
-Issue #62 بسته و recovered است. Workflowها روی #65 طبیعی اجرا شدند و workaround تکراری ساخته نشد.
+Issue #19 باز است: required status check در Ruleset هنوز Platform-level قابل‌نوشتن نیست.
 
-Issue #19 باز است: Ruleset فعلی PR را الزام می‌کند ولی required status check Platform-level هنوز از Connector قابل‌نوشتن نیست.
-
-## Product بعدی — Issue #67
-`feat(backup): share a validated Timeline backup snapshot`
-
-Audit اولیه:
-- فایل داده واقعی در Application Support است
-- Storage فعلی schema-versioned و recoverable است
-- Backup باید همان storage معتبر را snapshot کند، نه JSON serializer دوم بسازد
-- Restore/Import در Slice جداگانه است
-- dependency اشتراک فایل فقط بعد از Flutter/Android compatibility audit انتخاب می‌شود
-- Reminder فعلاً ریسک permission/scheduling بیشتری دارد
-
-Branch Backup فقط بعد از Merge نهایی #66 شروع شود.
-
-## اصل سرعت
-Product / CI-Automation / Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
+Merge Product فقط با:
+`exact-head CI + Android + live mergeability + expected-head lock + post-main proof`
 
 ## ادامه
-1. exact-head CI جدید #66 را Verify کن.
-2. Green → Ready → Fresh head/mergeability → expected-head Merge.
-3. main docs-only را با Fast CI Verify کن.
-4. سپس #67 را با compatibility audit Android/Share شروع کن.
-5. #19 را باز نگه دار تا Ruleset write واقعی ممکن شود.
+1. Runهای #68 را Fresh بخوان.
+2. dependency resolution واقعی را به lockfile منتقل کن.
+3. خطاهای واقعی Analyze/Test/Android را اصلاح کن.
+4. final exact-head gates را بگیر و Safe Merge کن.
+5. main را Verify کن.
+6. Docs lane را Final Sync/Merge کن.
 
 ## Trigger
 `ادامه یادنگار`
