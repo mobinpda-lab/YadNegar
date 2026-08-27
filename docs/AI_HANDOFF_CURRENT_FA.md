@@ -4,87 +4,74 @@
 GitHub Reality مقدم است. قبل از Write/Merge/گزارش وضعیت، Fresh Audit الزامی است.
 
 Repository: `mobinpda-lab/YadNegar`  
-Current verified main: `dcdefb3155322b5d49972b196786e569bc541267`
+Current main: `99f672d53045782d18847380fc335fe1da25c0c6`
 
-## وضعیت واقعی محصول
-Flow اصلی:
+## وضعیت محصول
+Flow اصلی روی main:
 `Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete → Undo`
 
-روی main:
-- Note/Event/Call/Idea/Activity روی یک TimelineItem
+قابلیت‌های اصلی موجود:
+- پنج نوع TimelineItem
 - فارسی و RTL
 - JSON persistence واقعی و crash-recoverable
 - Search + Type + Date Range
 - occurredAt capture/edit
-- اصلاح Type از همان Edit flow
-- حذف با confirmation فارسی
-- Undo حذف با جلوگیری از overwrite آیتم جدیدتر
-- Fast CI + Android APK Build/Verify/Upload واقعی
+- اصلاح Type
+- حذف امن
+- Undo با no-overwrite conflict protection
+- Fast CI + Android APK Build/Verify/Upload
 
-Foundation موازی Model/Repository/Storage/AppShell وجود ندارد.
+PR #50 مستندات نهایی موج Delete/Undo را روی main ادغام کرده است.
 
-## PR #61 / Issue #57 — تکمیل شد
-Safe Delete روی main ادغام شد.
-- exact head: `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`
-- CI `33020857429`: success
-- Android `33020857455`: success
-- mergeability clean
-- expected-head lock
-- merged main: `509817c344d014579e28f62d64ff8465b722f3b9`
-- post-main CI `33023724452`: success
-- post-main Android `33023724492`: success
+## Product فعال — PR #65 / Issue #64
+`feat(export): copy visible Timeline items to clipboard`
 
-## PR #63 / Issue #59 — تکمیل شد
-Undo حذف روی main ادغام شد.
-- exact head: `373a1b8cf18016d27e01297abc70ff6034ef6d2c`
-- CI `33023943769`: success
-- Android `33023943767`: success
-- mergeability clean
-- expected-head lock
-- current main: `dcdefb3155322b5d49972b196786e569bc541267`
-- post-main CI `33024326747`: success
-- post-main Android `33024326787`: success با build/verify/upload APK
+Current head: `114fca4cdfd2269d5d4ff906ce96afe0590a7162`
+Base: `main` at `99f672d...`
+Status: Draft while exact-head gates run.
 
-Undo همان TimelineItem حذف‌شده را با metadata اصلی برمی‌گرداند، اما اگر ID توسط داده جدیدتر دوباره استفاده شده باشد overwrite نمی‌کند.
+Scope واقعی:
+- formatter خالص `ExportTimelineText`
+- کپی همان آیتم‌هایی که کاربر اکنون در Timeline می‌بیند
+- Search / Type / Date بدون query دوم در Export حفظ می‌شوند
+- Clipboard فقط در Presentation
+- success / empty / error feedback فارسی
+- unit + widget tests
+- فقط 4 فایل Export-related در diff
 
-Issue #59 بسته شده است.
+ممنوع/انجام‌نشده:
+- dependency جدید
+- Repository contract جدید
+- schema/storage change
+- Backup/Reminder foundation
+- duplicate Search/Filter path
+
+## Validation فعال
+- YadNegar CI `33026398124`: in progress
+- YadNegar Android Build `33026398078`: in progress
+- PR live mergeable=true
+- `mergeable_state=unstable` تا زمان settle شدن checks
+
+Merge فقط بعد از Green شدن هر دو run، Fresh head/mergeability و `expected_head_sha` lock.
 
 ## Automation
-### Issue #62 — بسته شد
-مشکل intermittent ثبت workflow/merge-ref بدون دورزدن Gate بررسی شد. PR #63 روی synchronize عادی هر دو Workflow را روی exact head دریافت کرد؛ incident بازیابی‌شده و بسته شده است.
+Issue #62 recovered/closed است. PR #65 هر دو Workflow استاندارد را روی Head دقیق بدون carrier یا duplicate workflow دریافت کرده است.
 
-### Issue #19 — باز است
-Ruleset فعلی PR را الزام می‌کند، ولی required status check ندارد و Connector Ruleset write ارائه نمی‌دهد.
+Issue #19 باز است: Ruleset فعلی PR را الزام می‌کند، اما required status check Platform-level هنوز از Connector قابل‌نوشتن نیست.
 
-قانون Merge عملیاتی:
-`exact-head CI Green + Android Green + live mergeability + expected-head lock + post-main proof`
-
-## Docs — PR #50
-README قدیمی نیز در Lane Docs اصلاح شده است.
-PR #50 باید به‌صورت ساختاری روی main فعلی `dcdefb3...` Sync شود، exact-head validate شود و سپس امن Merge شود.
-
-## Product بعدی — Issue #64
-`feat(export): copy Timeline export to clipboard`
-
-سند جامع Wave 6 را Reminder / Backup / Export تعریف می‌کند. Audit نشان داد هیچ implementation موجودی برای این سه وجود ندارد.
-
-Export به Clipboard انتخاب شده چون:
-- user-facing و قابل‌استفاده است
-- Repository موجود را reuse می‌کند
-- Flutter Clipboard داخلی کافی است
-- dependency/permission/schema/storage جدید نمی‌خواهد
-- Backup/Restore و Reminder را داخل یک PR قاطی نمی‌کند
-
-Branch #64 فقط بعد از نهایی‌شدن Docs ساخته شود.
+## Docs موازی
+Branch: `docs/current-state-wave6-export`
+این Lane فقط وضعیت زنده Wave 6 را ثبت می‌کند و تا Merge Product از فایل‌های Product مستقل است. بعد از Merge #65 باید روی main جدید Final Sync شود و exact-head CI بگیرد.
 
 ## اصل سرعت
-Laneهای Product/Core/Automation/Docs تا حد امن موازی‌اند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
+Laneهای Product / Automation / Documentation هم‌زمان جلو می‌روند. Block یک Lane، Lane مستقل را متوقف نمی‌کند. سرعت از reuse، PR کوچک، CI واقعی و مستندسازی هم‌زمان می‌آید؛ نه از حذف Gate.
 
 ## ادامه
-1. PR #50 را روی main فعلی structurally sync کن.
-2. exact-head CI آن را Verify و امن Merge کن.
-3. Issue #64 را از main جدید شروع کن.
-4. #19 را تا اعمال واقعی required status check باز نگه دار.
+1. CI + Android exact-head PR #65 را بخوان.
+2. اگر Green شدند، PR را Ready و با expected-head lock Merge کن.
+3. main جدید را دوباره Verify کن.
+4. Docs lane را Final Sync و Merge کن.
+5. سپس Wave 6 را Fresh Audit کن و فقط Gap بعدی واقعی را شروع کن.
 
 ## Trigger
 `ادامه یادنگار`
