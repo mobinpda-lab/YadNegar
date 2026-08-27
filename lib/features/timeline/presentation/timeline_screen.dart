@@ -316,6 +316,7 @@ class TimelineScreen extends StatelessWidget {
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final item = items[index];
+        final reminderLabel = _reminderLabel(item);
         return Card(
           key: Key('timeline-item-${item.id}'),
           child: ListTile(
@@ -331,6 +332,13 @@ class TimelineScreen extends StatelessWidget {
                   _timelineTimeLabel(item),
                   key: Key('timeline-time-${item.id}'),
                 ),
+                if (reminderLabel != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    reminderLabel,
+                    key: Key('timeline-reminder-${item.id}'),
+                  ),
+                ],
               ],
             ),
             isThreeLine: true,
@@ -347,12 +355,45 @@ class TimelineScreen extends StatelessWidget {
     return '$prefix: ${_formatDateTime(item.timelineAt)}';
   }
 
+  String? _reminderLabel(TimelineItem item) {
+    final reminderAt = item.reminderAt;
+    if (reminderAt == null) {
+      return null;
+    }
+
+    return switch (item.reminderRecurrence) {
+      TimelineReminderRecurrence.none =>
+        'یادآور: ${_formatDateTime(reminderAt)}',
+      TimelineReminderRecurrence.daily =>
+        'یادآور: روزانه - ${_formatTime(reminderAt)}',
+      TimelineReminderRecurrence.weekly =>
+        'یادآور: هفتگی - ${_weekdayLabel(reminderAt.weekday)} - ${_formatTime(reminderAt)}',
+    };
+  }
+
   String _formatDateTime(DateTime value) {
     final month = value.month.toString().padLeft(2, '0');
     final day = value.day.toString().padLeft(2, '0');
+    return '${value.year}/$month/$day - ${_formatTime(value)}';
+  }
+
+  String _formatTime(DateTime value) {
     final hour = value.hour.toString().padLeft(2, '0');
     final minute = value.minute.toString().padLeft(2, '0');
-    return '${value.year}/$month/$day - $hour:$minute';
+    return '$hour:$minute';
+  }
+
+  String _weekdayLabel(int weekday) {
+    return switch (weekday) {
+      DateTime.monday => 'دوشنبه',
+      DateTime.tuesday => 'سه‌شنبه',
+      DateTime.wednesday => 'چهارشنبه',
+      DateTime.thursday => 'پنجشنبه',
+      DateTime.friday => 'جمعه',
+      DateTime.saturday => 'شنبه',
+      DateTime.sunday => 'یکشنبه',
+      _ => '',
+    };
   }
 
   String _typeLabel(TimelineItemType type) {
