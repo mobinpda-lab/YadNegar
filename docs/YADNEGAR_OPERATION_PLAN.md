@@ -1,5 +1,5 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 2.7 — Delete + Undo Integrated / Wave 6 Export Next
+## نسخه 2.9 — Export Integrated / Backup Next
 
 **تاریخ مبنا:** 2026-08-27  
 **مرجع حقیقت:** GitHub Repository State
@@ -18,117 +18,99 @@ Laneها:
 Block یک Lane، Lane مستقل را متوقف نمی‌کند.
 
 ## 2. main فعلی
-`dcdefb3155322b5d49972b196786e569bc541267`
+`40415af1f064a7ef7298ce9993ee949c52664bff`
 
-Main شامل Timeline واحد، JSON persistence واقعی/crash-recoverable، Quick Capture/Load/Edit، پنج Type، Search/Type/Date، occurredAt capture/edit، اصلاح Type، حذف امن و Undo است.
+Main شامل Timeline واحد، JSON persistence واقعی/crash-recoverable، Quick Capture/Load/Edit، پنج Type، Search/Type/Date، occurredAt capture/edit، اصلاح Type، حذف امن، Undo و Export visible Timeline است.
 
 No duplicate Model/Repository/Storage/AppShell.
 
-## 3. موج تکمیل‌شده — Safe Delete
-PR #61 / Issue #57
-- exact head `b10f3d2f5fc82b8acc2ee39c4a882c279a502442`
-- CI `33020857429`: success
-- Android `33020857455`: success
+## 3. موج تکمیل‌شده — Export
+PR #65 / Issue #64
+
+Exact pre-merge head:
+`114fca4cdfd2269d5d4ff906ce96afe0590a7162`
+
+Pre-merge proof:
+- CI `33026398124`: success
+- Android `33026398078`: success
+- Android build + verify + upload: success
+- live mergeable=true
 - merged with expected-head lock
-- post-main CI `33023724452`: success
-- post-main Android `33023724492`: success
 
-## 4. موج تکمیل‌شده — Undo Delete
-PR #63 / Issue #59
-- exact head `373a1b8cf18016d27e01297abc70ff6034ef6d2c`
-- CI `33023943769`: success
-- Android `33023943767`: success
-- live mergeability clean
-- merged with expected-head lock
-- current main `dcdefb3155322b5d49972b196786e569bc541267`
-- post-main CI `33024326747`: success
-- post-main Android `33024326787`: success
+Merged main:
+`40415af1f064a7ef7298ce9993ee949c52664bff`
 
-Undo:
-- reuses `findById + upsert`
-- metadata اصلی را حفظ می‌کند
-- conflict/no-overwrite دارد
-- Search/Type/Date را حفظ می‌کند
-- schema/storage/history foundation جدید ندارد
+Post-main proof:
+- CI `33026680361`: success
+- Android `33026680302`: success
+- Android build + verify + upload: success
 
-## 5. Lane A — Core/Data
-Foundation اصلی پایدار است:
+Export behavior:
+- pure text formatter
+- exact visible Timeline items are exported
+- current Search/Type/Date state is naturally reflected
+- no second repository query
+- Clipboard only at presentation edge
+- no dependency/schema/storage/repository-contract change
+
+## 4. Lane A — Core/Data
+Foundation remains stable:
 - one Timeline model
 - one Repository contract
 - one crash-recoverable JSON storage
-- delete/restore روی همان contract موجود
 
-Wave 6 نباید برای Export Foundation داده موازی بسازد.
+Next Backup work must reuse the existing validated/recovered storage representation rather than introducing a second serializer or storage contract.
 
-## 6. Lane B — Product/UX
-Vertical Slice بعدی: Issue #64 — Export به Clipboard.
+## 5. Lane B — Product/UX
+Export is integrated.
 
-Scope هدف:
-- خروجی deterministic و خوانا از Timeline
-- UI action فارسی برای کپی خروجی
-- Clipboard فقط در Presentation/Integration edge
-- empty/success/error behavior مشخص
-- بدون dependency جدید
+Next candidate is Issue #67 — validated portable backup snapshot.
+Do not start Restore/Import or Reminder inside the same Slice.
 
-Reminder و Backup/Restore در PR #64 Out-of-scope هستند.
+## 6. Lane C — CI/Automation/Docs
+- PR #66 final Wave 6 documentation lane is structurally synced onto exported main
+- final docs refresh must receive a fresh exact-head Fast CI before merge
+- Issue #62 recovered/closed
+- Issue #19 required-status Ruleset gap remains open
 
-## 7. Lane C — CI/Automation/Docs
-- PR #50 Final Documentation Reconciliation فعال است
-- README stale نیز در همین Lane اصلاح شد
-- Issue #62 recovered و بسته شد
-- Issue #19 Ruleset required-status gap باز است
-
-## 8. Merge Contract
+## 7. Merge Contract
 1. exact current head
-2. Fast CI Green همان head
-3. Android Green همان head برای Product changes
+2. Fast CI Green on that head
+3. Android Green on that head for Product changes
 4. live mergeability true
 5. `expected_head_sha` lock
 6. post-main proof
 
-Historical Green معتبر نیست.
+Historical Green is never reused for a new head.
 
-## 9. Automation Recovery
-Incident #62 بسته شده، ولی recovery rule حفظ می‌شود:
-- raw PR/workflow state را Fresh audit کن
-- duplicate workflow نساز
-- historical run را به Head جدید نسبت نده
-- exact-head evidence را حفظ کن
-- فقط در صورت recurrence Issue #62 را reopen کن
+## 8. Wave 6 Next — Issue #67 Backup
+Objective: create a validated portable Timeline backup snapshot.
 
-## 10. Ruleset — Issue #19
-`main-protection` فعال است اما required-status-check ندارد. Connector فعلی Ruleset write ندارد.
-Operational merge lock تا رفع واقعی اجباری است.
-
-## 11. Documentation Contract
-PR #50 اکنون باید:
-- README + Current State + Handoff + Operation Plan را روی واقعیت نهایی نگه دارد
-- structurally روی main `dcdefb3...` sync شود
-- exact-head validation دریافت کند
-- سپس safe merge شود
-
-## 12. Wave 6 Selection
-سند جامع Wave 6 را `Reminder / Backup / Export` تعریف می‌کند.
 Fresh audit:
-- هیچ implementation موجودی برای این سه نیست
-- dependencies فعلی فقط Flutter + path_provider
-- Reminder نیازمند permission/scheduling و احتمالاً contract جدید است
-- Export-to-clipboard کم‌ریسک‌ترین user-facing slice است
+- source data is `Application Support/timeline.json`
+- repository storage is schema-versioned and crash-recoverable
+- Backup should snapshot valid storage bytes after recovery/validation
+- primary user data must not be mutated
+- Restore/Import is out-of-scope and needs its own validation/rollback Slice
+- Reminder remains higher risk because of scheduling/permission/data-contract concerns
+- Share/Save dependency must be compatible with the pinned Flutter/Android toolchain before adoption
 
-Issue #64 ایجاد شده و بعد از Docs شروع می‌شود.
+Do not create the Backup branch until PR #66 is final-merged.
 
-## 13. Queue
+## 9. Queue
 ### Active
-1. PR #50 — final docs reconciliation
-2. Issue #64 — next product: Timeline export to clipboard
+1. PR #66 — final docs after Export
+2. Issue #67 — next Product candidate: validated portable Backup
 3. Issue #19 — Ruleset enforcement gap
 
 ### Completed recently
-- #63 / #59 — Undo deletion
-- #61 / #57 — safe delete
-- #62 — workflow registration incident recovered/closed
+- PR #65 / Issue #64 — visible Timeline Export
+- PR #50 — documentation reconciliation
+- PR #63 / Issue #59 — Undo deletion
+- PR #61 / Issue #57 — safe delete
+- Issue #62 — workflow registration incident recovered/closed
 
-## 14. خط قرمز
+## 10. خط قرمز
 - duplicate foundation
 - fake CI/build/persistence
 - stale merge evidence
@@ -136,9 +118,17 @@ Issue #64 ایجاد شده و بعد از Docs شروع می‌شود.
 - docs stale
 - duplicate workflow workaround
 - ادعای Ruleset enforcement بدون proof
-- قاطی‌کردن Reminder/Backup با Export کوچک
+- duplicate JSON serializer for Backup
+- mixing Restore/Reminder into Backup Slice
 
-## 15. گزارش مالک
+## 11. قدم بعد
+- final exact-head CI برای #66
+- Green → Ready → Fresh mergeability → expected-head merge
+- Verify docs-only main with Fast CI
+- compatibility audit Android/Share for #67
+- then create the smallest safe Backup branch
+
+## 12. گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
 
 کوتاه، غیر فنی، نتیجه‌محور.
