@@ -12,6 +12,7 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/android-build.yml'
+      - '.github/scripts/android-smoke-recovery.sh'
   pull_request:
     branches: [main]
     paths:
@@ -21,6 +22,7 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/android-build.yml'
+      - '.github/scripts/android-smoke-recovery.sh'
   workflow_dispatch:
 
 permissions:
@@ -103,4 +105,47 @@ jobs:
             build/release-candidate/SHA256SUMS.txt
             build/release-candidate/ARTIFACT_INFO.txt
           if-no-files-found: error
+          retention-days: 14
+
+  android-smoke-recovery:
+    needs: android-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download exact-run debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-debug-apk
+          path: build/smoke-apk
+
+      - name: Verify downloaded debug APK
+        run: test -s build/smoke-apk/app-debug.apk
+
+      - name: Enable KVM group permissions
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run emulator startup and storage recovery proof
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash .github/scripts/android-smoke-recovery.sh
+
+      - name: Upload emulator smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-android-smoke-recovery-evidence
+          path: build/android-smoke-evidence/
+          if-no-files-found: warn
           retention-days: 14
