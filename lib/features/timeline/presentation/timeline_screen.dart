@@ -30,6 +30,7 @@ class TimelineScreen extends StatefulWidget {
     this.onClearSearch,
     this.dateRangeLabel,
     this.onDateRangeTap,
+    this.onDateRangeClear,
     this.onRestoreSnapshot,
   });
 
@@ -47,6 +48,7 @@ class TimelineScreen extends StatefulWidget {
   final VoidCallback? onClearSearch;
   final String? dateRangeLabel;
   final VoidCallback? onDateRangeTap;
+  final VoidCallback? onDateRangeClear;
   final VoidCallback? onRestoreSnapshot;
 
   @override
@@ -303,14 +305,27 @@ class _TimelineScreenState extends State<TimelineScreen> {
               16,
               8,
             ),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                key: const Key('timeline-date-filter'),
-                onPressed: widget.onDateRangeTap,
-                icon: const Icon(Icons.date_range),
-                label: Text(widget.dateRangeLabel ?? 'فیلتر بازه زمانی'),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const Key('timeline-date-filter'),
+                    onPressed: widget.onDateRangeTap,
+                    icon: const Icon(Icons.date_range),
+                    label: Text(widget.dateRangeLabel ?? 'فیلتر بازه زمانی'),
+                  ),
+                ),
+                if (widget.dateRangeLabel != null &&
+                    widget.onDateRangeClear != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    key: const Key('timeline-date-filter-clear'),
+                    tooltip: 'پاک کردن بازه زمانی',
+                    onPressed: widget.onDateRangeClear,
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ],
             ),
           ),
         Expanded(child: _buildContent()),
