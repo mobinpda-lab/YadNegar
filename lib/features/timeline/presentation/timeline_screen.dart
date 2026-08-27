@@ -258,11 +258,11 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 ),
                 if (_hasActiveSearch) ...[
                   const SizedBox(width: 8),
-                  IconButton(
+                  TextButton.icon(
                     key: const Key('timeline-search-clear'),
-                    tooltip: 'پاک کردن جستجو و فیلترها',
                     onPressed: _clearFilters,
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(Icons.clear_all),
+                    label: const Text('پاک کردن همه'),
                   ),
                 ],
               ],
