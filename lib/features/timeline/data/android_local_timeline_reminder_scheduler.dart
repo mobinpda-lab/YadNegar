@@ -21,7 +21,7 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
   @override
   Future<TimelineReminderScheduleResult> schedule(TimelineItem item) async {
     final reminderAt = item.reminderAt;
-    if (reminderAt == null || !reminderAt.isAfter(_clock())) {
+    if (reminderAt == null || !_canSchedule(item, _clock())) {
       await cancel(item.id);
       return TimelineReminderScheduleResult.skippedPast;
     }
@@ -63,11 +63,19 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
 
     final now = _clock();
     for (final item in items) {
-      final reminderAt = item.reminderAt;
-      if (reminderAt != null && reminderAt.isAfter(now)) {
+      if (_canSchedule(item, now)) {
         await _scheduleWithoutPermission(item);
       }
     }
+  }
+
+  bool _canSchedule(TimelineItem item, DateTime now) {
+    final reminderAt = item.reminderAt;
+    if (reminderAt == null) {
+      return false;
+    }
+    return item.reminderRecurrence != TimelineReminderRecurrence.none ||
+        reminderAt.isAfter(now);
   }
 
   Future<bool> _ensurePermission() async {
@@ -127,8 +135,19 @@ class AndroidLocalTimelineReminderScheduler implements TimelineReminderScheduler
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: _matchDateTimeComponents(item.reminderRecurrence),
       payload: payload,
     );
+  }
+
+  DateTimeComponents? _matchDateTimeComponents(
+    TimelineReminderRecurrence recurrence,
+  ) {
+    return switch (recurrence) {
+      TimelineReminderRecurrence.none => null,
+      TimelineReminderRecurrence.daily => DateTimeComponents.time,
+      TimelineReminderRecurrence.weekly => DateTimeComponents.dayOfWeekAndTime,
+    };
   }
 
   int _allocateNotificationId(String timelineItemId, Set<int> usedIds) {
