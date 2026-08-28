@@ -1,0 +1,45 @@
+name: YadNegar UI Evidence
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'tool/ui_evidence/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/ui-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.0'
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Render deterministic UI evidence
+        run: |
+          mkdir -p tool/ui_evidence/goldens
+          flutter test --update-goldens tool/ui_evidence/yadnegar_ui_evidence.dart
+
+      - name: Upload YadNegar screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-ui-evidence
+          path: tool/ui_evidence/goldens/*.png
+          if-no-files-found: error
+          retention-days: 14
