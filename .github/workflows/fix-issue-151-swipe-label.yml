@@ -1,0 +1,38 @@
+name: Fix Issue 151 Swipe Label
+
+on:
+  push:
+    branches:
+      - feat/issue-151-home-bismillah-swipe-main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/issue-151-home-bismillah-swipe-main
+          fetch-depth: 0
+      - name: Fix exact Persian label and remove workflow
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/features/timeline/presentation/tracked_subject_home.dart')
+          text = p.read_text()
+          bad = "'افزاودن پیگيري.'"
+          good = "'افزودن پیگیری'"
+          if text.count(bad) != 1:
+              raise SystemExit(f'Expected exactly one malformed label, found {text.count(bad)}')
+          p.write_text(text.replace(bad, good, 1))
+          Path('.github/workflows/fix-issue-151-swipe-label.yml').unlink()
+          PY
+      - name: Commit scoped fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/features/timeline/presentation/tracked_subject_home.dart .github/workflows/fix-issue-151-swipe-label.yml
+          git commit -m "fix(home): correct Persian FollowUp swipe label"
+          git push origin HEAD:feat/issue-151-home-bismillah-swipe-main
