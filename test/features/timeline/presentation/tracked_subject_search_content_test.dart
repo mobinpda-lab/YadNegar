@@ -24,9 +24,7 @@ class _MemoryTimelineRepository implements TimelineRepository {
   @override
   Future<TimelineItem?> findById(String id) async {
     for (final item in items) {
-      if (item.id == id) {
-        return item;
-      }
+      if (item.id == id) return item;
     }
     return null;
   }
@@ -121,7 +119,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final search = find.byKey(const Key('tracked-subject-search'));
-      final scrollable = find.byKey(const Key('tracked-subject-home-scroll'));
+      final scrollable = find.descendant(
+        of: find.byKey(const Key('tracked-subject-home-scroll')),
+        matching: find.byType(Scrollable),
+      );
       expect(find.text('۴ مورد'), findsOneWidget);
 
       Future<void> expectVisibleResult(String query, Key key) async {
