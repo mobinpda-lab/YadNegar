@@ -127,6 +127,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
   Widget build(BuildContext context) {
     final latest = _followUps.isEmpty ? null : _followUps.first;
     final hasPdfActions = TrackedSubjectPdfScope.maybeOf(context) != null;
+    final description = _subject.description;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -167,6 +168,19 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                     Text(
                       _subject.text,
                       style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'شرح کار',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description == null || description.isEmpty
+                          ? 'شرحی برای این کار ثبت نشده است.'
+                          : description,
+                      key: const Key('tracked-subject-description'),
+                      softWrap: true,
                     ),
                     const SizedBox(height: 14),
                     const Text(
