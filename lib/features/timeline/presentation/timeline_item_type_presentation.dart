@@ -31,17 +31,21 @@ class TimelineItemTypeOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          timelineItemTypeIcon(type),
-          size: 20,
-          key: Key('timeline-type-option-${type.name}-icon'),
-        ),
-        const SizedBox(width: 8),
-        Text(timelineItemTypeLabel(type)),
-      ],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            timelineItemTypeIcon(type),
+            size: 20,
+            key: Key('timeline-type-option-${type.name}-icon'),
+          ),
+          const SizedBox(width: 8),
+          Text(timelineItemTypeLabel(type)),
+        ],
+      ),
     );
   }
 }
