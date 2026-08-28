@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:yadnegar/core/presentation/persian_datetime_formatter.dart';
+import 'package:yadnegar/core/presentation/persian_duration_formatter.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
+import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
@@ -9,6 +11,8 @@ import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.da
 import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_detail.dart';
 
+typedef TrackedSubjectHomeClock = DateTime Function();
+
 class TrackedSubjectHome extends StatefulWidget {
   const TrackedSubjectHome({
     super.key,
@@ -16,16 +20,22 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.loadSubjects,
     required this.loadFollowUps,
     required this.addFollowUp,
+    required this.editTimelineItem,
     this.legacyTimeline,
+    this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
+    this.durationFormatter = const PersianDurationFormatter(),
   });
 
   final QuickCapture quickCapture;
   final LoadTrackedSubjects loadSubjects;
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
+  final EditTimelineItem editTimelineItem;
   final Widget? legacyTimeline;
+  final TrackedSubjectHomeClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
+  final PersianDurationFormatter durationFormatter;
 
   @override
   State<TrackedSubjectHome> createState() => _TrackedSubjectHomeState();
@@ -91,7 +101,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('موضوع جدید'),
+          title: const Text('کار جدید'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -99,8 +109,8 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                 key: const Key('tracked-subject-input'),
                 autofocus: true,
                 decoration: const InputDecoration(
-                  labelText: 'عنوان موضوع',
-                  hintText: 'مثلاً سرویس خودرو، تماس با مشتری، ورزش…',
+                  labelText: 'نام کار',
+                  hintText: 'مثلاً تماس با علی',
                   border: OutlineInputBorder(),
                 ),
                 onChanged: (value) => draft = value,
@@ -110,7 +120,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                 key: const Key('tracked-subject-type'),
                 initialValue: selectedType,
                 decoration: const InputDecoration(
-                  labelText: 'نوع',
+                  labelText: 'نوع کار',
                   border: OutlineInputBorder(),
                 ),
                 items: TimelineItemType.values
@@ -122,10 +132,9 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                     )
                     .toList(growable: false),
                 onChanged: (type) {
-                  if (type == null) {
-                    return;
+                  if (type != null) {
+                    setDialogState(() => selectedType = type);
                   }
-                  setDialogState(() => selectedType = type);
                 },
               ),
             ],
@@ -133,7 +142,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('انصراف'),
+              child: const Text('لغو'),
             ),
             FilledButton(
               key: const Key('tracked-subject-save'),
@@ -144,7 +153,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                 }
                 Navigator.of(dialogContext).pop((normalized, selectedType));
               },
-              child: const Text('ایجاد موضوع'),
+              child: const Text('ذخیره'),
             ),
           ],
         ),
@@ -163,7 +172,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ایجاد موضوع انجام نشد.')),
+        const SnackBar(content: Text('ایجاد کار انجام نشد.')),
       );
     }
   }
@@ -175,7 +184,10 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           subject: subject,
           loadFollowUps: widget.loadFollowUps,
           addFollowUp: widget.addFollowUp,
+          editTimelineItem: widget.editTimelineItem,
+          clock: widget.clock,
           dateTimeFormatter: widget.dateTimeFormatter,
+          durationFormatter: widget.durationFormatter,
         ),
       ),
     );
@@ -211,7 +223,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           children: [
             Text('یادنگار'),
             Text(
-              'موضوعات و پیگیری‌ها',
+              'مدیریت کارها و پیگیری‌ها',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
             ),
           ],
@@ -227,7 +239,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           if (widget.legacyTimeline != null)
             IconButton(
               key: const Key('tracked-subject-legacy-tools'),
-              tooltip: 'ابزارها و نمای قبلی',
+              tooltip: 'ابزارها',
               onPressed: () => Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(builder: (_) => widget.legacyTimeline!),
               ),
@@ -240,7 +252,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
         key: const Key('tracked-subject-add'),
         onPressed: _createSubject,
         icon: const Icon(Icons.add),
-        label: const Text('موضوع جدید'),
+        label: const Text('افزودن کار جدید'),
       ),
     );
   }
@@ -257,7 +269,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(
-            'یک موضوع بسازید؛ بعد هر بار که اتفاق تازه‌ای افتاد، داخل همان موضوع یک پیگیری ثبت کنید.',
+            'یک کار بسازید؛ بعد هر بار اتفاق تازه‌ای افتاد، داخل همان کار یک پیگیری ثبت کنید.',
             key: Key('tracked-subject-empty'),
             textAlign: TextAlign.center,
           ),
@@ -275,7 +287,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
         itemBuilder: (context, index) {
           final subject = _subjects[index];
           final followUps = _followUps[subject.id] ?? const <TimelineItem>[];
-          final lastAt = followUps.isEmpty ? subject.timelineAt : followUps.first.timelineAt;
+          final latest = followUps.isEmpty ? null : followUps.first;
           return Card(
             key: Key('tracked-subject-${subject.id}'),
             child: ListTile(
@@ -284,14 +296,30 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${followUps.length} پیگیری'),
                   Text(
-                    'آخرین ثبت: ${widget.dateTimeFormatter.formatDateTime(lastAt)}',
-                    key: Key('tracked-subject-last-${subject.id}'),
+                    '${widget.dateTimeFormatter.persianDigits(followUps.length.toString())} پیگیری',
                   ),
+                  if (latest == null)
+                    const Text(
+                      'هنوز پیگیری ثبت نشده است',
+                      key: Key('tracked-subject-no-follow-up'),
+                    )
+                  else ...[
+                    Text(
+                      'آخرین پیگیری: ${widget.dateTimeFormatter.formatDateTime(latest.timelineAt)}',
+                      key: Key('tracked-subject-last-${subject.id}'),
+                    ),
+                    Text(
+                      widget.durationFormatter.relativeAgo(
+                        now: widget.clock(),
+                        value: latest.timelineAt,
+                      ),
+                      key: Key('tracked-subject-relative-${subject.id}'),
+                    ),
+                  ],
                 ],
               ),
-              isThreeLine: true,
+              isThreeLine: latest != null,
               trailing: const Icon(Icons.chevron_left),
               onTap: () => _openSubject(subject),
             ),
