@@ -10,7 +10,7 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Verified Product Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current merged product main SHA: `64460c5cb0cf1e70f6361a32acf9e77a6bfdfdfe`
+Current verified product main SHA: `64460c5cb0cf1e70f6361a32acf9e77a6bfdfdfe`
 
 Canonical model:
 `Tracked Task Root → Persistent FollowUps → Jalali/Persian History → Search → PDF/Share/Print`
@@ -60,7 +60,7 @@ Safety:
 
 ## Recent Completed Slices
 ### #153 — Date-based Reports
-Completed and merged before the current Home work.
+Completed and merged.
 - one Jalali day or inclusive Jalali range
 - root appears once
 - only matching FollowUps are included
@@ -69,16 +69,18 @@ Completed and merged before the current Home work.
 
 ### #149 / PR #157 — Home Single Snapshot
 Completed.
-- Home now calls the repository once per reload and groups roots/children in memory
+- Home calls the repository once per reload and groups roots/children in memory
 - Projects, description, search and FollowUp ordering preserved
 - no cache, store, schema or dependency added
 
 Merged main after PR #157:
 `2f360ca952ffdd706461c6fb428d67853f8e27b9`
 
-Post-main CI and Android full chain were Green; #149 is closed Completed.
+Post-main CI and Android full chain were Green; #149 is Closed / Completed.
 
-### #151 / PR #159 — Final Home/FollowUp UX
+### #151 / PR #159 — Home/FollowUp UX
+Completed.
+
 Final PR head:
 `0e27cfd8083ca5428b1fb7a321982cc6d4b7f936`
 
@@ -98,17 +100,23 @@ Exact-head evidence:
 Merged with exact expected-head lock to:
 `64460c5cb0cf1e70f6361a32acf9e77a6bfdfdfe`
 
-Post-main:
+Post-main exact SHA:
 - CI #397 `33209875036`: success
-- Android #170 `33209875095`: **currently running** at this documentation-preparation commit
+- Android #170 `33209875095`: full chain success
+  - debug APK
+  - release candidate
+  - emulator smoke/storage recovery
+  - release readiness
+  - deterministic release draft
+  - release approval/rollback
 
-Issue #151 must remain open until Android #170 full post-main chain is Green. This docs branch must not merge before that proof is updated to success.
+Issue #151 is Closed / Completed.
 
 ## Release Baseline
 Verified release automation:
 `Fast CI → Android Build → Candidate → Smoke/Recovery → Readiness → Release Draft → Approval/Rollback`
 
-Release status remains:
+Release status:
 `candidate verified / governance verified / production signing blocked / not Play-Store-ready`
 
 No production keystore/secret, real release tag, GitHub Release or Play Store publish is created without an explicit Owner/Security decision.
@@ -134,11 +142,9 @@ Fresh audit decisions:
 - reuse `TimelineItem`, `QuickCapture`, `EditTimelineItem`, JSON repository, Jalali grid, 24h dial and Home single-snapshot projection
 - no second store/calendar/search/reminder foundation
 
-Prepared decomposition:
+Implementation decomposition:
 1. Slice A — schema v7 + domain/application + derived buckets + tests
 2. Slice B — create/edit/detail/Home Today Center UI
-
-No product write for #160 begins until #151 post-main proof is Green.
 
 ## Documentation Lane
 Active branch:
@@ -150,7 +156,7 @@ Final intended scope is exactly four canonical documents:
 - `docs/YADNEGAR_OPERATION_PLAN.md`
 - `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
 
-Before merge, replace the temporary Android #170 running status with exact Green evidence, fresh-compare four-doc scope, run exact-head CI, merge with expected-head lock, then take post-main CI proof.
+Before merge: exact-head Fast CI + fresh four-doc scope + live mergeability + expected-head lock + post-main Fast CI.
 
 ## Maximum Parallel Rules
 - independent Product / Release / Automation / Docs lanes move concurrently
@@ -163,8 +169,7 @@ Before merge, replace the temporary Android #170 running status with exact Green
 - documentation records only verified reality
 
 ## Current Queue
-- #151: awaiting only post-main Android #170 proof before final closure
-- #160: next product lane, design ready
+- #160: active next product lane
 - #19: independent Platform-limited governance gap
 
 ## Trigger
