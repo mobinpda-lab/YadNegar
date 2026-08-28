@@ -1,0 +1,60 @@
+name: Apply tracked subject home snapshot patch
+
+on:
+  push:
+    branches:
+      - perf/tracked-subject-home-snapshot
+    paths:
+      - '.github/patch-trigger-tracked-subject-home-snapshot'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: perf/tracked-subject-home-snapshot
+          fetch-depth: 0
+
+      - name: Patch Home to reuse one repository snapshot
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/features/timeline/presentation/tracked_subject_home.dart')
+          text = path.read_text()
+          old = """      final subjects = await widget.loadSubjects.load();
+      final followUps = <String, List<TimelineItem>>{};
+      for (final subject in subjects) {
+        followUps[subject.id] = await widget.loadFollowUps.load(subject.id);
+      }
+
+      final sorted = List<TimelineItem>.of(subjects)
+"""
+          new = """      final homeData = await widget.loadSubjects.loadHomeData();
+      final subjects = homeData.subjects;
+      final followUps = homeData.followUpsBySubject;
+
+      final sorted = List<TimelineItem>.of(subjects)
+"""
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one Home reload block, found {text.count(old)}')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+          rm .github/workflows/apply-tracked-subject-home-snapshot.yml
+          rm .github/patch-trigger-tracked-subject-home-snapshot
+
+      - name: Commit final patch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'perf(home): reuse one repository snapshot'
+          git push origin HEAD:perf/tracked-subject-home-snapshot
