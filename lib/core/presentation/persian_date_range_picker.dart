@@ -81,17 +81,20 @@ class _PersianDateRangeDialogState extends State<_PersianDateRangeDialog> {
       ),
       content: SizedBox(
         width: 360,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildMonthHeader(),
-            const SizedBox(height: 12),
-            _buildWeekHeader(),
-            const SizedBox(height: 6),
-            _buildMonthGrid(),
-            const SizedBox(height: 12),
-            _buildSelectionSummary(),
-          ],
+        child: SingleChildScrollView(
+          key: const Key('persian-date-range-scroll'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildMonthHeader(),
+              const SizedBox(height: 12),
+              _buildWeekHeader(),
+              const SizedBox(height: 6),
+              _buildMonthGrid(),
+              const SizedBox(height: 12),
+              _buildSelectionSummary(),
+            ],
+          ),
         ),
       ),
       actions: [
