@@ -7,6 +7,9 @@ import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
+import 'package:yadnegar/features/timeline/presentation/project_management_sheet.dart';
+import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_detail.dart';
@@ -52,6 +55,8 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
 
   List<TimelineItem> _subjects = const <TimelineItem>[];
   Map<String, List<TimelineItem>> _followUps = const <String, List<TimelineItem>>{};
+  List<YadNegarProject> _projects = const <YadNegarProject>[];
+  bool _projectsLoaded = false;
   bool _isLoading = true;
   String? _errorMessage;
   String _query = '';
@@ -60,6 +65,15 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
   void initState() {
     super.initState();
     _reload();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_projectsLoaded && ProjectScope.maybeOf(context) != null) {
+      _projectsLoaded = true;
+      _reloadProjects();
+    }
   }
 
   @override
@@ -79,6 +93,10 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
         return true;
       }
       if (subject.description?.toLowerCase().contains(query) ?? false) {
+        return true;
+      }
+      final project = _projectFor(subject.projectId);
+      if (project?.title.toLowerCase().contains(query) ?? false) {
         return true;
       }
       final followUps = _followUps[subject.id] ?? const <TimelineItem>[];
@@ -106,6 +124,33 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           latest.month == now.month &&
           latest.day == now.day;
     }).length;
+  }
+
+  YadNegarProject? _projectFor(String? projectId) {
+    if (projectId == null) {
+      return null;
+    }
+    for (final project in _projects) {
+      if (project.id == projectId) {
+        return project;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _reloadProjects() async {
+    final scope = ProjectScope.maybeOf(context);
+    if (scope == null) {
+      return;
+    }
+    try {
+      final projects = await scope.manageProjects.list();
+      if (mounted) {
+        setState(() => _projects = projects);
+      }
+    } catch (_) {
+      // Project list failure must not block the task timeline.
+    }
   }
 
   Future<void> _reload() async {
@@ -153,6 +198,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     var draft = '';
     var descriptionDraft = '';
     var selectedType = TimelineItemType.activity;
+    String? selectedProjectId;
     final result = await showDialog<_TrackedSubjectDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -198,6 +244,50 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                   ),
                   onChanged: (value) => descriptionDraft = value,
                 ),
+                if (_projects.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String?>(
+                    key: const Key('tracked-subject-project'),
+                    initialValue: selectedProjectId,
+                    decoration: InputDecoration(
+                      labelText: 'پروژه',
+                      helperText: 'پروژه با تگ متفاوت است',
+                      filled: true,
+                      fillColor: _surfaceTint,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    items: <DropdownMenuItem<String?>>[
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('بدون پروژه'),
+                      ),
+                      ..._projects.map(
+                        (project) => DropdownMenuItem<String?>(
+                          value: project.id,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Color(project.colorValue),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(project.title),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) =>
+                        setDialogState(() => selectedProjectId = value),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 DropdownButtonFormField<TimelineItemType>(
                   key: const Key('tracked-subject-type'),
@@ -248,6 +338,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                     description: normalizedDescription.isEmpty
                         ? null
                         : normalizedDescription,
+                    projectId: selectedProjectId,
                     type: selectedType,
                   ),
                 );
@@ -267,6 +358,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       await widget.quickCapture.capture(
         text: result.text,
         description: result.description,
+        projectId: result.projectId,
         type: result.type,
       );
       await _reload();
@@ -296,6 +388,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     );
     if (mounted) {
       await _reload();
+      await _reloadProjects();
     }
   }
 
@@ -313,6 +406,20 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('پشتیبان‌گیری انجام نشد.')),
       );
+    }
+  }
+
+  Future<void> _openProjects() async {
+    final scope = ProjectScope.maybeOf(context);
+    if (scope == null) {
+      return;
+    }
+    await ProjectManagementSheet.open(
+      context,
+      manageProjects: scope.manageProjects,
+    );
+    if (mounted) {
+      await _reloadProjects();
     }
   }
 
@@ -348,6 +455,17 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (ProjectScope.maybeOf(this.context) != null)
+                ListTile(
+                  key: const Key('tracked-subject-projects-menu'),
+                  leading: const Icon(Icons.folder_copy_outlined, color: _primary),
+                  title: const Text('پروژه‌ها'),
+                  subtitle: const Text('ساخت، ویرایش و مدیریت پروژه‌های رنگی'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _openProjects();
+                  },
+                ),
               if (TimelineBackupScope.maybeOf(this.context) != null)
                 ListTile(
                   leading: const Icon(Icons.backup_outlined, color: _primary),
@@ -446,7 +564,10 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     final visibleSubjects = _visibleSubjects;
     return RefreshIndicator(
       color: _primary,
-      onRefresh: _reload,
+      onRefresh: () async {
+        await _reload();
+        await _reloadProjects();
+      },
       child: ListView(
         key: const Key('tracked-subject-home-scroll'),
         controller: _scrollController,
@@ -458,6 +579,10 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           _buildSearch(),
           const SizedBox(height: 18),
           _buildStats(),
+          if (_projects.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            _buildProjectsStrip(),
+          ],
           const SizedBox(height: 24),
           Row(
             children: [
@@ -624,6 +749,90 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     );
   }
 
+  Widget _buildProjectsStrip() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'پروژه‌ها',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+            ),
+            TextButton.icon(
+              key: const Key('projects-manage-inline'),
+              onPressed: _openProjects,
+              icon: const Icon(Icons.settings_outlined, size: 18),
+              label: const Text('مدیریت'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          key: const Key('projects-colored-boxes'),
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (var index = 0; index < _projects.length; index++) ...[
+                _buildProjectBox(_projects[index]),
+                if (index != _projects.length - 1) const SizedBox(width: 10),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProjectBox(YadNegarProject project) {
+    final color = Color(project.colorValue);
+    final taskCount = _subjects.where((subject) => subject.projectId == project.id).length;
+    return InkWell(
+      key: Key('home-project-${project.id}'),
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        _searchController.text = project.title;
+        setState(() => _query = project.title);
+      },
+      child: Container(
+        width: 154,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.13),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 34,
+              height: 8,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              project.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              '${widget.dateTimeFormatter.persianDigits(taskCount.toString())} کار',
+              style: const TextStyle(color: _muted, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSubjectCard(TimelineItem subject) {
     final followUps = _followUps[subject.id] ?? const <TimelineItem>[];
     final latest = followUps.isEmpty ? null : followUps.first;
@@ -631,6 +840,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     final statusColor = hasFollowUp ? const Color(0xFF3176D5) : const Color(0xFFE69A17);
     final statusTint = hasFollowUp ? const Color(0xFFEAF2FF) : const Color(0xFFFFF4DF);
     final statusText = hasFollowUp ? 'در حال پیگیری' : 'نیازمند پیگیری';
+    final project = _projectFor(subject.projectId);
 
     return Material(
       color: Colors.white,
@@ -656,10 +866,16 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: _surfaceTint,
+                  color: project == null
+                      ? _surfaceTint
+                      : Color(project.colorValue).withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(timelineItemTypeIcon(subject.type), color: _primary, size: 25),
+                child: Icon(
+                  timelineItemTypeIcon(subject.type),
+                  color: project == null ? _primary : Color(project.colorValue),
+                  size: 25,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -676,6 +892,31 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
+                    if (project != null) ...[
+                      const SizedBox(height: 5),
+                      Container(
+                        key: Key('tracked-subject-project-${subject.id}'),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Color(project.colorValue).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border(
+                            right: BorderSide(
+                              color: Color(project.colorValue),
+                              width: 4,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'پروژه: ${project.title}',
+                          style: TextStyle(
+                            color: Color(project.colorValue),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 5),
                     Text(
                       '${widget.dateTimeFormatter.persianDigits(followUps.length.toString())} پیگیری',
@@ -804,10 +1045,12 @@ class _TrackedSubjectDraft {
     required this.text,
     required this.type,
     this.description,
+    this.projectId,
   });
 
   final String text;
   final String? description;
+  final String? projectId;
   final TimelineItemType type;
 }
 
