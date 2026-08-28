@@ -96,11 +96,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final rootCard = find.byKey(const Key('tracked-subject-car'));
-    final homeScrollable = find.descendant(
-      of: find.byKey(const Key('tracked-subject-home-scroll')),
-      matching: find.byType(Scrollable),
+    await tester.drag(
+      find.byKey(const Key('tracked-subject-home-scroll')),
+      const Offset(0, -520),
     );
-    await tester.scrollUntilVisible(rootCard, 250, scrollable: homeScrollable);
+    await tester.pumpAndSettle();
     expect(rootCard, findsOneWidget);
     expect(find.text('۱ پیگیری'), findsOneWidget);
     expect(find.textContaining('۱۴۰۵/۰۶/۰۶'), findsWidgets);
