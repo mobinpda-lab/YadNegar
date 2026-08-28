@@ -19,45 +19,50 @@ class TrackedSubjectPdfActions {
     final exportScope = await showModalBottomSheet<_PdfExportScope>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ListTile(
-              title: Text(
-                'گزارش PDF',
-                style: TextStyle(fontWeight: FontWeight.w700),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(
+                title: Text(
+                  'گزارش PDF',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text('محدوده گزارش را انتخاب کنید'),
               ),
-              subtitle: Text('محدوده گزارش را انتخاب کنید'),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-current'),
-              leading: const Icon(Icons.description_outlined),
-              title: const Text('همین کار'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_PdfExportScope.current),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-all'),
-              leading: const Icon(Icons.library_books_outlined),
-              title: const Text('همه کارها'),
-              onTap: () => Navigator.of(sheetContext).pop(_PdfExportScope.all),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-selected'),
-              leading: const Icon(Icons.checklist_rtl_outlined),
-              title: const Text('انتخاب چند کار'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_PdfExportScope.selected),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-date-range'),
-              leading: const Icon(Icons.date_range_outlined),
-              title: const Text('گزارش بر اساس تاریخ'),
-              subtitle: const Text('یک روز یا بازه زمانی شمسی'),
-              onTap: () => Navigator.of(sheetContext).pop(_PdfExportScope.date),
-            ),
-          ],
+              ListTile(
+                key: const Key('tracked-subject-pdf-current'),
+                leading: const Icon(Icons.description_outlined),
+                title: const Text('همین کار'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PdfExportScope.current),
+              ),
+              ListTile(
+                key: const Key('tracked-subject-pdf-all'),
+                leading: const Icon(Icons.library_books_outlined),
+                title: const Text('همه کارها'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PdfExportScope.all),
+              ),
+              ListTile(
+                key: const Key('tracked-subject-pdf-selected'),
+                leading: const Icon(Icons.checklist_rtl_outlined),
+                title: const Text('انتخاب چند کار'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PdfExportScope.selected),
+              ),
+              ListTile(
+                key: const Key('tracked-subject-pdf-date-range'),
+                leading: const Icon(Icons.date_range_outlined),
+                title: const Text('گزارش بر اساس تاریخ'),
+                subtitle: const Text('یک روز یا بازه زمانی شمسی'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PdfExportScope.date),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -99,31 +104,33 @@ class TrackedSubjectPdfActions {
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ListTile(
-              title: Text(
-                'گزارش تاریخ‌محور',
-                style: TextStyle(fontWeight: FontWeight.w700),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(
+                title: Text(
+                  'گزارش تاریخ‌محور',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text('نوع بازه را انتخاب کنید'),
               ),
-              subtitle: Text('نوع بازه را انتخاب کنید'),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-one-day'),
-              leading: const Icon(Icons.today_outlined),
-              title: const Text('یک روز'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_DateReportMode.oneDay),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-date-period'),
-              leading: const Icon(Icons.calendar_view_month_outlined),
-              title: const Text('بازه زمانی'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_DateReportMode.range),
-            ),
-          ],
+              ListTile(
+                key: const Key('tracked-subject-pdf-one-day'),
+                leading: const Icon(Icons.today_outlined),
+                title: const Text('یک روز'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_DateReportMode.oneDay),
+              ),
+              ListTile(
+                key: const Key('tracked-subject-pdf-date-period'),
+                leading: const Icon(Icons.calendar_view_month_outlined),
+                title: const Text('بازه زمانی'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_DateReportMode.range),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -272,30 +279,32 @@ class TrackedSubjectPdfActions {
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const ListTile(
-              title: Text(
-                'خروجی گزارش',
-                style: TextStyle(fontWeight: FontWeight.w700),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(
+                title: Text(
+                  'خروجی گزارش',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-share'),
-              leading: const Icon(Icons.picture_as_pdf_outlined),
-              title: const Text('PDF / اشتراک'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_PdfOutputAction.share),
-            ),
-            ListTile(
-              key: const Key('tracked-subject-pdf-print'),
-              leading: const Icon(Icons.print_outlined),
-              title: const Text('چاپ گزارش'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_PdfOutputAction.print),
-            ),
-          ],
+              ListTile(
+                key: const Key('tracked-subject-pdf-share'),
+                leading: const Icon(Icons.picture_as_pdf_outlined),
+                title: const Text('PDF / اشتراک'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PdfOutputAction.share),
+              ),
+              ListTile(
+                key: const Key('tracked-subject-pdf-print'),
+                leading: const Icon(Icons.print_outlined),
+                title: const Text('چاپ گزارش'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_PdfOutputAction.print),
+              ),
+            ],
+          ),
         ),
       ),
     );
