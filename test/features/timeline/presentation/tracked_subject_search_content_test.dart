@@ -93,7 +93,7 @@ void main() {
         followUp,
         unrelatedRoot,
       ]);
-      final clock = () => DateTime(2026, 8, 28, 14);
+      DateTime clock() => DateTime(2026, 8, 28, 14);
 
       await tester.pumpWidget(
         MaterialApp(
