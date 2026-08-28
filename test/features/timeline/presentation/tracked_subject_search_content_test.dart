@@ -121,35 +121,32 @@ void main() {
       await tester.pumpAndSettle();
 
       final search = find.byKey(const Key('tracked-subject-search'));
-      expect(find.byKey(const Key('tracked-subject-title-root')), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-description-root')), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsOneWidget);
+      expect(find.text('۴ مورد'), findsOneWidget);
 
       await tester.enterText(search, 'علی');
       await tester.pump();
+      expect(find.text('۱ مورد'), findsOneWidget);
       expect(find.byKey(const Key('tracked-subject-title-root')), findsOneWidget);
       expect(find.byKey(const Key('tracked-subject-description-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsNothing);
 
       await tester.enterText(search, 'نسخه نهایی');
       await tester.pump();
+      expect(find.text('۱ مورد'), findsOneWidget);
       expect(find.byKey(const Key('tracked-subject-description-root')), findsOneWidget);
       expect(find.byKey(const Key('tracked-subject-title-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsNothing);
 
       await tester.enterText(search, 'حسابدار');
       await tester.pump();
+      expect(find.text('۱ مورد'), findsOneWidget);
       expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsOneWidget);
       expect(find.byKey(const Key('tracked-subject-description-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsNothing);
 
       await tester.tap(find.byKey(const Key('tracked-subject-search-clear')));
       await tester.pump();
-      expect(find.byKey(const Key('tracked-subject-title-root')), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-description-root')), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsOneWidget);
+      expect(find.text('۴ مورد'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
