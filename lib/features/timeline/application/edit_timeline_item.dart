@@ -29,19 +29,22 @@ class EditTimelineItem {
       throw ArgumentError.value(id, 'id', 'Timeline item id cannot be empty.');
     }
 
-    final normalizedText = text.trim();
-    if (normalizedText.isEmpty) {
-      throw ArgumentError.value(text, 'text', 'Timeline item text cannot be empty.');
-    }
-
     final existing = await repository.findById(normalizedId);
     if (existing == null) {
       throw StateError('Timeline item "$normalizedId" was not found.');
     }
 
+    final normalizedText = text.trim();
+    final targetText = existing.isFollowUp && normalizedText.isEmpty
+        ? 'پیگیری'
+        : normalizedText;
+    if (targetText.isEmpty) {
+      throw ArgumentError.value(text, 'text', 'Timeline item text cannot be empty.');
+    }
+
     final targetType = type ?? existing.type;
     final changedToTypeWithoutOccurredAt =
-        type != null && !_supportsOccurredAt(targetType);
+        type != null && !_supportsOccurredAt(targetType) && !existing.isFollowUp;
     final targetReminderAt = replaceReminderAt ? reminderAt : existing.reminderAt;
     final targetReminderRecurrence = targetReminderAt == null
         ? TimelineReminderRecurrence.none
@@ -51,8 +54,9 @@ class EditTimelineItem {
 
     final updated = TimelineItem(
       id: existing.id,
+      parentId: existing.parentId,
       type: targetType,
-      text: normalizedText,
+      text: targetText,
       createdAt: existing.createdAt,
       occurredAt: changedToTypeWithoutOccurredAt
           ? null
