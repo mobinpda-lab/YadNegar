@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:yadnegar/core/presentation/persian_date_picker.dart';
+import 'package:yadnegar/features/timeline/application/build_tracked_subject_export.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_pdf_scope.dart';
 
@@ -32,7 +34,8 @@ class TrackedSubjectPdfActions {
               key: const Key('tracked-subject-pdf-current'),
               leading: const Icon(Icons.description_outlined),
               title: const Text('همین کار'),
-              onTap: () => Navigator.of(sheetContext).pop(_PdfExportScope.current),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_PdfExportScope.current),
             ),
             ListTile(
               key: const Key('tracked-subject-pdf-all'),
@@ -44,7 +47,15 @@ class TrackedSubjectPdfActions {
               key: const Key('tracked-subject-pdf-selected'),
               leading: const Icon(Icons.checklist_rtl_outlined),
               title: const Text('انتخاب چند کار'),
-              onTap: () => Navigator.of(sheetContext).pop(_PdfExportScope.selected),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_PdfExportScope.selected),
+            ),
+            ListTile(
+              key: const Key('tracked-subject-pdf-date-range'),
+              leading: const Icon(Icons.date_range_outlined),
+              title: const Text('گزارش بر اساس تاریخ'),
+              subtitle: const Text('یک روز یا بازه زمانی شمسی'),
+              onTap: () => Navigator.of(sheetContext).pop(_PdfExportScope.date),
             ),
           ],
         ),
@@ -72,9 +83,111 @@ class TrackedSubjectPdfActions {
           return;
         }
         break;
+      case _PdfExportScope.date:
+        subjectIds = await _selectDateRange(context);
+        if (subjectIds == null || !context.mounted) {
+          return;
+        }
+        break;
     }
 
     await _chooseAction(context, scope: scope, subjectIds: subjectIds);
+  }
+
+  static Future<Set<String>?> _selectDateRange(BuildContext context) async {
+    final mode = await showModalBottomSheet<_DateReportMode>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(
+              title: Text(
+                'گزارش تاریخ‌محور',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: Text('نوع بازه را انتخاب کنید'),
+            ),
+            ListTile(
+              key: const Key('tracked-subject-pdf-one-day'),
+              leading: const Icon(Icons.today_outlined),
+              title: const Text('یک روز'),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_DateReportMode.oneDay),
+            ),
+            ListTile(
+              key: const Key('tracked-subject-pdf-date-period'),
+              leading: const Icon(Icons.calendar_view_month_outlined),
+              title: const Text('بازه زمانی'),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_DateReportMode.range),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (mode == null || !context.mounted) {
+      return null;
+    }
+
+    final first = await showYadNegarPersianDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+    );
+    if (first == null || !context.mounted) {
+      return null;
+    }
+
+    var start = DateTime(first.year, first.month, first.day);
+    var end = DateTime(
+      first.year,
+      first.month,
+      first.day,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    if (mode == _DateReportMode.range) {
+      final second = await showYadNegarPersianDatePicker(
+        context: context,
+        initialDate: first,
+      );
+      if (second == null || !context.mounted) {
+        return null;
+      }
+      final secondDay = DateTime(second.year, second.month, second.day);
+      if (secondDay.isBefore(start)) {
+        final originalStart = start;
+        start = secondDay;
+        end = DateTime(
+          originalStart.year,
+          originalStart.month,
+          originalStart.day,
+          23,
+          59,
+          59,
+          999,
+        );
+      } else {
+        end = DateTime(
+          secondDay.year,
+          secondDay.month,
+          secondDay.day,
+          23,
+          59,
+          59,
+          999,
+        );
+      }
+    }
+
+    return TrackedSubjectDateRangeSelection(
+      startInclusive: start,
+      endInclusive: end,
+    );
   }
 
   static Future<Set<String>?> _selectSubjects(
@@ -140,7 +253,8 @@ class TrackedSubjectPdfActions {
               key: const Key('tracked-subject-pdf-selection-confirm'),
               onPressed: selected.isEmpty
                   ? null
-                  : () => Navigator.of(dialogContext).pop(Set<String>.of(selected)),
+                  : () => Navigator.of(dialogContext)
+                      .pop(Set<String>.of(selected)),
               child: const Text('ادامه'),
             ),
           ],
@@ -169,15 +283,17 @@ class TrackedSubjectPdfActions {
             ),
             ListTile(
               key: const Key('tracked-subject-pdf-share'),
-              leading: const Icon(Icons.share_outlined),
-              title: const Text('اشتراک PDF'),
-              onTap: () => Navigator.of(sheetContext).pop(_PdfOutputAction.share),
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: const Text('PDF / اشتراک'),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_PdfOutputAction.share),
             ),
             ListTile(
               key: const Key('tracked-subject-pdf-print'),
               leading: const Icon(Icons.print_outlined),
-              title: const Text('چاپ PDF'),
-              onTap: () => Navigator.of(sheetContext).pop(_PdfOutputAction.print),
+              title: const Text('چاپ گزارش'),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_PdfOutputAction.print),
             ),
           ],
         ),
@@ -206,6 +322,8 @@ class TrackedSubjectPdfActions {
   }
 }
 
-enum _PdfExportScope { current, all, selected }
+enum _PdfExportScope { current, all, selected, date }
+
+enum _DateReportMode { oneDay, range }
 
 enum _PdfOutputAction { share, print }
