@@ -121,26 +121,27 @@ void main() {
       await tester.pumpAndSettle();
 
       final search = find.byKey(const Key('tracked-subject-search'));
+      final scrollable = find.byKey(const Key('tracked-subject-home-scroll'));
       expect(find.text('۴ مورد'), findsOneWidget);
 
-      await tester.enterText(search, 'علی');
-      await tester.pump();
-      expect(find.text('۱ مورد'), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-title-root')), findsOneWidget);
+      Future<void> expectVisibleResult(String query, Key key) async {
+        await tester.enterText(search, query);
+        await tester.pump();
+        final result = find.byKey(key);
+        await tester.scrollUntilVisible(result, 250, scrollable: scrollable);
+        expect(find.text('۱ مورد'), findsOneWidget);
+        expect(result, findsOneWidget);
+      }
+
+      await expectVisibleResult('علی', const Key('tracked-subject-title-root'));
       expect(find.byKey(const Key('tracked-subject-description-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsNothing);
 
-      await tester.enterText(search, 'نسخه نهایی');
-      await tester.pump();
-      expect(find.text('۱ مورد'), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-description-root')), findsOneWidget);
+      await expectVisibleResult('نسخه نهایی', const Key('tracked-subject-description-root'));
       expect(find.byKey(const Key('tracked-subject-title-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsNothing);
 
-      await tester.enterText(search, 'حسابدار');
-      await tester.pump();
-      expect(find.text('۱ مورد'), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsOneWidget);
+      await expectVisibleResult('حسابدار', const Key('tracked-subject-follow-up-root'));
       expect(find.byKey(const Key('tracked-subject-description-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsNothing);
 
