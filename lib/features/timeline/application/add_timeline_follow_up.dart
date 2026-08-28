@@ -25,13 +25,14 @@ class AddTimelineFollowUp {
     }
 
     final normalized = text.trim();
+    final now = clock();
     final followUp = TimelineItem(
       id: idGenerator(),
       parentId: subject.id,
       type: subject.type,
       text: normalized.isEmpty ? 'پیگیری' : normalized,
-      createdAt: clock(),
-      occurredAt: occurredAt ?? clock(),
+      createdAt: now,
+      occurredAt: occurredAt ?? now,
     );
     await repository.upsert(followUp);
     return followUp;
