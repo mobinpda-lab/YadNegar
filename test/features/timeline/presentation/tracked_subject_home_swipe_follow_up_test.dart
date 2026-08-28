@@ -57,6 +57,13 @@ void main() {
     final swipe = find.byKey(const Key('tracked-subject-swipe-root-1'));
     expect(swipe, findsOneWidget);
 
+    final revealGesture = await tester.startGesture(tester.getCenter(swipe));
+    await revealGesture.moveBy(const Offset(-80, 0));
+    await tester.pump();
+    expect(find.text('افزودن پیگیری'), findsOneWidget);
+    await revealGesture.up();
+    await tester.pumpAndSettle();
+
     await tester.drag(swipe, const Offset(-320, 0));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('follow-up-editor-subject')), findsOneWidget);
