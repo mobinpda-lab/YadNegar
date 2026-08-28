@@ -43,10 +43,20 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'initial tracked-task Home must fit at 320px',
+    );
 
     await tester.tap(find.byKey(const Key('tracked-subject-add')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('tracked-subject-description-input')), findsOneWidget);
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'new tracked-task dialog must fit at 320px',
+    );
 
     await tester.enterText(
       find.byKey(const Key('tracked-subject-input')),
@@ -56,6 +66,13 @@ void main() {
       find.byKey(const Key('tracked-subject-description-input')),
       '  خلاصه قرارداد و اقدام بعدی  ',
     );
+    await tester.pump();
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'filled tracked-task dialog must fit at 320px',
+    );
+
     await tester.ensureVisible(find.byKey(const Key('tracked-subject-save')));
     await tester.tap(find.byKey(const Key('tracked-subject-save')));
     await tester.pumpAndSettle();
@@ -65,7 +82,11 @@ void main() {
     expect(saved!.text, 'پیگیری قرارداد');
     expect(saved.description, 'خلاصه قرارداد و اقدام بعدی');
     expect(find.text('پیگیری قرارداد'), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'saved no-follow-up task card must fit at 320px',
+    );
   });
 }
 
