@@ -60,7 +60,7 @@ void main() {
     final revealGesture = await tester.startGesture(tester.getCenter(swipe));
     await revealGesture.moveBy(const Offset(-80, 0));
     await tester.pump();
-    expect(find.text('افزودن پیگیری'), findsOneWidget);
+    expect(find.text('افزودن پیگیری', skipOffstage: false), findsOneWidget);
     await revealGesture.up();
     await tester.pumpAndSettle();
 
