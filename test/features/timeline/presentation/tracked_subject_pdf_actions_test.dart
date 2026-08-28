@@ -60,7 +60,9 @@ void main() {
 
     await tester.pumpWidget(
       _Harness(
-        sharePdf: (ids) async => sharedIds = ids,
+        sharePdf: (ids) async {
+          sharedIds = ids;
+        },
         printPdf: (_) async {},
       ),
     );
