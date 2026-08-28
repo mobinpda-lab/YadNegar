@@ -1,0 +1,137 @@
+name: Patch Issue 151 Home
+
+on:
+  push:
+    branches:
+      - feat/issue-151-home-bismillah-swipe-v6
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/issue-151-home-bismillah-swipe-v6
+          fetch-depth: 0
+      - name: Patch Bismillah and safe bidirectional FollowUp swipe
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/timeline/presentation/tracked_subject_home.dart')
+          text = path.read_text()
+
+          import_anchor = "import 'package:yadnegar/features/timeline/presentation/project_scope.dart';\n"
+          follow_import = "import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';\n"
+          if follow_import not in text:
+              if text.count(import_anchor) != 1:
+                  raise SystemExit('ProjectScope import anchor mismatch')
+              text = text.replace(import_anchor, import_anchor + follow_import, 1)
+
+          method_anchor = "  Future<void> _openSubject(TimelineItem subject) async {\n"
+          method = """  Future<void> _addFollowUpFromHome(TimelineItem subject) async {
+            final saved = await Navigator.of(context).push<TimelineItem>(
+              MaterialPageRoute<TimelineItem>(
+                builder: (context) => FollowUpEditorScreen(
+                  subject: subject,
+                  addFollowUp: widget.addFollowUp,
+                  editTimelineItem: widget.editTimelineItem,
+                  clock: widget.clock,
+                  dateTimeFormatter: widget.dateTimeFormatter,
+                ),
+              ),
+            );
+            if (saved != null && mounted) {
+              await _reload();
+            }
+          }
+
+"""
+          if '_addFollowUpFromHome(TimelineItem subject)' not in text:
+              if text.count(method_anchor) != 1:
+                  raise SystemExit('openSubject anchor mismatch')
+              text = text.replace(method_anchor, method + method_anchor, 1)
+
+          header_anchor = """        children: [
+          _buildHeader(),
+          const SizedBox(height: 22),
+"""
+          header_replacement = """        children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Center(
+              child: Text(
+                'بسم الله الرحمن الرحیم',
+                key: Key('tracked-subject-bismillah'),
+                style: TextStyle(
+                  color: Color(0xFF77788A),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          _buildHeader(),
+          const SizedBox(height: 22),
+"""
+          if "Key('tracked-subject-bismillah')" not in text:
+              if text.count(header_anchor) != 1:
+                  raise SystemExit('Home header anchor mismatch')
+              text = text.replace(header_anchor, header_replacement, 1)
+
+          card_anchor = "  Widget _buildSubjectCard(TimelineItem subject) {\n"
+          wrapper = """  Widget _buildSubjectCard(TimelineItem subject) {
+    return Dismissible(
+      key: Key('tracked-subject-swipe-${subject.id}'),
+      direction: DismissDirection.horizontal,
+      confirmDismiss: (_) async {
+        await _addFollowUpFromHome(subject);
+        return false;
+      },
+      background: _buildFollowUpSwipeBackground(Alignment.centerRight),
+      secondaryBackground: _buildFollowUpSwipeBackground(Alignment.centerLeft),
+      child: _buildSubjectCardBody(subject),
+    );
+  }
+
+  Widget _buildFollowUpSwipeBackground(Alignment alignment) {
+    return Container(
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8E4FF),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.add_comment_outlined, color: _primary),
+          SizedBox(width: 8),
+          Text(
+            'افزودن پیگیری',
+            style: TextStyle(color: _primary, fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubjectCardBody(TimelineItem subject) {
+"""
+          if '_buildSubjectCardBody(TimelineItem subject)' not in text:
+              if text.count(card_anchor) != 1:
+                  raise SystemExit('subject card anchor mismatch')
+              text = text.replace(card_anchor, wrapper, 1)
+
+          path.write_text(text)
+          Path('.github/workflows/patch-issue-151-home.yml').unlink()
+          PY
+      - name: Commit exact product patch and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/features/timeline/presentation/tracked_subject_home.dart .github/workflows/patch-issue-151-home.yml
+          git commit -m "feat(home): add Bismillah and safe FollowUp swipe"
+          git push origin HEAD:feat/issue-151-home-bismillah-swipe-v6
