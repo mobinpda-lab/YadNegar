@@ -8,6 +8,7 @@ import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_repository.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_home.dart';
+import 'package:yadnegar/main.dart';
 
 void main() {
   testWidgets('create flow persists optional description at narrow Android width', (tester) async {
@@ -20,25 +21,22 @@ void main() {
     DateTime clock() => DateTime(2026, 8, 28, 14);
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: Directionality(
-          textDirection: TextDirection.rtl,
-          child: TrackedSubjectHome(
-            quickCapture: QuickCapture(
-              repository: repository,
-              clock: clock,
-              idGenerator: () => 'new-root',
-            ),
-            loadSubjects: LoadTrackedSubjects(repository: repository),
-            loadFollowUps: LoadTimelineFollowUps(repository: repository),
-            addFollowUp: AddTimelineFollowUp(
-              repository: repository,
-              clock: clock,
-              idGenerator: () => 'new-follow-up',
-            ),
-            editTimelineItem: EditTimelineItem(repository: repository),
+      YadNegarApp(
+        home: TrackedSubjectHome(
+          quickCapture: QuickCapture(
+            repository: repository,
             clock: clock,
+            idGenerator: () => 'new-root',
           ),
+          loadSubjects: LoadTrackedSubjects(repository: repository),
+          loadFollowUps: LoadTimelineFollowUps(repository: repository),
+          addFollowUp: AddTimelineFollowUp(
+            repository: repository,
+            clock: clock,
+            idGenerator: () => 'new-follow-up',
+          ),
+          editTimelineItem: EditTimelineItem(repository: repository),
+          clock: clock,
         ),
       ),
     );
