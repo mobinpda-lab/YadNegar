@@ -108,7 +108,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
               const SizedBox(height: 12),
               DropdownButtonFormField<TimelineItemType>(
                 key: const Key('tracked-subject-type'),
-                value: selectedType,
+                initialValue: selectedType,
                 decoration: const InputDecoration(
                   labelText: 'نوع',
                   border: OutlineInputBorder(),
