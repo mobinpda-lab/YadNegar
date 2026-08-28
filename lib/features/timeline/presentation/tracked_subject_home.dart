@@ -526,7 +526,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
             key: const Key('tracked-subject-backup'),
             tooltip: 'پشتیبان‌گیری',
             onPressed: _runBackup,
-            icon: const Icon(Icons.notifications_none_rounded, color: _primary),
+            icon: const Icon(Icons.backup_outlined, color: _primary),
           ),
       ],
     );
