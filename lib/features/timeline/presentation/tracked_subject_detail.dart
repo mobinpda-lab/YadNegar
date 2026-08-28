@@ -7,6 +7,8 @@ import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_edit_screen.dart';
+import 'package:yadnegar/features/timeline/presentation/tracked_subject_pdf_actions.dart';
+import 'package:yadnegar/features/timeline/presentation/tracked_subject_pdf_scope.dart';
 
 typedef TrackedSubjectDetailClock = DateTime Function();
 
@@ -124,6 +126,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
   @override
   Widget build(BuildContext context) {
     final latest = _followUps.isEmpty ? null : _followUps.first;
+    final hasPdfActions = TrackedSubjectPdfScope.maybeOf(context) != null;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -131,6 +134,18 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
           key: const Key('tracked-subject-detail-title'),
         ),
         actions: [
+          if (hasPdfActions)
+            IconButton(
+              key: const Key('tracked-subject-pdf-open'),
+              tooltip: 'گزارش PDF',
+              onPressed: () async {
+                await TrackedSubjectPdfActions.open(
+                  context,
+                  currentSubjectId: _subject.id,
+                );
+              },
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+            ),
           TextButton(
             key: const Key('tracked-subject-edit'),
             onPressed: _editSubject,

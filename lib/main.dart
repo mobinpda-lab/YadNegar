@@ -3,13 +3,16 @@ import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
+import 'package:yadnegar/features/timeline/application/build_tracked_subject_export.dart';
 import 'package:yadnegar/features/timeline/application/delete_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
@@ -19,6 +22,7 @@ import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dar
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
+import 'package:yadnegar/features/timeline/application/tracked_subject_pdf_document.dart';
 import 'package:yadnegar/features/timeline/data/android_local_timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.dart';
 import 'package:yadnegar/features/timeline/data/json_timeline_backup_service.dart';
@@ -28,6 +32,7 @@ import 'package:yadnegar/features/timeline/presentation/timeline_persian_pickers
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restore_action.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_home.dart';
+import 'package:yadnegar/features/timeline/presentation/tracked_subject_pdf_scope.dart';
 import 'package:yadnegar/theme/app_fonts.dart';
 
 final Random _secureRandom = Random.secure();
@@ -92,6 +97,57 @@ Future<void> main() async {
     clock: DateTime.now,
     idGenerator: _generateTimelineId,
   );
+  final buildTrackedSubjectExport = BuildTrackedSubjectExport(
+    repository: repository,
+  );
+  const trackedSubjectPdfDocument = TrackedSubjectPdfDocument();
+
+  Future<Uint8List> buildTrackedSubjectPdf(Set<String>? subjectIds) async {
+    final export = await buildTrackedSubjectExport.build(subjectIds: subjectIds);
+    final regular = await rootBundle.load(
+      'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Regular.ttf',
+    );
+    final bold = await rootBundle.load(
+      'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Bold.ttf',
+    );
+    return trackedSubjectPdfDocument.build(
+      export: export,
+      regularFontBytes: regular.buffer.asUint8List(
+        regular.offsetInBytes,
+        regular.lengthInBytes,
+      ),
+      boldFontBytes: bold.buffer.asUint8List(
+        bold.offsetInBytes,
+        bold.lengthInBytes,
+      ),
+    );
+  }
+
+  Future<File> createTrackedSubjectPdfFile(Set<String>? subjectIds) async {
+    final bytes = await buildTrackedSubjectPdf(subjectIds);
+    final temporaryDirectory = await getTemporaryDirectory();
+    final timestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final file = File('${temporaryDirectory.path}/yadnegar-report-$timestamp.pdf');
+    await file.writeAsBytes(bytes, flush: true);
+    return file;
+  }
+
+  Future<void> shareTrackedSubjectPdf(Set<String>? subjectIds) async {
+    final file = await createTrackedSubjectPdfFile(subjectIds);
+    await Share.shareXFiles(
+      <XFile>[XFile(file.path, mimeType: 'application/pdf')],
+      subject: 'گزارش یادنگار',
+      text: 'گزارش کارها و پیگیری‌های یادنگار',
+    );
+  }
+
+  Future<void> printTrackedSubjectPdf(Set<String>? subjectIds) async {
+    final bytes = await buildTrackedSubjectPdf(subjectIds);
+    await Printing.layoutPdf(
+      name: 'yadnegar-report.pdf',
+      onLayout: (_) async => bytes,
+    );
+  }
 
   Future<TimelineSnapshotRestoreResult> restoreTimelineSnapshot() async {
     final result = await FilePicker.platform.pickFiles(
@@ -143,27 +199,32 @@ Future<void> main() async {
   );
 
   runApp(
-    YadNegarApp(
-      fontFamily: hasLicensedIranSansX
-          ? AppFonts.iranSansXFamily
-          : AppFonts.vazirmatnFamily,
-      home: TimelineBackupScope(
-        backupAction: () async {
-          final temporaryDirectory = await getTemporaryDirectory();
-          final snapshot = await backupService.createSnapshot(temporaryDirectory);
-          await Share.shareXFiles(
-            <XFile>[XFile(snapshot.path)],
-            subject: 'پشتیبان یادنگار',
-            text: 'فایل پشتیبان یادنگار',
-          );
-        },
-        child: TrackedSubjectHome(
-          quickCapture: quickCapture,
-          loadSubjects: loadSubjects,
-          loadFollowUps: loadFollowUps,
-          addFollowUp: addFollowUp,
-          editTimelineItem: editTimelineItem,
-          legacyTimeline: legacyTimeline,
+    TrackedSubjectPdfScope(
+      sharePdf: shareTrackedSubjectPdf,
+      printPdf: printTrackedSubjectPdf,
+      loadSubjects: loadSubjects.load,
+      child: YadNegarApp(
+        fontFamily: hasLicensedIranSansX
+            ? AppFonts.iranSansXFamily
+            : AppFonts.vazirmatnFamily,
+        home: TimelineBackupScope(
+          backupAction: () async {
+            final temporaryDirectory = await getTemporaryDirectory();
+            final snapshot = await backupService.createSnapshot(temporaryDirectory);
+            await Share.shareXFiles(
+              <XFile>[XFile(snapshot.path)],
+              subject: 'پشتیبان یادنگار',
+              text: 'فایل پشتیبان یادنگار',
+            );
+          },
+          child: TrackedSubjectHome(
+            quickCapture: quickCapture,
+            loadSubjects: loadSubjects,
+            loadFollowUps: loadFollowUps,
+            addFollowUp: addFollowUp,
+            editTimelineItem: editTimelineItem,
+            legacyTimeline: legacyTimeline,
+          ),
         ),
       ),
     ),
