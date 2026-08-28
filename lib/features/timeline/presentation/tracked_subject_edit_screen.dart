@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
+import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
 
 class TrackedSubjectEditScreen extends StatefulWidget {
   const TrackedSubjectEditScreen({
@@ -19,6 +21,7 @@ class TrackedSubjectEditScreen extends StatefulWidget {
 class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
+  late String? _projectId;
   bool _saving = false;
 
   @override
@@ -28,6 +31,7 @@ class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
     _descriptionController = TextEditingController(
       text: widget.subject.description ?? '',
     );
+    _projectId = widget.subject.projectId;
   }
 
   @override
@@ -49,6 +53,8 @@ class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
         text: title,
         replaceDescription: true,
         description: _descriptionController.text,
+        replaceProjectId: ProjectScope.maybeOf(context) != null,
+        projectId: _projectId,
       );
       if (mounted) {
         Navigator.of(context).pop(updated);
@@ -66,6 +72,7 @@ class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final projectScope = ProjectScope.maybeOf(context);
     return Scaffold(
       appBar: AppBar(title: const Text('ویرایش کار')),
       body: SafeArea(
@@ -97,6 +104,55 @@ class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
+              if (projectScope != null) ...[
+                const SizedBox(height: 16),
+                FutureBuilder<List<YadNegarProject>>(
+                  future: projectScope.manageProjects.list(),
+                  builder: (context, snapshot) {
+                    final projects = snapshot.data ?? const <YadNegarProject>[];
+                    final validProjectId = projects.any((p) => p.id == _projectId)
+                        ? _projectId
+                        : null;
+                    return DropdownButtonFormField<String?>(
+                      key: const Key('tracked-subject-edit-project'),
+                      initialValue: validProjectId,
+                      decoration: const InputDecoration(
+                        labelText: 'پروژه',
+                        helperText: 'پروژه با تگ متفاوت است',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: <DropdownMenuItem<String?>>[
+                        const DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('بدون پروژه'),
+                        ),
+                        ...projects.map(
+                          (project) => DropdownMenuItem<String?>(
+                            value: project.id,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Color(project.colorValue),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(project.title),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: snapshot.hasData
+                          ? (value) => setState(() => _projectId = value)
+                          : null,
+                    );
+                  },
+                ),
+              ],
               const Spacer(),
               FilledButton(
                 key: const Key('tracked-subject-edit-confirm'),

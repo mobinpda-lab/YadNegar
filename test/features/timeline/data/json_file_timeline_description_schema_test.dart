@@ -35,8 +35,8 @@ void main() {
     expect(items.single.text, 'کار قدیمی');
   });
 
-  test('schema 5 round-trips optional tracked-task description', () async {
-    final directory = await Directory.systemTemp.createTemp('yadnegar-description-v5-');
+  test('current schema round-trips optional tracked-task description', () async {
+    final directory = await Directory.systemTemp.createTemp('yadnegar-description-current-');
     addTearDown(() async => directory.delete(recursive: true));
     final file = File('${directory.path}/timeline.json');
     final repository = JsonFileTimelineRepository(file);
@@ -54,7 +54,8 @@ void main() {
     final raw = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
     final rawItems = raw['items'] as List<dynamic>;
     final rawItem = rawItems.single as Map<String, dynamic>;
-    expect(raw['schemaVersion'], 5);
+    expect(raw['schemaVersion'], JsonFileTimelineRepository.schemaVersion);
+    expect(raw['projects'], isA<List<dynamic>>());
     expect(rawItem['description'], 'خلاصه چندخطی قرارداد و اقدام بعدی');
 
     final reloaded = await JsonFileTimelineRepository(file).listNewestFirst();

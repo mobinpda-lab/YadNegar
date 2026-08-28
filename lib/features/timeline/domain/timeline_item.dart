@@ -19,6 +19,7 @@ class TimelineItem {
     required this.text,
     required this.createdAt,
     this.description,
+    this.projectId,
     this.parentId,
     this.occurredAt,
     this.reminderAt,
@@ -32,9 +33,14 @@ class TimelineItem {
   final String text;
   final DateTime createdAt;
 
-  /// Optional multi-line description/summary for tracked subject root items.
-  /// Follow-up records intentionally continue to use [text] only.
+  /// Optional multi-line description/summary for every tracked task root.
+  /// A tracked task may have FollowUps or no FollowUps; the description remains
+  /// a property of the task itself. Follow-up records continue to use [text].
   final String? description;
+
+  /// Optional Project membership for tracked task roots.
+  /// FollowUps do not own project membership and inherit context from parent.
+  final String? projectId;
 
   /// Null means this item is a tracked subject/root item.
   /// A non-null value identifies the tracked subject this follow-up belongs to.

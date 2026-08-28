@@ -19,6 +19,7 @@ import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_r
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
+import 'package:yadnegar/features/timeline/application/manage_projects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
@@ -26,6 +27,7 @@ import 'package:yadnegar/features/timeline/application/tracked_subject_pdf_docum
 import 'package:yadnegar/features/timeline/data/android_local_timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.dart';
 import 'package:yadnegar/features/timeline/data/json_timeline_backup_service.dart';
+import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_home.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_persian_pickers.dart';
@@ -95,6 +97,11 @@ Future<void> main() async {
   final addFollowUp = AddTimelineFollowUp(
     repository: repository,
     clock: DateTime.now,
+    idGenerator: _generateTimelineId,
+  );
+  final manageProjects = ManageProjects(
+    projectRepository: repository,
+    timelineRepository: repository,
     idGenerator: _generateTimelineId,
   );
   final buildTrackedSubjectExport = BuildTrackedSubjectExport(
@@ -178,6 +185,8 @@ Future<void> main() async {
       return TimelineSnapshotRestoreResult.unsupportedSchema;
     } on DuplicateTimelineItemIdException {
       return TimelineSnapshotRestoreResult.duplicateId;
+    } on DuplicateProjectIdException {
+      return TimelineSnapshotRestoreResult.duplicateId;
     } on FormatException {
       return TimelineSnapshotRestoreResult.invalidBackup;
     }
@@ -199,31 +208,34 @@ Future<void> main() async {
   );
 
   runApp(
-    TrackedSubjectPdfScope(
-      sharePdf: shareTrackedSubjectPdf,
-      printPdf: printTrackedSubjectPdf,
-      loadSubjects: loadSubjects.load,
-      child: YadNegarApp(
-        fontFamily: hasLicensedIranSansX
-            ? AppFonts.iranSansXFamily
-            : AppFonts.vazirmatnFamily,
-        home: TimelineBackupScope(
-          backupAction: () async {
-            final temporaryDirectory = await getTemporaryDirectory();
-            final snapshot = await backupService.createSnapshot(temporaryDirectory);
-            await Share.shareXFiles(
-              <XFile>[XFile(snapshot.path)],
-              subject: 'پشتیبان یادنگار',
-              text: 'فایل پشتیبان یادنگار',
-            );
-          },
-          child: TrackedSubjectHome(
-            quickCapture: quickCapture,
-            loadSubjects: loadSubjects,
-            loadFollowUps: loadFollowUps,
-            addFollowUp: addFollowUp,
-            editTimelineItem: editTimelineItem,
-            legacyTimeline: legacyTimeline,
+    ProjectScope(
+      manageProjects: manageProjects,
+      child: TrackedSubjectPdfScope(
+        sharePdf: shareTrackedSubjectPdf,
+        printPdf: printTrackedSubjectPdf,
+        loadSubjects: loadSubjects.load,
+        child: YadNegarApp(
+          fontFamily: hasLicensedIranSansX
+              ? AppFonts.iranSansXFamily
+              : AppFonts.vazirmatnFamily,
+          home: TimelineBackupScope(
+            backupAction: () async {
+              final temporaryDirectory = await getTemporaryDirectory();
+              final snapshot = await backupService.createSnapshot(temporaryDirectory);
+              await Share.shareXFiles(
+                <XFile>[XFile(snapshot.path)],
+                subject: 'پشتیبان یادنگار',
+                text: 'فایل پشتیبان یادنگار',
+              );
+            },
+            child: TrackedSubjectHome(
+              quickCapture: quickCapture,
+              loadSubjects: loadSubjects,
+              loadFollowUps: loadFollowUps,
+              addFollowUp: addFollowUp,
+              editTimelineItem: editTimelineItem,
+              legacyTimeline: legacyTimeline,
+            ),
           ),
         ),
       ),

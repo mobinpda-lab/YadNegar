@@ -18,6 +18,7 @@ class QuickCapture {
   Future<TimelineItem> capture({
     required String text,
     String? description,
+    String? projectId,
     TimelineItemType type = TimelineItemType.note,
     DateTime? occurredAt,
     DateTime? reminderAt,
@@ -32,6 +33,10 @@ class QuickCapture {
     final targetDescription = normalizedDescription == null || normalizedDescription.isEmpty
         ? null
         : normalizedDescription;
+    final normalizedProjectId = projectId?.trim();
+    final targetProjectId = normalizedProjectId == null || normalizedProjectId.isEmpty
+        ? null
+        : normalizedProjectId;
 
     final id = idGenerator().trim();
     if (id.isEmpty) {
@@ -43,6 +48,7 @@ class QuickCapture {
       type: type,
       text: normalizedText,
       description: targetDescription,
+      projectId: targetProjectId,
       createdAt: clock(),
       occurredAt: occurredAt,
       reminderAt: reminderAt,
