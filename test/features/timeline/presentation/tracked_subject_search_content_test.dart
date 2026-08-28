@@ -119,17 +119,15 @@ void main() {
       await tester.pumpAndSettle();
 
       final search = find.byKey(const Key('tracked-subject-search'));
-      final scrollable = find.descendant(
-        of: find.byKey(const Key('tracked-subject-home-scroll')),
-        matching: find.byType(Scrollable),
-      );
+      final homeList = find.byKey(const Key('tracked-subject-home-scroll'));
       expect(find.text('۴ مورد'), findsOneWidget);
 
       Future<void> expectVisibleResult(String query, Key key) async {
         await tester.enterText(search, query);
         await tester.pump();
+        await tester.drag(homeList, const Offset(0, -520));
+        await tester.pumpAndSettle();
         final result = find.byKey(key);
-        await tester.scrollUntilVisible(result, 250, scrollable: scrollable);
         expect(find.text('۱ مورد'), findsOneWidget);
         expect(result, findsOneWidget);
       }
