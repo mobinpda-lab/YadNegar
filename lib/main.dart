@@ -257,6 +257,9 @@ class YadNegarApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: fontFamily,
+        dialogTheme: const DialogThemeData(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        ),
       ),
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
