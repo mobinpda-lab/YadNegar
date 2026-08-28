@@ -891,7 +891,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           Icon(Icons.add_comment_outlined, color: _primary),
           SizedBox(width: 8),
           Text(
-            'افزاودن پیگيري.',
+            'افزودن پیگیری',
             style: TextStyle(color: _primary, fontWeight: FontWeight.w800),
           ),
         ],
