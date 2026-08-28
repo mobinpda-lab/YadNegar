@@ -99,7 +99,7 @@ void main() {
     expect(find.byKey(const Key('tracked-subject-detail-title')), findsOneWidget);
     expect(find.byKey(const Key('follow-up-car-f1')), findsOneWidget);
     expect(find.text('بررسی روغن انجام شد'), findsOneWidget);
-    expect(find.text('1405/06/06 - 09:15'), findsWidgets);
+    expect(find.text('۱۴۰۵/۰۶/۰۶ - ۰۹:۱۵'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('tracked-subject-add-follow-up')));
     await tester.pumpAndSettle();
@@ -111,7 +111,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('تماس با تعمیرگاه و تعیین نوبت'), findsOneWidget);
-    expect(find.text('1405/06/06 - 11:30'), findsWidgets);
+    expect(find.text('۱۴۰۵/۰۶/۰۶ - ۱۱:۳۰'), findsWidgets);
     expect(
       repository.items.where((item) => item.parentId == root.id),
       hasLength(2),
