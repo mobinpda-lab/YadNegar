@@ -24,6 +24,7 @@ import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.da
 import 'package:yadnegar/features/timeline/data/json_timeline_backup_service.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_home.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_persian_pickers.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restore_action.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_home.dart';
@@ -136,6 +137,9 @@ Future<void> main() async {
     restoreTimelineSnapshot: restoreTimelineSnapshot,
     searchTimeline: searchTimeline,
     filterTimelineByDateRange: dateFilter,
+    dateRangePicker: pickPersianTimelineDateRange,
+    occurredAtPicker: pickPersianTimelineDateTime,
+    reminderAtPicker: pickPersianFutureReminderDateTime,
   );
 
   runApp(
