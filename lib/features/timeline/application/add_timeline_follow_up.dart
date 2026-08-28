@@ -17,7 +17,7 @@ class AddTimelineFollowUp {
 
   Future<TimelineItem> add({
     required TimelineItem subject,
-    required String text,
+    String text = '',
     DateTime? occurredAt,
   }) async {
     if (!subject.isTrackedSubject) {
@@ -25,17 +25,14 @@ class AddTimelineFollowUp {
     }
 
     final normalized = text.trim();
-    if (normalized.isEmpty) {
-      throw ArgumentError.value(text, 'text', 'follow-up text cannot be empty');
-    }
-
+    final now = clock();
     final followUp = TimelineItem(
       id: idGenerator(),
       parentId: subject.id,
       type: subject.type,
-      text: normalized,
-      createdAt: clock(),
-      occurredAt: occurredAt,
+      text: normalized.isEmpty ? 'پیگیری' : normalized,
+      createdAt: now,
+      occurredAt: occurredAt ?? now,
     );
     await repository.upsert(followUp);
     return followUp;

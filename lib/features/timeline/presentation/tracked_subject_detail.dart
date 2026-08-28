@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:yadnegar/core/presentation/persian_datetime_formatter.dart';
+import 'package:yadnegar/core/presentation/persian_duration_formatter.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
+import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
+import 'package:yadnegar/features/timeline/presentation/tracked_subject_edit_screen.dart';
+
+typedef TrackedSubjectDetailClock = DateTime Function();
 
 class TrackedSubjectDetail extends StatefulWidget {
   const TrackedSubjectDetail({
@@ -10,19 +16,26 @@ class TrackedSubjectDetail extends StatefulWidget {
     required this.subject,
     required this.loadFollowUps,
     required this.addFollowUp,
+    required this.editTimelineItem,
+    this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
+    this.durationFormatter = const PersianDurationFormatter(),
   });
 
   final TimelineItem subject;
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
+  final EditTimelineItem editTimelineItem;
+  final TrackedSubjectDetailClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
+  final PersianDurationFormatter durationFormatter;
 
   @override
   State<TrackedSubjectDetail> createState() => _TrackedSubjectDetailState();
 }
 
 class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
+  late TimelineItem _subject;
   List<TimelineItem> _followUps = const <TimelineItem>[];
   bool _isLoading = true;
   String? _errorMessage;
@@ -30,6 +43,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
   @override
   void initState() {
     super.initState();
+    _subject = widget.subject;
     _reload();
   }
 
@@ -39,7 +53,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
       _errorMessage = null;
     });
     try {
-      final followUps = await widget.loadFollowUps.load(widget.subject.id);
+      final followUps = await widget.loadFollowUps.load(_subject.id);
       if (!mounted) {
         return;
       }
@@ -59,68 +73,70 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
   }
 
   Future<void> _addFollowUp() async {
-    var draft = '';
-    final text = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('پیگیری جدید برای «${widget.subject.text}»'),
-        content: TextField(
-          key: const Key('follow-up-input'),
-          autofocus: true,
-          minLines: 2,
-          maxLines: 5,
-          decoration: const InputDecoration(
-            labelText: 'شرح پیگیری',
-            hintText: 'مثلاً تماس گرفتم، نتیجه این شد…',
-            border: OutlineInputBorder(),
-          ),
-          onChanged: (value) => draft = value,
+    final saved = await Navigator.of(context).push<TimelineItem>(
+      MaterialPageRoute<TimelineItem>(
+        builder: (context) => FollowUpEditorScreen(
+          subject: _subject,
+          addFollowUp: widget.addFollowUp,
+          editTimelineItem: widget.editTimelineItem,
+          clock: widget.clock,
+          dateTimeFormatter: widget.dateTimeFormatter,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('انصراف'),
-          ),
-          FilledButton(
-            key: const Key('follow-up-save'),
-            onPressed: () {
-              final normalized = draft.trim();
-              if (normalized.isEmpty) {
-                return;
-              }
-              Navigator.of(dialogContext).pop(normalized);
-            },
-            child: const Text('ثبت پیگیری'),
-          ),
-        ],
       ),
     );
-
-    if (text == null || !mounted) {
-      return;
-    }
-
-    try {
-      await widget.addFollowUp.add(subject: widget.subject, text: text);
+    if (saved != null && mounted) {
       await _reload();
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ثبت پیگیری انجام نشد.')),
-      );
+    }
+  }
+
+  Future<void> _editSubject() async {
+    final updated = await Navigator.of(context).push<TimelineItem>(
+      MaterialPageRoute<TimelineItem>(
+        builder: (context) => TrackedSubjectEditScreen(
+          subject: _subject,
+          editTimelineItem: widget.editTimelineItem,
+        ),
+      ),
+    );
+    if (updated != null && mounted) {
+      setState(() => _subject = updated);
+    }
+  }
+
+  Future<void> _editFollowUp(TimelineItem followUp) async {
+    final updated = await Navigator.of(context).push<TimelineItem>(
+      MaterialPageRoute<TimelineItem>(
+        builder: (context) => FollowUpEditorScreen(
+          subject: _subject,
+          existing: followUp,
+          addFollowUp: widget.addFollowUp,
+          editTimelineItem: widget.editTimelineItem,
+          clock: widget.clock,
+          dateTimeFormatter: widget.dateTimeFormatter,
+        ),
+      ),
+    );
+    if (updated != null && mounted) {
+      await _reload();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final latest = _followUps.isEmpty ? null : _followUps.first;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.subject.text,
+          _subject.text,
           key: const Key('tracked-subject-detail-title'),
         ),
+        actions: [
+          TextButton(
+            key: const Key('tracked-subject-edit'),
+            onPressed: _editSubject,
+            child: const Text('ویرایش'),
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -133,40 +149,36 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      _subject.text,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 14),
                     const Text(
-                      'موضوع پیگیری',
+                      'آخرین پیگیری',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 6),
-                    Text(widget.subject.text),
-                    const SizedBox(height: 10),
                     Text(
-                      'شروع: ${widget.dateTimeFormatter.formatDateTime(widget.subject.timelineAt)}',
-                      key: const Key('tracked-subject-created-at'),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _followUps.isEmpty
-                          ? 'هنوز پیگیری ثبت نشده است.'
-                          : 'آخرین پیگیری: ${widget.dateTimeFormatter.formatDateTime(_followUps.first.timelineAt)}',
+                      latest == null
+                          ? 'هنوز پیگیری ثبت نشده است'
+                          : widget.dateTimeFormatter.formatDateTime(latest.timelineAt),
                       key: const Key('tracked-subject-last-follow-up'),
                     ),
+                    if (latest != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        '● ${widget.durationFormatter.elapsedSince(now: widget.clock(), latest: latest.timelineAt)}',
+                        key: const Key('tracked-subject-elapsed'),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: FilledButton.icon(
-              key: const Key('tracked-subject-add-follow-up'),
-              onPressed: _addFollowUp,
-              icon: const Icon(Icons.add_comment_outlined),
-              label: const Text('ثبت پیگیری جدید'),
-            ),
-          ),
           const Padding(
-            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Text(
               'تاریخچه پیگیری‌ها',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -174,6 +186,12 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
           ),
           Expanded(child: _buildFollowUpList()),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        key: const Key('tracked-subject-add-follow-up'),
+        tooltip: 'ثبت پیگیری جدید',
+        onPressed: _addFollowUp,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -190,7 +208,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(
-            'اولین پیگیری را ثبت کنید تا تاریخچه این موضوع شکل بگیرد.',
+            'هنوز پیگیری ثبت نشده است',
             key: Key('tracked-subject-follow-up-empty'),
             textAlign: TextAlign.center,
           ),
@@ -205,15 +223,33 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final followUp = _followUps[index];
+        final previous = index + 1 < _followUps.length ? _followUps[index + 1] : null;
         return Card(
           key: Key('follow-up-${followUp.id}'),
           child: ListTile(
+            onTap: () => _editFollowUp(followUp),
             leading: const Icon(Icons.history),
             title: Text(followUp.text),
-            subtitle: Text(
-              widget.dateTimeFormatter.formatDateTime(followUp.timelineAt),
-              key: Key('follow-up-time-${followUp.id}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.dateTimeFormatter.formatDateTime(followUp.timelineAt),
+                  key: Key('follow-up-time-${followUp.id}'),
+                ),
+                if (previous != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.durationFormatter.intervalBetween(
+                      newer: followUp.timelineAt,
+                      older: previous.timelineAt,
+                    ),
+                    key: Key('follow-up-interval-${followUp.id}'),
+                  ),
+                ],
+              ],
             ),
+            trailing: const Icon(Icons.edit_outlined),
           ),
         );
       },

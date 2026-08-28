@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
+import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
@@ -49,7 +50,7 @@ class _MemoryTimelineRepository implements TimelineRepository {
 }
 
 void main() {
-  testWidgets('root opens its own persistent follow-up history', (tester) async {
+  testWidgets('tracked task supports blank-default capture and safe editing', (tester) async {
     final root = TimelineItem(
       id: 'car',
       type: TimelineItemType.activity,
@@ -62,9 +63,12 @@ void main() {
       type: root.type,
       text: 'بررسی روغن انجام شد',
       createdAt: DateTime(2026, 8, 28, 9, 15),
+      occurredAt: DateTime(2026, 8, 28, 9, 15),
     );
     final repository = _MemoryTimelineRepository([root, existingFollowUp]);
+    final edit = EditTimelineItem(repository: repository);
     var generatedId = 0;
+    final now = DateTime(2026, 8, 28, 11, 30);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -73,16 +77,18 @@ void main() {
           child: TrackedSubjectHome(
             quickCapture: QuickCapture(
               repository: repository,
-              clock: () => DateTime(2026, 8, 28, 10),
+              clock: () => now,
               idGenerator: () => 'root-${generatedId++}',
             ),
             loadSubjects: LoadTrackedSubjects(repository: repository),
             loadFollowUps: LoadTimelineFollowUps(repository: repository),
             addFollowUp: AddTimelineFollowUp(
               repository: repository,
-              clock: () => DateTime(2026, 8, 28, 11, 30),
+              clock: () => now,
               idGenerator: () => 'follow-${generatedId++}',
             ),
+            editTimelineItem: edit,
+            clock: () => now,
           ),
         ),
       ),
@@ -90,31 +96,61 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('tracked-subject-car')), findsOneWidget);
-    expect(find.byKey(const Key('tracked-subject-car-f1')), findsNothing);
-    expect(find.text('1 پیگیری'), findsOneWidget);
+    expect(find.text('۱ پیگیری'), findsOneWidget);
+    expect(find.textContaining('۱۴۰۵/۰۶/۰۶'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('tracked-subject-car')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('tracked-subject-detail-title')), findsOneWidget);
-    expect(find.byKey(const Key('follow-up-car-f1')), findsOneWidget);
     expect(find.text('بررسی روغن انجام شد'), findsOneWidget);
     expect(find.text('۱۴۰۵/۰۶/۰۶ - ۰۹:۱۵'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('tracked-subject-add-follow-up')));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('follow-up-input')),
-      'تماس با تعمیرگاه و تعیین نوبت',
-    );
-    await tester.tap(find.byKey(const Key('follow-up-save')));
+
+    expect(find.text('ثبت پیگیری'), findsOneWidget);
+    expect(find.text('۱۴۰۵/۰۶/۰۶'), findsOneWidget);
+    expect(find.text('۱۱:۳۰'), findsOneWidget);
+
+    // Leave the optional title blank: the application must store «پیگیری».
+    await tester.tap(find.byKey(const Key('follow-up-editor-confirm')));
     await tester.pumpAndSettle();
 
-    expect(find.text('تماس با تعمیرگاه و تعیین نوبت'), findsOneWidget);
-    expect(find.text('۱۴۰۵/۰۶/۰۶ - ۱۱:۳۰'), findsWidgets);
-    expect(
-      repository.items.where((item) => item.parentId == root.id),
-      hasLength(2),
+    expect(find.text('پیگیری'), findsOneWidget);
+    expect(find.text('فاصله از پیگیری قبلی: ۲ ساعت و ۱۵ دقیقه'), findsOneWidget);
+    expect(find.text('● ۰ دقیقه از آخرین پیگیری گذشته'), findsOneWidget);
+
+    final newFollowUp = repository.items.singleWhere((item) => item.id == 'follow-0');
+    expect(newFollowUp.parentId, root.id);
+    expect(newFollowUp.text, 'پیگیری');
+    expect(newFollowUp.occurredAt, now);
+
+    // Edit only this follow-up; it must remain a child and keep its sibling history.
+    await tester.tap(find.byKey(const Key('follow-up-follow-0')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('follow-up-title-input')),
+      'تماس با تعمیرگاه',
     );
+    await tester.tap(find.byKey(const Key('follow-up-editor-confirm')));
+    await tester.pumpAndSettle();
+
+    final editedFollowUp = repository.items.singleWhere((item) => item.id == 'follow-0');
+    expect(editedFollowUp.text, 'تماس با تعمیرگاه');
+    expect(editedFollowUp.parentId, root.id);
+    expect(repository.items.where((item) => item.parentId == root.id), hasLength(2));
+
+    // Edit the root task without affecting its children.
+    await tester.tap(find.byKey(const Key('tracked-subject-edit')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('tracked-subject-edit-title')),
+      'سرویس دوره‌ای خودرو',
+    );
+    await tester.tap(find.byKey(const Key('tracked-subject-edit-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('سرویس دوره‌ای خودرو'), findsWidgets);
+    expect(repository.items.where((item) => item.parentId == root.id), hasLength(2));
   });
 }
