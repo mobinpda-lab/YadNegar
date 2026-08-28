@@ -10,6 +10,7 @@ import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
 import 'package:yadnegar/features/timeline/presentation/project_management_sheet.dart';
 import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
+import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_detail.dart';
@@ -370,6 +371,23 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     }
   }
 
+  Future<void> _addFollowUpFromHome(TimelineItem subject) async {
+    final saved = await Navigator.of(context).push<TimelineItem>(
+      MaterialPageRoute<TimelineItem>(
+        builder: (context) => FollowUpEditorScreen(
+          subject: subject,
+          addFollowUp: widget.addFollowUp,
+          editTimelineItem: widget.editTimelineItem,
+          clock: widget.clock,
+          dateTimeFormatter: widget.dateTimeFormatter,
+        ),
+      ),
+    );
+    if (saved != null && mounted) {
+      await _reload();
+    }
+  }
+
   Future<void> _openSubject(TimelineItem subject) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
@@ -572,6 +590,20 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 112),
         children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Center(
+              child: Text(
+                'بسم الله الرحمن الرحیم',
+                key: Key('tracked-subject-bismillah'),
+                style: TextStyle(
+                  color: Color(0xFF77788A),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
           _buildHeader(),
           const SizedBox(height: 22),
           _buildSearch(),
@@ -832,6 +864,42 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
   }
 
   Widget _buildSubjectCard(TimelineItem subject) {
+    return Dismissible(
+      key: Key('tracked-subject-swipe-${subject.id}'),
+      direction: DismissDirection.horizontal,
+      confirmDismiss: (_) async {
+        await _addFollowUpFromHome(subject);
+        return false;
+      },
+      background: _buildFollowUpSwipeBackground(Alignment.centerRight),
+      secondaryBackground: _buildFollowUpSwipeBackground(Alignment.centerLeft),
+      child: _buildSubjectCardBody(subject),
+    );
+  }
+
+  Widget _buildFollowUpSwipeBackground(Alignment alignment) {
+    return Container(
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE6E4FF),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.add_comment_outlined, color: _primary),
+          SizedBox(width: 8),
+          Text(
+            'افزودن پیگیری',
+            style: TextStyle(color: _primary, fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubjectCardBody(TimelineItem subject) {
     final followUps = _followUps[subject.id] ?? const <TimelineItem>[];
     final latest = followUps.isEmpty ? null : followUps.first;
     final hasFollowUp = latest != null;
