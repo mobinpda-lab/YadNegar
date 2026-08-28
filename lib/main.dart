@@ -158,6 +158,7 @@ Future<void> main() async {
           loadSubjects: loadSubjects,
           loadFollowUps: loadFollowUps,
           addFollowUp: addFollowUp,
+          editTimelineItem: editTimelineItem,
           legacyTimeline: legacyTimeline,
         ),
       ),
