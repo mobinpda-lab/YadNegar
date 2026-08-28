@@ -17,6 +17,7 @@ class QuickCapture {
 
   Future<TimelineItem> capture({
     required String text,
+    String? description,
     TimelineItemType type = TimelineItemType.note,
     DateTime? occurredAt,
     DateTime? reminderAt,
@@ -27,6 +28,11 @@ class QuickCapture {
       throw ArgumentError.value(text, 'text', 'Quick Capture text cannot be empty.');
     }
 
+    final normalizedDescription = description?.trim();
+    final targetDescription = normalizedDescription == null || normalizedDescription.isEmpty
+        ? null
+        : normalizedDescription;
+
     final id = idGenerator().trim();
     if (id.isEmpty) {
       throw StateError('Quick Capture id generator returned an empty id.');
@@ -36,6 +42,7 @@ class QuickCapture {
       id: id,
       type: type,
       text: normalizedText,
+      description: targetDescription,
       createdAt: clock(),
       occurredAt: occurredAt,
       reminderAt: reminderAt,
