@@ -1,164 +1,204 @@
 # برنامه عملیاتی شتاب‌یافته پروژه YadNegar
-## نسخه 4.7 — Independent Timeline Date-Range Clear Integrated
+## نسخه 5.0 — Canonical Tracked-Task Contract Integrated
 
 **تاریخ مبنا:** 2026-08-28  
 **مرجع حقیقت:** GitHub Repository State
 
 ## 1. مدل اجرا
-هدف: تولید نرم‌افزار Verify‌شده در ساعت‌ها به‌جای روزها.
+هدف: تولید نرم‌افزار Verify‌شده با بیشترین سرعت امن.
 
-چرخه:
-`Fresh Audit → Reuse → Small/Safe Parallel Slice → Tests → exact-head CI/Android → expected-head merge → post-main proof → docs sync → next slice`
+چرخه استاندارد:
+`Fresh Audit → Reuse → Decompose → Maximum Parallel → Focused Tests → exact-head CI/Android → fresh scope → expected-head merge → post-main proof → docs sync → issue cleanup → next real slice`
 
-Laneها:
+Laneهای مستقل:
 - Core/Data
 - Product/UX
 - Release/Platform
 - CI/Automation/Documentation
 
-Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked preparation فقط با Fresh compare و اثبات Scope مستقل مجاز است.
+Block یک Lane، Lane مستقل را متوقف نمی‌کند. Stacked preparation فقط وقتی مجاز است که branch بعداً Fresh compare شود و Scope/Dependency مستقل باقی مانده باشد.
 
 ## 2. main فعلی
-Current product main:
-`0fbdb1c9dc3473112530843620480a3e7283e7ae`
+Current verified main:
+`2c1f944f94de729037adc62939650863123786c3`
 
-Main شامل:
-- Timeline foundation واحد
-- schema v3 و backward-compatible v1/v2 reads
-- daily/weekly Android reminder scheduling با timezone محلی دستگاه
-- Persian recurrence UX
-- Reminder status روی کارت
-- Reminder presence filter: همه / دارای یادآور / بدون یادآور
-- Search/Type/Date composition
-- آیکن و label مشترک پنج نوع canonical Timeline
-- پاک‌کردن مستقل فیلتر نوع با گزینه واقعی `همه انواع`
-- پاک‌کردن مستقل Date Range با حفظ query/type/reminder filter
-- Export + Backup/Restore
-- Release Governance غیرمخرب کامل
-است.
+جهت canonical محصول بر اساس #121:
+`Tracked Task Root → Persistent FollowUps → Jalali/Persian History → PDF/Share/Print`
 
-## 3. Release Baseline — Stable
-زنجیره Verify‌شده:
-`Fast CI → Android Build → Candidate/Manifest → Smoke/Recovery → Readiness → Version/Release Notes Draft → Approval/Rollback Evidence`
+Foundation قدیمی Timeline/Reminder/JSON حذف نشده و reuse شده است. ابزار Timeline تخت قدیمی در بخش legacy باقی می‌ماند، اما Product capacity باید روی قرارداد tracked-task متمرکز باشد مگر اینکه قابلیت قدیمی مستقیماً به قرارداد فعلی کمک کند.
 
-وضعیت Release:
-`candidate verified / governance verified / production signing blocked / not Play-Store-ready`
+## 3. رفتار اصلی محصول تکمیل‌شده
+### Tracked Task
+- یک root ثابت برای هر کار
+- description/summary چندخطی اختیاری
+- create/edit/detail کامل
+- Home compact
 
-هیچ Tag، GitHub Release، Play Store publish یا production keystore/secret ساخته نشده است.
+### FollowUp
+- هر پیگیری child همان root است
+- history append-only از نظر رفتار محصول
+- صفحه مستقل `ثبت پیگیری`
+- عنوان اختیاری؛ خالی => `پیگیری`
+- زمان پیش‌فرض دستگاه و قابل ویرایش قبل از ذخیره
+- Jalali input + Persian digits
+- ویرایش هر FollowUp با حفظ parent/siblings
 
-## 4. Completed Product Waves
-- Recurring Reminder — #93 / PR #96 / PR #97 + docs #98: completed
-- Timeline Reminder Status — #99 / PR #100 + docs #101: completed
-- Reminder Presence Filter — #102 / PR #103 + docs #105: completed
-- Timeline Type Card Icons — #104 / PR #106 + docs #107: completed
-- Shared Timeline Type Presentation — #108 / PR #109 + docs #110: completed
-- Independent Type Filter Clear — #111 / PR #112 + docs #113: completed; documented main `654cb489...`
+### Home / Detail
+- آخرین FollowUp واقعی مبنای exact date/time و relative text
+- no-follow-up state واقعی
+- elapsed-since-latest محاسباتی، نه persisted
+- inter-follow-up interval محاسباتی، نه persisted
+- newest FollowUp first
 
-## 5. Independent Date-Range Clear — #114 / PR #115
-Final product head:
-`6cb084ae12c9dbab1e2fcd2dc812374522f1f895`
+### PDF
+- همه کارها
+- کارهای انتخاب‌شده
+- یک کار با همه پیگیری‌ها
+- RTL Persian + Jalali + Persian digits + bundled Vazirmatn
+- description در صورت وجود
+- Share/Print روی همان projection/document path
+
+## 4. Data / Storage Safety
+Current schema: **v5**  
+Backward-compatible reads: **v1-v4**
+
+Schema evolution:
+- v4: optional `parentId` برای root/follow-up relation
+- v5: optional tracked-task `description`
+
+قواعد پایدار:
+- یک Repository/Storage واحد
+- no duplicate Task/FollowUp DB
+- no destructive migration
+- no read-time rewrite
+- safe-write upgrade
+- tmp/bak recovery
+- validated Backup/Restore
+- unsupported newer schema fail-closed
+
+## 5. موج canonical #121
+تکمیل‌شده:
+- #122 / PR #124 — root/follow-up foundation
+- #126 / PR #130 — Jalali picker + Persian date/time digits
+- #129 / PR #133 — computed Persian duration foundation
+- #128 — final follow-up capture/edit/Home/detail semantics
+- #125 / PR #138 + PR #139 — PDF + all/selected/single + share/print
+- #140 / PR #141 + PR #142 — schema v5 description + UI + PDF
+
+PR #120 از موج flat Timeline عمداً Superseded و merge نشده است.
+
+## 6. Evidence نهایی محصول
+PR #142 final head:
+`da362d2138df05b859468d36b52b61d1ac95192f`
 
 Merged main:
-`0fbdb1c9dc3473112530843620480a3e7283e7ae`
-
-Scope واقعی:
-- `lib/features/timeline/presentation/timeline_home.dart`
-- `lib/features/timeline/presentation/timeline_screen.dart`
-- `test/features/timeline/presentation/timeline_date_filter_clear_test.dart`
-
-Reuse-first behavior:
-- State مستقل موجود `_dateStart/_dateEndExclusive` reuse شد.
-- callback کوچک date-only clear به `TimelineScreen` متصل شد.
-- کنترل پاک‌کردن فقط هنگام Date Range فعال دیده می‌شود.
-- query فعال، type filter و reminder-presence filter حفظ می‌شوند.
-- Global Clear All بدون تغییر باقی ماند.
-- Domain/schema/repository/storage/scheduler/workflow/dependencies دست‌نخورده ماندند.
+`2c1f944f94de729037adc62939650863123786c3`
 
 Pre-merge exact-head:
-- CI `33114258026`: success
-- Android `33114258075`: success full chain
+- CI `33179167525`: success
+- UI Evidence `33179167522`: success
+- Android `33179167509`: success full chain
 - live mergeability=true
 - exact expected-head merge: success
 
-Post-main exact SHA `0fbdb1c9...`:
-- CI `33115076694`: success
-- Android `33115076613`: success full chain
+Post-main exact SHA:
+- CI `33179977417`: success
+- Android `33179977437`: success full chain
 - Build/Candidate/Smoke-Recovery/Readiness/Release-Draft/Approval: all success
 
-## 6. Product Foundation
-Flow اصلی:
-`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
+320px create flow روی Theme واقعی برنامه تست و اصلاح شده است؛ Dialog inset افقی 20px دارد.
 
-Current storage schema: v3  
-Compatibility: v1/v2 reads پشتیبانی می‌شوند.
+## 7. Release Baseline
+زنجیره Verify‌شده:
+`Fast CI → Android Build → Candidate/Manifest → Smoke/Recovery → Readiness → Version/Release Notes Draft → Approval/Rollback Evidence`
 
-هیچ Model / Repository / Storage / AppShell / Reminder DB / Scheduler موازی وجود ندارد.
+وضعیت:
+`candidate verified / governance verified / production signing blocked / not Play-Store-ready`
 
-## 7. Automation / Documentation
+ممنوع بدون Owner/Security decision صریح:
+- production keystore/secret
+- production signing claim
+- real release tag
+- GitHub Release
+- Play Store publish
+
+## 8. Automation
 ### Issue #19
-Ruleset `main-protection` فعال است و PR را اجباری می‌کند و deletion/non-fast-forward را می‌بندد، اما required status checks هنوز Platform-level enforce نشده‌اند. Connected tooling Ruleset Write ندارد.
+تنها Gap شناخته‌شده Platform-level است.
 
-قانون عملی تا enforcement واقعی:
-`exact head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
+Ruleset `main-protection`:
+- PR required
+- branch deletion blocked
+- non-fast-forward blocked
 
-### Active Docs Sync — #114
-Branch:
-`docs/timeline-date-filter-clear-live`
+اما required status checks هنوز enforce نشده‌اند چون Connected tooling Ruleset Write ندارد.
 
-Branch از main قبلی `654cb489...` ساخته شد و تا پایان Product Gate بدون Write ماند؛ سپس بدون Force به exact main `0fbdb1c9...` Fast-forward شد و با Evidence واقعی به‌روزرسانی شد.
+تا enforcement واقعی:
+`exact head + exact-head relevant gates + fresh scope + live mergeability + exact expected_head_sha + post-main proof`
 
-Merge Contract:
-1. fresh compare = docs-only
-2. exact docs head
-3. Fast CI Green همان Head
-4. live mergeability=true
-5. exact `expected_head_sha`
-6. post-main Fast CI
-7. Close #114 فقط بعد از proof
-
-## 8. Merge Contract
-### Product / Release
-1. exact current head
-2. Fast CI Green همان Head
-3. Android/relevant gates Green همان Head
-4. Fresh compare برای Scope/Dependency
+### Docs-only Contract
+1. branch از verified main یا safe fast-forward بدون Force
+2. دقیقاً scope مستندات مورد انتظار
+3. exact docs head
+4. Fast CI Green همان Head
 5. live mergeability=true
-6. exact `expected_head_sha`
-7. post-main proof
-8. docs sync
+6. exact expected-head merge
+7. post-main Fast CI
 
-### Docs-only
-1. exact current head
-2. Fast CI Green
-3. live mergeability=true
-4. exact `expected_head_sha`
-5. post-main Fast CI
+## 9. Documentation Finalization
+Active branch:
+`docs/tracked-task-canonical-final`
 
-Historical Green برای Head جدید معتبر نیست.
+این branch قبل از docs write، فقط بعد از Green کامل Product post-main بدون Force به exact main `2c1f944...` fast-forward شده است.
 
-## 9. خط قرمز
+Scope مورد انتظار دقیقاً چهار فایل:
+- `docs/AI_CONTINUATION_STATE.md`
+- `docs/AI_HANDOFF_CURRENT_FA.md`
+- `docs/YADNEGAR_OPERATION_PLAN.md`
+- `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
+
+این sync دو debt را همزمان تسویه می‌کند:
+- #117 — Product قدیمی complete، docs debt باقی‌مانده
+- #121 — parent canonical tracked-task که همه childهای محصولی آن اکنون complete هستند
+
+بعد از docs merge + post-main Fast CI، هر دو Issue completed بسته می‌شوند.
+
+## 10. Maximum Parallel Contract
+- Product / Release / Automation / Docs تا حد استقلال موازی
+- هیچ Runner منفرد نباید کل پروژه را متوقف کند
+- Reuse قبل از Rebuild
+- کوچک‌ترین Slice برگشت‌پذیر
+- تست focused زودهنگام
+- Full gates فقط برای exact head نهایی
+- evidence تاریخی برای head جدید ممنوع
+- branchهای stacked بعد از تغییر base باید fresh compare شوند
+- مستندات فقط واقعیت اثبات‌شده را ثبت کنند
+
+## 11. خط قرمز
 - duplicate workflow/foundation/storage
 - fake/stale evidence
-- destructive migration
-- risky direct main edits
+- destructive migration بدون قرارداد
+- direct risky main edit
+- force update غیرضروری branch
 - secret/keystore داخل Repository
-- production-signing claim بدون verified config
-- Tag/Release/Play Store mutation بدون Owner/Security decision
+- production-ready claim بدون signing واقعی
+- Tag/Release/Publish بدون تصمیم صریح
 - حذف Gate برای سرعت
+- ساخت Backlog مصنوعی
 
-## 10. Queue
-### Active
-1. Docs sync نهایی #114
-2. Issue #19 — required-status enforcement gap
+## 12. Queue
+### اکنون
+- docs finalization برای #117/#121
+- #19 platform enforcement gap
 
-### Next Product Discovery
-بعد از بسته‌شدن #114، Queue و کد باید Fresh Audit شوند. Issue محصولی صرفاً برای پرکردن Backlog ساخته نمی‌شود؛ Slice بعدی باید نیاز واقعی، Scope کوچک و reuse بالا داشته باشد.
+### بعد از docs closure
+اگر Fresh Audit هیچ gap واقعی پیدا نکرد:
+- Product Issue جدید ایجاد نشود.
+- تست دستی/UX audit یا بررسی قابلیت‌های موجود برای یافتن کوچک‌ترین نیاز واقعی انجام شود.
+- Slice بعدی فقط با Definition of Done روشن، reuse بالا و scope کم باز شود.
 
-### Security-separated
-Production signing / real tag / release / publish فقط با Owner/Security decision صریح.
+## 13. اصل سرعت
+`Maximum Parallel = Independent Lanes + Safe Preparation + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Immediate Documentation`
 
-## 11. اصل سرعت
-`Maximum Parallel = Independent Lanes + Safe Stacked Preparation + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Concurrent Documentation`
-
-## 12. گزارش مالک
+## 14. گزارش مالک
 `کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
