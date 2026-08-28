@@ -9,7 +9,7 @@ import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('build creates a valid PDF with bundled Vazirmatn fonts', () async {
+  test('build creates a valid PDF with description and bundled Vazirmatn fonts', () async {
     final regular = await rootBundle.load(
       'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Regular.ttf',
     );
@@ -20,6 +20,7 @@ void main() {
       id: 'subject-1',
       type: TimelineItemType.activity,
       text: 'پیگیری قرارداد',
+      description: 'خلاصه قرارداد و نتیجه مورد انتظار',
       createdAt: DateTime(2026, 8, 28, 10),
       occurredAt: DateTime(2026, 8, 28, 10),
     );
