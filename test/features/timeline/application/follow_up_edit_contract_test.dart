@@ -87,6 +87,9 @@ void main() {
     expect(edited.parentId, root.id);
     expect(edited.text, 'هماهنگی انجام شد');
     expect(repository.items[first.id]?.text, 'اولین تماس');
-    expect(repository.items.where((key, value) => value.parentId == root.id), hasLength(2));
+    expect(
+      repository.items.values.where((item) => item.parentId == root.id),
+      hasLength(2),
+    );
   });
 }
