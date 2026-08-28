@@ -199,23 +199,24 @@ Future<void> main() async {
   );
 
   runApp(
-    YadNegarApp(
-      fontFamily: hasLicensedIranSansX
-          ? AppFonts.iranSansXFamily
-          : AppFonts.vazirmatnFamily,
-      home: TimelineBackupScope(
-        backupAction: () async {
-          final temporaryDirectory = await getTemporaryDirectory();
-          final snapshot = await backupService.createSnapshot(temporaryDirectory);
-          await Share.shareXFiles(
-            <XFile>[XFile(snapshot.path)],
-            subject: 'پشتیبان یادنگار',
-            text: 'فایل پشتیبان یادنگار',
-          );
-        },
-        child: TrackedSubjectPdfScope(
-          sharePdf: shareTrackedSubjectPdf,
-          printPdf: printTrackedSubjectPdf,
+    TrackedSubjectPdfScope(
+      sharePdf: shareTrackedSubjectPdf,
+      printPdf: printTrackedSubjectPdf,
+      loadSubjects: loadSubjects.load,
+      child: YadNegarApp(
+        fontFamily: hasLicensedIranSansX
+            ? AppFonts.iranSansXFamily
+            : AppFonts.vazirmatnFamily,
+        home: TimelineBackupScope(
+          backupAction: () async {
+            final temporaryDirectory = await getTemporaryDirectory();
+            final snapshot = await backupService.createSnapshot(temporaryDirectory);
+            await Share.shareXFiles(
+              <XFile>[XFile(snapshot.path)],
+              subject: 'پشتیبان یادنگار',
+              text: 'فایل پشتیبان یادنگار',
+            );
+          },
           child: TrackedSubjectHome(
             quickCapture: quickCapture,
             loadSubjects: loadSubjects,
