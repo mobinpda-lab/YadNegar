@@ -17,7 +17,8 @@ class DuplicateTimelineItemIdException extends FormatException {
 class JsonFileTimelineRepository implements TimelineRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 4;
+  static const int schemaVersion = 5;
+  static const int followUpSchemaVersion = 4;
   static const int recurrenceSchemaVersion = 3;
   static const int reminderSchemaVersion = 2;
   static const int legacySchemaVersion = 1;
@@ -164,6 +165,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
     final version = decoded['schemaVersion'];
     if (version != schemaVersion &&
+        version != followUpSchemaVersion &&
         version != recurrenceSchemaVersion &&
         version != reminderSchemaVersion &&
         version != legacySchemaVersion) {
@@ -257,7 +259,10 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw FormatException('Unknown Timeline item type: $typeName.');
     }
 
-    final parentId = sourceSchemaVersion >= schemaVersion
+    final description = sourceSchemaVersion >= schemaVersion
+        ? _optionalString(value, 'description')
+        : null;
+    final parentId = sourceSchemaVersion >= followUpSchemaVersion
         ? _optionalString(value, 'parentId')
         : null;
     final occurredAt = _optionalDateTime(value, 'occurredAt');
@@ -272,6 +277,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       id: id,
       type: type,
       text: text,
+      description: description,
       createdAt: createdAt,
       parentId: parentId,
       occurredAt: occurredAt,
@@ -285,6 +291,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       'id': item.id,
       'type': item.type.name,
       'text': item.text,
+      'description': item.description,
       'createdAt': item.createdAt.toIso8601String(),
       'parentId': item.parentId,
       'occurredAt': item.occurredAt?.toIso8601String(),

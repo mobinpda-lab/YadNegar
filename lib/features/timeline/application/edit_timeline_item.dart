@@ -17,6 +17,8 @@ class EditTimelineItem {
     required String id,
     required String text,
     TimelineItemType? type,
+    bool replaceDescription = false,
+    String? description,
     bool replaceOccurredAt = false,
     DateTime? occurredAt,
     bool replaceReminderAt = false,
@@ -42,6 +44,17 @@ class EditTimelineItem {
       throw ArgumentError.value(text, 'text', 'Timeline item text cannot be empty.');
     }
 
+    final normalizedDescription = description?.trim();
+    final replacementDescription =
+        normalizedDescription == null || normalizedDescription.isEmpty
+            ? null
+            : normalizedDescription;
+    final targetDescription = existing.isFollowUp
+        ? existing.description
+        : replaceDescription
+            ? replacementDescription
+            : existing.description;
+
     final targetType = type ?? existing.type;
     final changedToTypeWithoutOccurredAt =
         type != null && !_supportsOccurredAt(targetType) && !existing.isFollowUp;
@@ -57,6 +70,7 @@ class EditTimelineItem {
       parentId: existing.parentId,
       type: targetType,
       text: targetText,
+      description: targetDescription,
       createdAt: existing.createdAt,
       occurredAt: changedToTypeWithoutOccurredAt
           ? null

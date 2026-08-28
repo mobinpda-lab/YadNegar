@@ -18,6 +18,7 @@ class TimelineItem {
     required this.type,
     required this.text,
     required this.createdAt,
+    this.description,
     this.parentId,
     this.occurredAt,
     this.reminderAt,
@@ -30,6 +31,10 @@ class TimelineItem {
   final TimelineItemType type;
   final String text;
   final DateTime createdAt;
+
+  /// Optional multi-line description/summary for tracked subject root items.
+  /// Follow-up records intentionally continue to use [text] only.
+  final String? description;
 
   /// Null means this item is a tracked subject/root item.
   /// A non-null value identifies the tracked subject this follow-up belongs to.

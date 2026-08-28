@@ -50,7 +50,7 @@ void main() {
     expect(await storageFile.readAsBytes(), before);
   });
 
-  test('schema v4 persists and reloads a follow-up parent relation', () async {
+  test('current schema persists and reloads a follow-up parent relation', () async {
     final root = TimelineItem(
       id: 'car-service',
       type: TimelineItemType.activity,
@@ -69,7 +69,7 @@ void main() {
     await repository.upsert(followUp);
 
     final decoded = jsonDecode(await storageFile.readAsString()) as Map<String, dynamic>;
-    expect(decoded['schemaVersion'], 4);
+    expect(decoded['schemaVersion'], JsonFileTimelineRepository.schemaVersion);
     final rawItems = decoded['items'] as List<dynamic>;
     final rawFollowUp = rawItems.cast<Map<String, dynamic>>().singleWhere(
           (item) => item['id'] == followUp.id,
