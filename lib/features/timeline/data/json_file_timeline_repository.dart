@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:yadnegar/features/timeline/domain/project_repository.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_repository.dart';
+import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
 
 class UnsupportedTimelineStorageSchemaException extends FormatException {
   UnsupportedTimelineStorageSchemaException(Object? version)
@@ -14,10 +16,16 @@ class DuplicateTimelineItemIdException extends FormatException {
       : super('Duplicate Timeline item id: $id.');
 }
 
-class JsonFileTimelineRepository implements TimelineRepository {
+class DuplicateProjectIdException extends FormatException {
+  DuplicateProjectIdException(String id)
+      : super('Duplicate Project id: $id.');
+}
+
+class JsonFileTimelineRepository implements TimelineRepository, ProjectRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 5;
+  static const int schemaVersion = 6;
+  static const int descriptionSchemaVersion = 5;
   static const int followUpSchemaVersion = 4;
   static const int recurrenceSchemaVersion = 3;
   static const int reminderSchemaVersion = 2;
@@ -30,7 +38,8 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
   @override
   Future<void> upsert(TimelineItem item) async {
-    final items = await _readAll();
+    final storage = await _readStorage();
+    final items = List<TimelineItem>.of(storage.items);
     final existingIndex = items.indexWhere((candidate) => candidate.id == item.id);
 
     if (existingIndex == -1) {
@@ -40,12 +49,13 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
 
     _sortNewestFirst(items);
-    await _writeAll(items);
+    await _writeStorage(_TimelineStorage(items: items, projects: storage.projects));
   }
 
   @override
   Future<bool> deleteById(String id) async {
-    final items = await _readAll();
+    final storage = await _readStorage();
+    final items = List<TimelineItem>.of(storage.items);
     final previousLength = items.length;
     items.removeWhere((item) => item.id == id);
 
@@ -54,14 +64,14 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
 
     _sortNewestFirst(items);
-    await _writeAll(items);
+    await _writeStorage(_TimelineStorage(items: items, projects: storage.projects));
     return true;
   }
 
   @override
   Future<TimelineItem?> findById(String id) async {
-    final items = await _readAll();
-    for (final item in items) {
+    final storage = await _readStorage();
+    for (final item in storage.items) {
       if (item.id == id) {
         return item;
       }
@@ -71,17 +81,63 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
   @override
   Future<List<TimelineItem>> listNewestFirst() async {
-    final items = await _readAll();
+    final storage = await _readStorage();
+    final items = List<TimelineItem>.of(storage.items);
     _sortNewestFirst(items);
     return List<TimelineItem>.unmodifiable(items);
   }
 
+  @override
+  Future<List<YadNegarProject>> listProjects() async {
+    final storage = await _readStorage();
+    final projects = List<YadNegarProject>.of(storage.projects)
+      ..sort((left, right) => left.title.compareTo(right.title));
+    return List<YadNegarProject>.unmodifiable(projects);
+  }
+
+  @override
+  Future<YadNegarProject?> findProjectById(String id) async {
+    final storage = await _readStorage();
+    for (final project in storage.projects) {
+      if (project.id == id) {
+        return project;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<void> upsertProject(YadNegarProject project) async {
+    final storage = await _readStorage();
+    final projects = List<YadNegarProject>.of(storage.projects);
+    final index = projects.indexWhere((candidate) => candidate.id == project.id);
+    if (index == -1) {
+      projects.add(project);
+    } else {
+      projects[index] = project;
+    }
+    await _writeStorage(_TimelineStorage(items: storage.items, projects: projects));
+  }
+
+  @override
+  Future<bool> deleteProjectById(String id) async {
+    final storage = await _readStorage();
+    final projects = List<YadNegarProject>.of(storage.projects);
+    final previousLength = projects.length;
+    projects.removeWhere((project) => project.id == id);
+    if (projects.length == previousLength) {
+      return false;
+    }
+    await _writeStorage(_TimelineStorage(items: storage.items, projects: projects));
+    return true;
+  }
+
   Future<List<int>> readValidatedSnapshotBytes() async {
-    final items = await _readAll();
+    final storage = await _readStorage();
     if (await file.exists()) {
       return file.readAsBytes();
     }
-    return utf8.encode(_encodeItems(items));
+    return utf8.encode(_encodeStorage(storage));
   }
 
   Future<void> restoreValidatedSnapshotBytes(List<int> bytes) async {
@@ -90,39 +146,34 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw const FormatException('Timeline backup cannot be empty.');
     }
 
-    final items = _decodeItems(raw);
-    final seenIds = <String>{};
-    for (final item in items) {
-      if (!seenIds.add(item.id)) {
-        throw DuplicateTimelineItemIdException(item.id);
-      }
-    }
-
+    final storage = _decodeStorage(raw);
+    _validateUniqueIds(storage);
+    final items = List<TimelineItem>.of(storage.items);
     _sortNewestFirst(items);
-    await _writeAll(items);
+    await _writeStorage(_TimelineStorage(items: items, projects: storage.projects));
   }
 
-  Future<List<TimelineItem>> _readAll() async {
+  Future<_TimelineStorage> _readStorage() async {
     await _recoverMissingPrimary();
 
     if (!await file.exists()) {
-      return <TimelineItem>[];
+      return const _TimelineStorage(items: <TimelineItem>[], projects: <YadNegarProject>[]);
     }
 
     try {
-      final items = await _readItemsFrom(file);
+      final storage = await _readStorageFrom(file);
       await _cleanupStagingFiles();
-      return items;
+      return storage;
     } on FormatException {
       if (!await _backupFile.exists()) {
         rethrow;
       }
 
-      final backupItems = await _readItemsFrom(_backupFile);
+      final backupStorage = await _readStorageFrom(_backupFile);
       await file.delete();
       await _backupFile.rename(file.path);
       await _tryDelete(_temporaryFile);
-      return backupItems;
+      return backupStorage;
     }
   }
 
@@ -142,22 +193,22 @@ class JsonFileTimelineRepository implements TimelineRepository {
     }
 
     try {
-      await _readItemsFrom(_temporaryFile);
+      await _readStorageFrom(_temporaryFile);
       await _temporaryFile.rename(file.path);
     } on FormatException {
       await _tryDelete(_temporaryFile);
     }
   }
 
-  Future<List<TimelineItem>> _readItemsFrom(File source) async {
+  Future<_TimelineStorage> _readStorageFrom(File source) async {
     final raw = await source.readAsString();
     if (raw.trim().isEmpty) {
-      return <TimelineItem>[];
+      return const _TimelineStorage(items: <TimelineItem>[], projects: <YadNegarProject>[]);
     }
-    return _decodeItems(raw);
+    return _decodeStorage(raw);
   }
 
-  List<TimelineItem> _decodeItems(String raw) {
+  _TimelineStorage _decodeStorage(String raw) {
     final decoded = jsonDecode(raw);
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('Timeline storage root must be a JSON object.');
@@ -165,6 +216,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
     final version = decoded['schemaVersion'];
     if (version != schemaVersion &&
+        version != descriptionSchemaVersion &&
         version != followUpSchemaVersion &&
         version != recurrenceSchemaVersion &&
         version != reminderSchemaVersion &&
@@ -177,22 +229,48 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw const FormatException('Timeline storage items must be a JSON list.');
     }
 
-    return rawItems
+    final items = rawItems
         .map<TimelineItem>(
           (value) => _itemFromJson(value, sourceSchemaVersion: version as int),
         )
         .toList(growable: true);
+
+    final projects = <YadNegarProject>[];
+    if (version >= schemaVersion) {
+      final rawProjects = decoded['projects'];
+      if (rawProjects is! List<dynamic>) {
+        throw const FormatException('Timeline storage projects must be a JSON list.');
+      }
+      projects.addAll(rawProjects.map<YadNegarProject>(_projectFromJson));
+    }
+
+    final storage = _TimelineStorage(items: items, projects: projects);
+    _validateUniqueIds(storage);
+    return storage;
   }
 
-  Future<void> _writeAll(List<TimelineItem> items) async {
+  void _validateUniqueIds(_TimelineStorage storage) {
+    final seenItemIds = <String>{};
+    for (final item in storage.items) {
+      if (!seenItemIds.add(item.id)) {
+        throw DuplicateTimelineItemIdException(item.id);
+      }
+    }
+    final seenProjectIds = <String>{};
+    for (final project in storage.projects) {
+      if (!seenProjectIds.add(project.id)) {
+        throw DuplicateProjectIdException(project.id);
+      }
+    }
+  }
+
+  Future<void> _writeStorage(_TimelineStorage storage) async {
     await file.parent.create(recursive: true);
-    final encoded = _encodeItems(items);
+    final encoded = _encodeStorage(storage);
 
     await _tryDelete(_temporaryFile);
     await _temporaryFile.writeAsString(encoded, flush: true);
-
-    // Validate the staged payload before moving the current primary aside.
-    await _readItemsFrom(_temporaryFile);
+    await _readStorageFrom(_temporaryFile);
 
     await _tryDelete(_backupFile);
     if (await file.exists()) {
@@ -211,10 +289,11 @@ class JsonFileTimelineRepository implements TimelineRepository {
     await _tryDelete(_backupFile);
   }
 
-  String _encodeItems(List<TimelineItem> items) {
+  String _encodeStorage(_TimelineStorage storage) {
     final payload = <String, Object>{
       'schemaVersion': schemaVersion,
-      'items': items.map<Map<String, Object?>>(_itemToJson).toList(),
+      'projects': storage.projects.map<Map<String, Object?>>(_projectToJson).toList(),
+      'items': storage.items.map<Map<String, Object?>>(_itemToJson).toList(),
     };
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert(payload);
@@ -259,8 +338,11 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw FormatException('Unknown Timeline item type: $typeName.');
     }
 
-    final description = sourceSchemaVersion >= schemaVersion
+    final description = sourceSchemaVersion >= descriptionSchemaVersion
         ? _optionalString(value, 'description')
+        : null;
+    final projectId = sourceSchemaVersion >= schemaVersion
+        ? _optionalString(value, 'projectId')
         : null;
     final parentId = sourceSchemaVersion >= followUpSchemaVersion
         ? _optionalString(value, 'parentId')
@@ -273,11 +355,16 @@ class JsonFileTimelineRepository implements TimelineRepository {
         ? _requiredReminderRecurrence(value, 'reminderRecurrence')
         : TimelineReminderRecurrence.none;
 
+    if (parentId != null && projectId != null) {
+      throw const FormatException('FollowUps cannot own projectId.');
+    }
+
     return TimelineItem(
       id: id,
       type: type,
       text: text,
       description: description,
+      projectId: projectId,
       createdAt: createdAt,
       parentId: parentId,
       occurredAt: occurredAt,
@@ -292,6 +379,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       'type': item.type.name,
       'text': item.text,
       'description': item.description,
+      'projectId': item.isTrackedSubject ? item.projectId : null,
       'createdAt': item.createdAt.toIso8601String(),
       'parentId': item.parentId,
       'occurredAt': item.occurredAt?.toIso8601String(),
@@ -300,10 +388,33 @@ class JsonFileTimelineRepository implements TimelineRepository {
     };
   }
 
+  YadNegarProject _projectFromJson(dynamic value) {
+    if (value is! Map<String, dynamic>) {
+      throw const FormatException('Project must be a JSON object.');
+    }
+    final colorValue = value['colorValue'];
+    if (colorValue is! int) {
+      throw const FormatException('Project colorValue must be an integer.');
+    }
+    return YadNegarProject(
+      id: _requiredString(value, 'id'),
+      title: _requiredString(value, 'title'),
+      colorValue: colorValue,
+    );
+  }
+
+  Map<String, Object?> _projectToJson(YadNegarProject project) {
+    return <String, Object?>{
+      'id': project.id,
+      'title': project.title,
+      'colorValue': project.colorValue,
+    };
+  }
+
   String _requiredString(Map<String, dynamic> json, String key) {
     final value = json[key];
-    if (value is! String) {
-      throw FormatException('$key must be a string.');
+    if (value is! String || value.isEmpty) {
+      throw FormatException('$key must be a non-empty string.');
     }
     return value;
   }
@@ -371,4 +482,11 @@ class JsonFileTimelineRepository implements TimelineRepository {
       return left.id.compareTo(right.id);
     });
   }
+}
+
+class _TimelineStorage {
+  const _TimelineStorage({required this.items, required this.projects});
+
+  final List<TimelineItem> items;
+  final List<YadNegarProject> projects;
 }
