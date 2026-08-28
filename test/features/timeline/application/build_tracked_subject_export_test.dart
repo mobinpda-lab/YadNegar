@@ -49,19 +49,81 @@ void main() {
 
     expect(result.isEmpty, isTrue);
   });
+
+  test('date report includes only roots with matching follow-ups', () async {
+    final repository = _MemoryRepository(<TimelineItem>[
+      _item('a', day: 20, minute: 10),
+      _item('b', day: 20, minute: 20),
+      _item('a-before', parentId: 'a', day: 27, minute: 50),
+      _item('a-in', parentId: 'a', day: 28, minute: 15),
+      _item('a-after', parentId: 'a', day: 29, minute: 5),
+      _item('b-outside', parentId: 'b', day: 29, minute: 10),
+    ]);
+
+    final result = await BuildTrackedSubjectExport(repository: repository).build(
+      subjectIds: TrackedSubjectDateRangeSelection(
+        startInclusive: DateTime(2026, 8, 28),
+        endInclusive: DateTime(2026, 8, 28, 23, 59, 59, 999),
+      ),
+    );
+
+    expect(result.entries, hasLength(1));
+    expect(result.entries.single.subject.id, 'a');
+    expect(
+      result.entries.single.followUps.map((item) => item.id),
+      <String>['a-in'],
+    );
+  });
+
+  test('date range boundaries are inclusive', () async {
+    final repository = _MemoryRepository(<TimelineItem>[
+      _item('a', day: 20, minute: 10),
+      _itemAt('start', parentId: 'a', at: DateTime(2026, 8, 28)),
+      _itemAt(
+        'end',
+        parentId: 'a',
+        at: DateTime(2026, 8, 29, 23, 59, 59, 999),
+      ),
+    ]);
+
+    final result = await BuildTrackedSubjectExport(repository: repository).build(
+      subjectIds: TrackedSubjectDateRangeSelection(
+        startInclusive: DateTime(2026, 8, 28),
+        endInclusive: DateTime(2026, 8, 29, 23, 59, 59, 999),
+      ),
+    );
+
+    expect(
+      result.entries.single.followUps.map((item) => item.id),
+      <String>['end', 'start'],
+    );
+  });
 }
 
 TimelineItem _item(
   String id, {
   String? parentId,
+  int day = 28,
   required int minute,
+}) {
+  return _itemAt(
+    id,
+    parentId: parentId,
+    at: DateTime(2026, 8, day, 12, minute),
+  );
+}
+
+TimelineItem _itemAt(
+  String id, {
+  String? parentId,
+  required DateTime at,
 }) {
   return TimelineItem(
     id: id,
     type: TimelineItemType.activity,
     text: id,
-    createdAt: DateTime(2026, 8, 28, 12, minute),
-    occurredAt: DateTime(2026, 8, 28, 12, minute),
+    createdAt: at,
+    occurredAt: at,
     parentId: parentId,
   );
 }
