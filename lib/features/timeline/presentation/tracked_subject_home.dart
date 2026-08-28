@@ -74,9 +74,18 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     if (query.isEmpty) {
       return _subjects;
     }
-    return _subjects
-        .where((subject) => subject.text.toLowerCase().contains(query))
-        .toList(growable: false);
+    return _subjects.where((subject) {
+      if (subject.text.toLowerCase().contains(query)) {
+        return true;
+      }
+      if (subject.description?.toLowerCase().contains(query) ?? false) {
+        return true;
+      }
+      final followUps = _followUps[subject.id] ?? const <TimelineItem>[];
+      return followUps.any(
+        (followUp) => followUp.text.toLowerCase().contains(query),
+      );
+    }).toList(growable: false);
   }
 
   int get _withFollowUpCount => _subjects
