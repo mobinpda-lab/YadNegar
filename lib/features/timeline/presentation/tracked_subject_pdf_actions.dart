@@ -58,8 +58,10 @@ class TrackedSubjectPdfActions {
     switch (exportScope) {
       case _PdfExportScope.current:
         subjectIds = <String>{currentSubjectId};
+        break;
       case _PdfExportScope.all:
         subjectIds = null;
+        break;
       case _PdfExportScope.selected:
         subjectIds = await _selectSubjects(
           context,
@@ -69,6 +71,7 @@ class TrackedSubjectPdfActions {
         if (subjectIds == null || subjectIds.isEmpty || !context.mounted) {
           return;
         }
+        break;
     }
 
     await _chooseAction(context, scope: scope, subjectIds: subjectIds);
@@ -188,8 +191,10 @@ class TrackedSubjectPdfActions {
       switch (action) {
         case _PdfOutputAction.share:
           await scope.sharePdf(subjectIds);
+          break;
         case _PdfOutputAction.print:
           await scope.printPdf(subjectIds);
+          break;
       }
     } catch (_) {
       if (context.mounted) {
