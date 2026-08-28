@@ -19,6 +19,8 @@ class EditTimelineItem {
     TimelineItemType? type,
     bool replaceDescription = false,
     String? description,
+    bool replaceProjectId = false,
+    String? projectId,
     bool replaceOccurredAt = false,
     DateTime? occurredAt,
     bool replaceReminderAt = false,
@@ -55,6 +57,17 @@ class EditTimelineItem {
             ? replacementDescription
             : existing.description;
 
+    final normalizedProjectId = projectId?.trim();
+    final replacementProjectId =
+        normalizedProjectId == null || normalizedProjectId.isEmpty
+            ? null
+            : normalizedProjectId;
+    final targetProjectId = existing.isFollowUp
+        ? null
+        : replaceProjectId
+            ? replacementProjectId
+            : existing.projectId;
+
     final targetType = type ?? existing.type;
     final changedToTypeWithoutOccurredAt =
         type != null && !_supportsOccurredAt(targetType) && !existing.isFollowUp;
@@ -71,6 +84,7 @@ class EditTimelineItem {
       type: targetType,
       text: targetText,
       description: targetDescription,
+      projectId: targetProjectId,
       createdAt: existing.createdAt,
       occurredAt: changedToTypeWithoutOccurredAt
           ? null
