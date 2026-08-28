@@ -17,7 +17,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     final repository = _MemoryRepository();
-    final clock = () => DateTime(2026, 8, 28, 14);
+    DateTime clock() => DateTime(2026, 8, 28, 14);
 
     await tester.pumpWidget(
       MaterialApp(
