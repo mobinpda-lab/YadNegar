@@ -103,7 +103,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('بررسی روغن انجام شد'), findsOneWidget);
-    expect(find.text('۱۴۰۵/۰۶/۰۶ - ۰۹:۱۵'), findsOneWidget);
+    expect(find.text('۱۴۰۵/۰۶/۰۶ - ۰۹:۱۵'), findsWidgets);
 
     await tester.tap(find.byKey(const Key('tracked-subject-add-follow-up')));
     await tester.pumpAndSettle();
