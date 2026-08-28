@@ -142,60 +142,82 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
 
   Future<void> _createSubject() async {
     var draft = '';
+    var descriptionDraft = '';
     var selectedType = TimelineItemType.activity;
-    final result = await showDialog<(String, TimelineItemType)>(
+    final result = await showDialog<_TrackedSubjectDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: const Text('کار جدید'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                key: const Key('tracked-subject-input'),
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: 'نام کار',
-                  hintText: 'مثلاً تماس با علی',
-                  filled: true,
-                  fillColor: _surfaceTint,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  key: const Key('tracked-subject-input'),
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: 'نام کار',
+                    hintText: 'مثلاً تماس با علی',
+                    filled: true,
+                    fillColor: _surfaceTint,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
+                  onChanged: (value) => draft = value,
                 ),
-                onChanged: (value) => draft = value,
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<TimelineItemType>(
-                key: const Key('tracked-subject-type'),
-                initialValue: selectedType,
-                decoration: InputDecoration(
-                  labelText: 'نوع کار',
-                  filled: true,
-                  fillColor: _surfaceTint,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('tracked-subject-description-input'),
+                  minLines: 2,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    labelText: 'شرح یا خلاصه (اختیاری)',
+                    hintText: 'جزئیات مهم این کار',
+                    alignLabelWithHint: true,
+                    filled: true,
+                    fillColor: _surfaceTint,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
+                  onChanged: (value) => descriptionDraft = value,
                 ),
-                items: TimelineItemType.values
-                    .map(
-                      (type) => DropdownMenuItem<TimelineItemType>(
-                        value: type,
-                        child: TimelineItemTypeOption(type: type),
-                      ),
-                    )
-                    .toList(growable: false),
-                onChanged: (type) {
-                  if (type != null) {
-                    setDialogState(() => selectedType = type);
-                  }
-                },
-              ),
-            ],
+                const SizedBox(height: 12),
+                DropdownButtonFormField<TimelineItemType>(
+                  key: const Key('tracked-subject-type'),
+                  initialValue: selectedType,
+                  decoration: InputDecoration(
+                    labelText: 'نوع کار',
+                    filled: true,
+                    fillColor: _surfaceTint,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: TimelineItemType.values
+                      .map(
+                        (type) => DropdownMenuItem<TimelineItemType>(
+                          value: type,
+                          child: TimelineItemTypeOption(type: type),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: (type) {
+                    if (type != null) {
+                      setDialogState(() => selectedType = type);
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -210,7 +232,16 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                 if (normalized.isEmpty) {
                   return;
                 }
-                Navigator.of(dialogContext).pop((normalized, selectedType));
+                final normalizedDescription = descriptionDraft.trim();
+                Navigator.of(dialogContext).pop(
+                  _TrackedSubjectDraft(
+                    text: normalized,
+                    description: normalizedDescription.isEmpty
+                        ? null
+                        : normalizedDescription,
+                    type: selectedType,
+                  ),
+                );
               },
               child: const Text('ذخیره'),
             ),
@@ -224,7 +255,11 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     }
 
     try {
-      await widget.quickCapture.capture(text: result.$1, type: result.$2);
+      await widget.quickCapture.capture(
+        text: result.text,
+        description: result.description,
+        type: result.type,
+      );
       await _reload();
     } catch (_) {
       if (!mounted) {
@@ -753,6 +788,18 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       ),
     );
   }
+}
+
+class _TrackedSubjectDraft {
+  const _TrackedSubjectDraft({
+    required this.text,
+    required this.type,
+    this.description,
+  });
+
+  final String text;
+  final String? description;
+  final TimelineItemType type;
 }
 
 class _StatData {
