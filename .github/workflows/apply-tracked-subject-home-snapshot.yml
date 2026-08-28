@@ -28,20 +28,22 @@ jobs:
 
           path = Path('lib/features/timeline/presentation/tracked_subject_home.dart')
           text = path.read_text()
-          old = """      final subjects = await widget.loadSubjects.load();
-      final followUps = <String, List<TimelineItem>>{};
-      for (final subject in subjects) {
-        followUps[subject.id] = await widget.loadFollowUps.load(subject.id);
-      }
-
-      final sorted = List<TimelineItem>.of(subjects)
-"""
-          new = """      final homeData = await widget.loadSubjects.loadHomeData();
-      final subjects = homeData.subjects;
-      final followUps = homeData.followUpsBySubject;
-
-      final sorted = List<TimelineItem>.of(subjects)
-"""
+          old = (
+              "      final subjects = await widget.loadSubjects.load();\n"
+              "      final followUps = <String, List<TimelineItem>>{};\n"
+              "      for (final subject in subjects) {\n"
+              "        followUps[subject.id] = await widget.loadFollowUps.load(subject.id);\n"
+              "      }\n"
+              "\n"
+              "      final sorted = List<TimelineItem>.of(subjects)\n"
+          )
+          new = (
+              "      final homeData = await widget.loadSubjects.loadHomeData();\n"
+              "      final subjects = homeData.subjects;\n"
+              "      final followUps = homeData.followUpsBySubject;\n"
+              "\n"
+              "      final sorted = List<TimelineItem>.of(subjects)\n"
+          )
           if text.count(old) != 1:
               raise SystemExit(f'expected exactly one Home reload block, found {text.count(old)}')
           path.write_text(text.replace(old, new, 1))
