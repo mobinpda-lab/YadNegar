@@ -77,6 +77,7 @@ class TrackedSubjectPdfDocument {
     TrackedSubjectExportEntry entry,
     pw.Font boldFont,
   ) {
+    final description = entry.subject.description?.trim();
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
@@ -91,6 +92,14 @@ class TrackedSubjectPdfDocument {
             textAlign: pw.TextAlign.right,
             style: pw.TextStyle(font: boldFont, fontSize: 14),
           ),
+          if (description != null && description.isNotEmpty) ...[
+            pw.SizedBox(height: 5),
+            pw.Text(
+              'شرح کار: $description',
+              textAlign: pw.TextAlign.right,
+              style: const pw.TextStyle(fontSize: 9.5),
+            ),
+          ],
           pw.SizedBox(height: 4),
           pw.Text(
             'زمان ثبت کار: ${dateTimeFormatter.formatDateTime(entry.subject.timelineAt)}',
