@@ -672,12 +672,16 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                     ],
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: statusTint, borderRadius: BorderRadius.circular(999)),
-                          child: Text(
-                            statusText,
-                            style: TextStyle(color: statusColor, fontSize: 11.5, fontWeight: FontWeight.w700),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(color: statusTint, borderRadius: BorderRadius.circular(999)),
+                            child: Text(
+                              statusText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: statusColor, fontSize: 11.5, fontWeight: FontWeight.w700),
+                            ),
                           ),
                         ),
                         if (latest != null) ...[
