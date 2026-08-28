@@ -9,10 +9,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
 import 'package:yadnegar/features/timeline/application/delete_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/filter_timeline_by_date_range.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline.dart';
+import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
+import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
@@ -23,6 +26,7 @@ import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.da
 import 'package:yadnegar/features/timeline/presentation/timeline_home.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restore_action.dart';
+import 'package:yadnegar/features/timeline/presentation/tracked_subject_home.dart';
 import 'package:yadnegar/theme/app_fonts.dart';
 
 final Random _secureRandom = Random.secure();
@@ -69,6 +73,71 @@ Future<void> main() async {
     // Reminder reconciliation is best-effort and must never block app startup.
   }
 
+  final quickCapture = QuickCapture(
+    repository: repository,
+    clock: DateTime.now,
+    idGenerator: _generateTimelineId,
+  );
+  final loadTimeline = LoadTimeline(repository: repository);
+  final editTimelineItem = EditTimelineItem(repository: repository);
+  final deleteTimelineItem = DeleteTimelineItem(repository: repository);
+  final restoreTimelineItem = RestoreTimelineItem(repository: repository);
+  final searchTimeline = SearchTimeline(repository: repository);
+  final dateFilter = FilterTimelineByDateRange(repository: repository);
+  final loadSubjects = LoadTrackedSubjects(repository: repository);
+  final loadFollowUps = LoadTimelineFollowUps(repository: repository);
+  final addFollowUp = AddTimelineFollowUp(
+    repository: repository,
+    clock: DateTime.now,
+    idGenerator: _generateTimelineId,
+  );
+
+  Future<TimelineSnapshotRestoreResult> restoreTimelineSnapshot() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: <String>['json'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) {
+      return TimelineSnapshotRestoreResult.cancelled;
+    }
+
+    final selected = result.files.single;
+    final bytes = selected.bytes ??
+        (selected.path == null ? null : await File(selected.path!).readAsBytes());
+    if (bytes == null) {
+      return TimelineSnapshotRestoreResult.invalidBackup;
+    }
+
+    try {
+      await repository.restoreValidatedSnapshotBytes(bytes);
+      try {
+        await reminderScheduler.reconcile(await repository.listNewestFirst());
+      } catch (_) {
+        // The restore is durable; reminder sync can retry at startup.
+      }
+      return TimelineSnapshotRestoreResult.restored;
+    } on UnsupportedTimelineStorageSchemaException {
+      return TimelineSnapshotRestoreResult.unsupportedSchema;
+    } on DuplicateTimelineItemIdException {
+      return TimelineSnapshotRestoreResult.duplicateId;
+    } on FormatException {
+      return TimelineSnapshotRestoreResult.invalidBackup;
+    }
+  }
+
+  final legacyTimeline = TimelineHome(
+    quickCapture: quickCapture,
+    loadTimeline: loadTimeline,
+    editTimelineItem: editTimelineItem,
+    deleteTimelineItem: deleteTimelineItem,
+    restoreTimelineItem: restoreTimelineItem,
+    reminderScheduler: reminderScheduler,
+    restoreTimelineSnapshot: restoreTimelineSnapshot,
+    searchTimeline: searchTimeline,
+    filterTimelineByDateRange: dateFilter,
+  );
+
   runApp(
     YadNegarApp(
       fontFamily: hasLicensedIranSansX
@@ -84,58 +153,12 @@ Future<void> main() async {
             text: 'فایل پشتیبان یادنگار',
           );
         },
-        child: TimelineHome(
-          quickCapture: QuickCapture(
-            repository: repository,
-            clock: DateTime.now,
-            idGenerator: _generateTimelineId,
-          ),
-          loadTimeline: LoadTimeline(repository: repository),
-          editTimelineItem: EditTimelineItem(repository: repository),
-          deleteTimelineItem: DeleteTimelineItem(repository: repository),
-          restoreTimelineItem: RestoreTimelineItem(repository: repository),
-          reminderScheduler: reminderScheduler,
-          restoreTimelineSnapshot: () async {
-            final result = await FilePicker.platform.pickFiles(
-              type: FileType.custom,
-              allowedExtensions: <String>['json'],
-              withData: true,
-            );
-            if (result == null || result.files.isEmpty) {
-              return TimelineSnapshotRestoreResult.cancelled;
-            }
-
-            final selected = result.files.single;
-            final bytes = selected.bytes ??
-                (selected.path == null
-                    ? null
-                    : await File(selected.path!).readAsBytes());
-            if (bytes == null) {
-              return TimelineSnapshotRestoreResult.invalidBackup;
-            }
-
-            try {
-              await repository.restoreValidatedSnapshotBytes(bytes);
-              try {
-                await reminderScheduler.reconcile(
-                  await repository.listNewestFirst(),
-                );
-              } catch (_) {
-                // The restore is already durable; reminder sync can retry at startup.
-              }
-              return TimelineSnapshotRestoreResult.restored;
-            } on UnsupportedTimelineStorageSchemaException {
-              return TimelineSnapshotRestoreResult.unsupportedSchema;
-            } on DuplicateTimelineItemIdException {
-              return TimelineSnapshotRestoreResult.duplicateId;
-            } on FormatException {
-              return TimelineSnapshotRestoreResult.invalidBackup;
-            }
-          },
-          searchTimeline: SearchTimeline(repository: repository),
-          filterTimelineByDateRange: FilterTimelineByDateRange(
-            repository: repository,
-          ),
+        child: TrackedSubjectHome(
+          quickCapture: quickCapture,
+          loadSubjects: loadSubjects,
+          loadFollowUps: loadFollowUps,
+          addFollowUp: addFollowUp,
+          legacyTimeline: legacyTimeline,
         ),
       ),
     ),
@@ -144,7 +167,8 @@ Future<void> main() async {
 
 String _generateTimelineId() {
   final timestamp = DateTime.now().toUtc().microsecondsSinceEpoch;
-  final randomPart = _secureRandom.nextInt(1 << 32).toRadixString(16).padLeft(8, '0');
+  final randomPart =
+      _secureRandom.nextInt(1 << 32).toRadixString(16).padLeft(8, '0');
   return '$timestamp-$randomPart';
 }
 

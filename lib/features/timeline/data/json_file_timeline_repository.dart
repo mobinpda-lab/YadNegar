@@ -17,7 +17,8 @@ class DuplicateTimelineItemIdException extends FormatException {
 class JsonFileTimelineRepository implements TimelineRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 3;
+  static const int schemaVersion = 4;
+  static const int recurrenceSchemaVersion = 3;
   static const int reminderSchemaVersion = 2;
   static const int legacySchemaVersion = 1;
 
@@ -163,6 +164,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
 
     final version = decoded['schemaVersion'];
     if (version != schemaVersion &&
+        version != recurrenceSchemaVersion &&
         version != reminderSchemaVersion &&
         version != legacySchemaVersion) {
       throw UnsupportedTimelineStorageSchemaException(version);
@@ -255,11 +257,14 @@ class JsonFileTimelineRepository implements TimelineRepository {
       throw FormatException('Unknown Timeline item type: $typeName.');
     }
 
+    final parentId = sourceSchemaVersion >= schemaVersion
+        ? _optionalString(value, 'parentId')
+        : null;
     final occurredAt = _optionalDateTime(value, 'occurredAt');
     final reminderAt = sourceSchemaVersion >= reminderSchemaVersion
         ? _optionalDateTime(value, 'reminderAt')
         : null;
-    final reminderRecurrence = sourceSchemaVersion >= schemaVersion
+    final reminderRecurrence = sourceSchemaVersion >= recurrenceSchemaVersion
         ? _requiredReminderRecurrence(value, 'reminderRecurrence')
         : TimelineReminderRecurrence.none;
 
@@ -268,6 +273,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       type: type,
       text: text,
       createdAt: createdAt,
+      parentId: parentId,
       occurredAt: occurredAt,
       reminderAt: reminderAt,
       reminderRecurrence: reminderRecurrence,
@@ -280,6 +286,7 @@ class JsonFileTimelineRepository implements TimelineRepository {
       'type': item.type.name,
       'text': item.text,
       'createdAt': item.createdAt.toIso8601String(),
+      'parentId': item.parentId,
       'occurredAt': item.occurredAt?.toIso8601String(),
       'reminderAt': item.reminderAt?.toIso8601String(),
       'reminderRecurrence': item.reminderRecurrence.name,
@@ -290,6 +297,17 @@ class JsonFileTimelineRepository implements TimelineRepository {
     final value = json[key];
     if (value is! String) {
       throw FormatException('$key must be a string.');
+    }
+    return value;
+  }
+
+  String? _optionalString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) {
+      return null;
+    }
+    if (value is! String || value.isEmpty) {
+      throw FormatException('$key must be a non-empty string when present.');
     }
     return value;
   }
