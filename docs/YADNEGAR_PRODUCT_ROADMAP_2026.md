@@ -1,11 +1,11 @@
 # طرح جامع محصول و نقشه راه یادنگار
-## نسخه 1.0 — 2026-08-28
+## نسخه 1.1 — 2026-08-28
 
 **Repository:** `mobinpda-lab/YadNegar`  
 **مرجع حقیقت:** GitHub Reality  
 **جهت محصول:** مدیریت کار و پیگیری فارسی با تاریخچه پایدار، تجربه روزمحور و حافظه شخصی سبک  
 
-> این سند از روی مستندات زنده یادنگار، قابلیت‌های موجود، Issue #151 و مقایسه با Arvin-clean تدوین شده است. اصل راهبردی: قابلیت موجود توسعه داده شود؛ Foundation موازی ساخته نشود.
+> این سند از روی مستندات زنده یادنگار، قابلیت‌های موجود، Issue #151، Issue #153 و مقایسه با Arvin-clean تدوین شده است. اصل راهبردی: قابلیت موجود توسعه داده شود؛ Foundation موازی ساخته نشود.
 
 ## 1. چشم‌انداز محصول
 یادنگار باید از یک ابزار ثبت و نگهداری اطلاعات به یک دستیار روزانه ساده و سریع تبدیل شود که به کاربر کمک کند بداند چه کارهایی دارد، آخرین وضعیت هر کار چه بوده، امروز چه چیزی نیاز به توجه دارد، چه چیزهایی عقب افتاده‌اند و قدم بعدی چیست.
@@ -62,8 +62,8 @@ Home به مرکز توجه امروز تبدیل شود: پیگیری‌های 
 ### C — Personal Organization
 Tags، Star، Archive، Trash و فیلترها بدون شلوغ کردن Home.
 
-### D — Reliability & Portability
-Backup/Restore قابل فهم، Export، recovery، و بعداً Cloud Backup.
+### D — Reporting & Portability
+گزارش تاریخ‌محور، PDF/Print/Share، Backup/Restore قابل فهم، Export، recovery و بعداً Cloud Backup؛ همه با reuse مسیرهای فعلی.
 
 ### E — Smart Assistance
 پس از تثبیت پایه‌ها: تشخیص کار فراموش‌شده، پیشنهاد پیگیری، Summary و semantic search؛ AI هرگز Source of Truth نباشد.
@@ -104,10 +104,29 @@ daily / weekly / monthly / custom interval. FollowUp recurrence از Reminder re
 ### Wave 8 — Calendar View
 تقویم رسمی هجری شمسی برای FollowUpهای ثبت‌شده، موعدهای آینده، Reminderها و روزهای دارای فعالیت؛ بدون storage مستقل.
 
-### Wave 9 — Backup/Restore UX + Cloud
+### Wave 9 — Date-based Reports / PDF / Print (Issue #153)
+گزارش از داده واقعی یادنگار بر اساس:
+- یک تاریخ مشخص هجری شمسی
+- یک بازه زمانی مشخص هجری شمسی
+
+خروجی‌ها:
+- PDF
+- Print
+- Share با reuse همان document path در صورت امکان
+
+قواعد:
+- انتخاب تاریخ با Date Picker شمسی مشترک Wave 1
+- بازه ابتدا/انتها inclusive
+- root هر کار فقط یک‌بار در گزارش
+- فقط FollowUpهای منطبق با تاریخ/بازه در projection گزارش نمایش داده شوند
+- تاریخ ساخت root جای FollowUp آن روز محسوب نشود
+- ترتیب خروجی deterministic، RTL، ارقام فارسی و Jalali حفظ شود
+- Repository/Storage/Report Engine دوم ساخته نشود
+
+### Wave 10 — Backup/Restore UX + Cloud
 ابتدا Local end-to-end: create, restore, last backup, validation, overwrite warning, smoke restore. سپس provider cloud با manual sync قبل از auto sync.
 
-### Wave 10 — Smart Layer
+### Wave 11 — Smart Layer
 ابتدا rule-based: مدت طولانی بدون پیگیری، موعد گذشته، بدون next action، summary ساده. سپس AI: history summary، next-action suggestion، زمان پیشنهادی و semantic search.
 
 ## 7. Navigation پیشنهادی
@@ -118,7 +137,7 @@ daily / weekly / monthly / custom interval. FollowUp recurrence از Reminder re
 4. آرشیو
 5. تنظیمات
 
-Trash، Backup، Export و Tag Management مسیر ثانویه باشند.
+Trash، Backup، Reports/Export و Tag Management مسیر ثانویه باشند.
 
 ## 8. مدل Home پیشنهادی
 1. «بسم الله الرحمن الرحیم»
@@ -141,7 +160,23 @@ Task Card:
 ## 9. Search نهایی
 Exact search به‌مرور title، description، FollowUp و Tag را پوشش دهد. Archive/Star در Filter باشند. semantic search در آینده لایه مکمل باشد نه جایگزین exact search.
 
-## 10. اصول UX
+## 10. Reporting Contract
+گزارش‌گیری تاریخ‌محور باید projection روی Repository موجود باشد و schema جدید فقط برای فیلتر گزارش ایجاد نشود.
+
+حالت‌ها:
+1. گزارش یک روز
+2. گزارش بازه زمانی
+3. گزارش همه
+4. گزارش کارهای انتخاب‌شده
+5. گزارش یک کار با تاریخچه
+
+برای گزارش تاریخ‌محور:
+- UI تاریخ شمسی، داده داخلی Gregorian/DateTime مطابق قرارداد موجود
+- شروع بازه از ابتدای روز و پایان بازه تا انتهای روز همان تاریخ
+- نتیجه خالی باید empty state فارسی واضح داشته باشد
+- PDF، Print و Share تا حد ممکن یک projection/document path مشترک داشته باشند
+
+## 11. اصول UX
 - عملیات اصلی حداکثر 1 تا 2 gesture
 - destructive action هرگز Swipe مستقیم نباشد
 - pickerها mobile-first
@@ -150,33 +185,37 @@ Exact search به‌مرور title، description، FollowUp و Tag را پوشش
 - accessibility label برای icon-only actions
 - قابلیت پیشرفته در secondary surfaces
 
-## 11. اصول معماری
+## 12. اصول معماری
 - یک Repository/Storage
 - عدم ایجاد Task/FollowUp DB موازی
 - migration additive
 - derived state تا حد ممکن non-persisted
 - Reminder foundation reuse
 - PDF/Share/Print reuse
+- report projection روی export foundation موجود
 - Search service دوم ممنوع بدون نیاز اثبات‌شده
 - Calendar projection روی داده موجود
 - Cloud فقط بعد از Local reliability
 
-## 12. Schema Evolution پیشنهادی
+## 13. Schema Evolution پیشنهادی
 فقط هنگام implementation:
 - v6 احتمالی: nextActionAt / status مورد نیاز Today
 - v7 احتمالی: tags + star
 - v8 احتمالی: archive/trash lifecycle
 - v9 احتمالی: recurrence
 
+گزارش تاریخ‌محور Issue #153 در حالت مطلوب هیچ schema migration جدیدی نیاز ندارد.
+
 این شماره‌ها قطعی نیستند و Fresh Audit زمان اجرا تعیین‌کننده است.
 
-## 13. کیفیت هر Wave
+## 14. کیفیت هر Wave
 `Focused Test → Full flutter test → flutter analyze → Android Build → UI Evidence (برای UI) → fresh scope → merge → post-main proof`
 
 برای Data: backward compatibility + migration + recovery + backup/restore tests.
 برای Reminder: schedule/edit/delete + restart reconciliation + timezone behavior.
+برای Reporting: single-day/range boundary tests + projection tests + PDF/Print path verification.
 
-## 14. اولویت نهایی
+## 15. اولویت نهایی
 ### P0
 - Issue #151
 - Today / Overdue
@@ -184,6 +223,7 @@ Exact search به‌مرور title، description، FollowUp و Tag را پوشش
 - Backup/Restore reliability
 
 ### P1
+- Issue #153 — گزارش PDF/Print یک روز و بازه زمانی
 - Tag
 - Star
 - Archive
@@ -198,7 +238,7 @@ Exact search به‌مرور title، description، FollowUp و Tag را پوشش
 ### P3
 - Smart/AI Layer
 
-## 15. خارج از Scope فعلی
+## 16. خارج از Scope فعلی
 - Collaboration/Team
 - حساب کاربری اجباری
 - Backend مستقل
@@ -207,23 +247,25 @@ Exact search به‌مرور title، description، FollowUp و Tag را پوشش
 - CRM سنگین
 - AI خودمختار برای تغییر داده
 
-## 16. Maximum Parallel
+## 17. Maximum Parallel
 Laneها:
 - Product/UX: Wave 1 → Today → Tags/Archive
+- Reporting: Issue #153 با reuse picker و PDF projection
 - Core/Data: فقط migration لازم Feature فعال
 - Reminder: tracked-task next-action integration
 - Reliability: Backup/Restore + recovery tests
 - Release/CI: Android + exact-head evidence
 - Documentation: sync پس از هر Wave Verify‌شده
 
-## 17. قدم اجرایی فعلی
+## 18. قدم اجرایی فعلی
 1. Issue #151 اجرا شود.
 2. همزمان Gap Audit برای Today/Overdue و Reminder integration انجام شود.
-3. پس از Merge Wave 1، Issueهای کوچک Wave 2 ساخته شوند.
-4. Backup/Restore foundation در Lane مستقل end-to-end Audit شود.
-5. اسناد canonical بعد از محصول Verify‌شده sync شوند.
+3. Issue #153 از نظر export projection و فیلتر روز/بازه آماده‌سازی شود؛ UI آن بعد از تثبیت Date Picker Issue #151 همان picker را reuse کند.
+4. پس از Merge Wave 1، Issueهای کوچک Wave 2 ساخته شوند.
+5. Backup/Restore foundation در Lane مستقل end-to-end Audit شود.
+6. اسناد canonical بعد از محصول Verify‌شده sync شوند.
 
-## 18. اصل نهایی
+## 19. اصل نهایی
 یادنگار قرار نیست بیشترین Feature را داشته باشد؛ باید در چند ثانیه پاسخ دهد:
 
 > «امروز چه چیزی را باید پیگیری کنم و آخرین وضعیتش چه بوده؟»
