@@ -18,17 +18,22 @@ class TrackedSubjectEditScreen extends StatefulWidget {
 
 class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
   late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.subject.text);
+    _descriptionController = TextEditingController(
+      text: widget.subject.description ?? '',
+    );
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -39,9 +44,11 @@ class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
     }
     setState(() => _saving = true);
     try {
-      final updated = await widget.editTimelineItem.updateText(
+      final updated = await widget.editTimelineItem.update(
         id: widget.subject.id,
         text: title,
+        replaceDescription: true,
+        description: _descriptionController.text,
       );
       if (mounted) {
         Navigator.of(context).pop(updated);
@@ -73,6 +80,20 @@ class _TrackedSubjectEditScreenState extends State<TrackedSubjectEditScreen> {
                 autofocus: true,
                 decoration: const InputDecoration(
                   labelText: 'عنوان کار',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                key: const Key('tracked-subject-edit-description'),
+                controller: _descriptionController,
+                minLines: 3,
+                maxLines: 6,
+                textInputAction: TextInputAction.newline,
+                decoration: const InputDecoration(
+                  labelText: 'شرح یا خلاصه کار (اختیاری)',
+                  hintText: 'جزئیات مهم، زمینه یا نتیجه مورد انتظار',
+                  alignLabelWithHint: true,
                   border: OutlineInputBorder(),
                 ),
               ),
