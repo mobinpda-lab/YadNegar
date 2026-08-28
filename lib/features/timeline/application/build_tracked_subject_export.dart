@@ -23,7 +23,7 @@ class TrackedSubjectExport {
 
 /// A date-range export request that preserves the existing PDF action contract.
 ///
-/// It intentionally behaves as an empty Set<String> so existing share/print
+/// It intentionally behaves as an empty string set so existing share/print
 /// wiring can pass it through unchanged; [BuildTrackedSubjectExport] recognizes
 /// the richer request type and applies the date projection to FollowUps.
 class TrackedSubjectDateRangeSelection extends SetBase<String> {
