@@ -115,11 +115,9 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     });
 
     try {
-      final subjects = await widget.loadSubjects.load();
-      final followUps = <String, List<TimelineItem>>{};
-      for (final subject in subjects) {
-        followUps[subject.id] = await widget.loadFollowUps.load(subject.id);
-      }
+      final homeData = await widget.loadSubjects.loadHomeData();
+      final subjects = homeData.subjects;
+      final followUps = homeData.followUpsBySubject;
 
       final sorted = List<TimelineItem>.of(subjects)
         ..sort((left, right) {
