@@ -21,6 +21,8 @@ class EditTimelineItem {
     String? description,
     bool replaceProjectId = false,
     String? projectId,
+    bool replaceNextActionAt = false,
+    DateTime? nextActionAt,
     bool replaceOccurredAt = false,
     DateTime? occurredAt,
     bool replaceReminderAt = false,
@@ -68,6 +70,19 @@ class EditTimelineItem {
             ? replacementProjectId
             : existing.projectId;
 
+    if (existing.isFollowUp && replaceNextActionAt && nextActionAt != null) {
+      throw ArgumentError.value(
+        nextActionAt,
+        'nextActionAt',
+        'FollowUps cannot own a next action.',
+      );
+    }
+    final targetNextActionAt = existing.isFollowUp
+        ? null
+        : replaceNextActionAt
+            ? nextActionAt
+            : existing.nextActionAt;
+
     final targetType = type ?? existing.type;
     final changedToTypeWithoutOccurredAt =
         type != null && !_supportsOccurredAt(targetType) && !existing.isFollowUp;
@@ -85,6 +100,7 @@ class EditTimelineItem {
       text: targetText,
       description: targetDescription,
       projectId: targetProjectId,
+      nextActionAt: targetNextActionAt,
       createdAt: existing.createdAt,
       occurredAt: changedToTypeWithoutOccurredAt
           ? null

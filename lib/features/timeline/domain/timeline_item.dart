@@ -20,6 +20,7 @@ class TimelineItem {
     required this.createdAt,
     this.description,
     this.projectId,
+    this.nextActionAt,
     this.parentId,
     this.occurredAt,
     this.reminderAt,
@@ -41,6 +42,12 @@ class TimelineItem {
   /// Optional Project membership for tracked task roots.
   /// FollowUps do not own project membership and inherit context from parent.
   final String? projectId;
+
+  /// Optional planned time for the next action on a tracked task root.
+  /// This is product planning data and is intentionally distinct from
+  /// [reminderAt], which controls notification scheduling. FollowUps do not own
+  /// a next action; they inherit task context from their parent root.
+  final DateTime? nextActionAt;
 
   /// Null means this item is a tracked subject/root item.
   /// A non-null value identifies the tracked subject this follow-up belongs to.

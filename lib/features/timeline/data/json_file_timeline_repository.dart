@@ -24,7 +24,8 @@ class DuplicateProjectIdException extends FormatException {
 class JsonFileTimelineRepository implements TimelineRepository, ProjectRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 6;
+  static const int schemaVersion = 7;
+  static const int projectSchemaVersion = 6;
   static const int descriptionSchemaVersion = 5;
   static const int followUpSchemaVersion = 4;
   static const int recurrenceSchemaVersion = 3;
@@ -216,6 +217,7 @@ class JsonFileTimelineRepository implements TimelineRepository, ProjectRepositor
 
     final version = decoded['schemaVersion'];
     if (version != schemaVersion &&
+        version != projectSchemaVersion &&
         version != descriptionSchemaVersion &&
         version != followUpSchemaVersion &&
         version != recurrenceSchemaVersion &&
@@ -236,7 +238,7 @@ class JsonFileTimelineRepository implements TimelineRepository, ProjectRepositor
         .toList(growable: true);
 
     final projects = <YadNegarProject>[];
-    if (version >= schemaVersion) {
+    if (version >= projectSchemaVersion) {
       final rawProjects = decoded['projects'];
       if (rawProjects is! List<dynamic>) {
         throw const FormatException('Timeline storage projects must be a JSON list.');
@@ -341,8 +343,11 @@ class JsonFileTimelineRepository implements TimelineRepository, ProjectRepositor
     final description = sourceSchemaVersion >= descriptionSchemaVersion
         ? _optionalString(value, 'description')
         : null;
-    final projectId = sourceSchemaVersion >= schemaVersion
+    final projectId = sourceSchemaVersion >= projectSchemaVersion
         ? _optionalString(value, 'projectId')
+        : null;
+    final nextActionAt = sourceSchemaVersion >= schemaVersion
+        ? _optionalDateTime(value, 'nextActionAt')
         : null;
     final parentId = sourceSchemaVersion >= followUpSchemaVersion
         ? _optionalString(value, 'parentId')
@@ -358,6 +363,9 @@ class JsonFileTimelineRepository implements TimelineRepository, ProjectRepositor
     if (parentId != null && projectId != null) {
       throw const FormatException('FollowUps cannot own projectId.');
     }
+    if (parentId != null && nextActionAt != null) {
+      throw const FormatException('FollowUps cannot own nextActionAt.');
+    }
 
     return TimelineItem(
       id: id,
@@ -365,6 +373,7 @@ class JsonFileTimelineRepository implements TimelineRepository, ProjectRepositor
       text: text,
       description: description,
       projectId: projectId,
+      nextActionAt: nextActionAt,
       createdAt: createdAt,
       parentId: parentId,
       occurredAt: occurredAt,
@@ -380,6 +389,7 @@ class JsonFileTimelineRepository implements TimelineRepository, ProjectRepositor
       'text': item.text,
       'description': item.description,
       'projectId': item.isTrackedSubject ? item.projectId : null,
+      'nextActionAt': item.isTrackedSubject ? item.nextActionAt?.toIso8601String() : null,
       'createdAt': item.createdAt.toIso8601String(),
       'parentId': item.parentId,
       'occurredAt': item.occurredAt?.toIso8601String(),
