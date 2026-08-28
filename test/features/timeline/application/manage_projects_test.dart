@@ -89,7 +89,11 @@ class _MemoryRepository implements TimelineRepository, ProjectRepository {
   final List<YadNegarProject> projects = <YadNegarProject>[];
 
   @override
-  Future<bool> deleteById(String id) async => items.removeWhere((item) => item.id == id) > 0;
+  Future<bool> deleteById(String id) async {
+    final before = items.length;
+    items.removeWhere((item) => item.id == id);
+    return items.length != before;
+  }
 
   @override
   Future<TimelineItem?> findById(String id) async {
