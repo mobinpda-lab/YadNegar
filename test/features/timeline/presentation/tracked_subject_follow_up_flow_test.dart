@@ -95,11 +95,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('tracked-subject-car')), findsOneWidget);
+    final rootCard = find.byKey(const Key('tracked-subject-car'));
+    await tester.scrollUntilVisible(
+      rootCard,
+      250,
+      scrollable: find.byKey(const Key('tracked-subject-home-scroll')),
+    );
+    expect(rootCard, findsOneWidget);
     expect(find.text('۱ پیگیری'), findsOneWidget);
     expect(find.textContaining('۱۴۰۵/۰۶/۰۶'), findsWidgets);
 
-    await tester.tap(find.byKey(const Key('tracked-subject-car')));
+    await tester.tap(rootCard);
     await tester.pumpAndSettle();
 
     expect(find.text('بررسی روغن انجام شد'), findsOneWidget);
