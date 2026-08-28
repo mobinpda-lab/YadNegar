@@ -1,6 +1,6 @@
 # YadNegar AI Continuation State
 
-Last updated: 2026-08-28
+Last updated: 2026-08-29
 
 ## Source of Truth
 `GitHub Reality > owner-approved product contract > canonical governance > current-state docs > conversation memory`
@@ -10,144 +10,167 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Verified Product Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current verified product main SHA: `9b577cc655cb53c9cfb2ed396fa8a71ad4eb3262`
+Current verified product main SHA: `64460c5cb0cf1e70f6361a32acf9e77a6bfdfdfe`
 
-The canonical product remains one persistent tracked-task root with persistent child FollowUps. The earlier flat Timeline is retained only as legacy tooling; no second Task/FollowUp store was introduced.
+Canonical model:
+`Tracked Task Root → Persistent FollowUps → Jalali/Persian History → Search → PDF/Share/Print`
+
+The earlier flat Timeline remains only as legacy tooling. No second Task/FollowUp store exists.
 
 ## Current Product Contract
-Primary behavior now includes:
-- root-only tracked-task Home
-- latest real FollowUp drives exact Jalali/Persian date-time and derived relative text
-- explicit no-follow-up state; root creation time never masquerades as latest FollowUp
-- dedicated FollowUp capture/edit with Jalali input and Persian digits
-- task edit and individual FollowUp edit with parent/sibling history preservation
-- optional multi-line tracked-task description across create/edit/detail/PDF
-- computed elapsed/inter-FollowUp durations; derived values are never persisted
-- Persian RTL PDF with bundled Vazirmatn for all / selected / single-task scopes
-- Share and Print reuse the same PDF projection/document path
-- Home search matches task title, optional task description, and any persisted child FollowUp text
-- JSON Backup/Restore remains a separate machine-readable safety feature
+- one persistent root per tracked task
+- persistent child FollowUps with parent/sibling history preservation
+- optional root description
+- optional root Project membership; FollowUps inherit Project context from parent
+- Projects stored in the same JSON foundation, not a second database
+- root-only Home with one repository snapshot per reload
+- latest real FollowUp drives exact date/time and relative status; root creation time never masquerades as a FollowUp
+- Home search across task title + description + child FollowUp text
+- subtle `بسم الله الرحمن الرحیم` at top of Home
+- swipe left or right on a task opens FollowUp capture for the same root and never dismisses/deletes the root
+- Jalali monthly grid date picker
+- 24-hour dial time picker
+- Persian RTL PDF for all / selected / single-task scopes
+- date-based one-day/range reports over matching FollowUps only
+- PDF / Print / Share reuse the same report/document foundation
+- validated JSON Backup/Restore
+- reminder foundation with none/daily/weekly recurrence and local-time semantics
 
 ## Data / Architecture Foundation
 One repository and one JSON persistence foundation are reused.
 
-Current storage schema: **v5**  
-Backward-compatible reads: **v1-v4**
+Current storage schema: **v6**  
+Backward-compatible reads: **v1-v5**
 
-Key schema evolution:
+Schema evolution:
+- v2: optional reminder time
+- v3: reminder recurrence
 - v4: optional `parentId` for root → FollowUp history
 - v5: optional tracked-task root `description`
+- v6: Projects + optional root `projectId`
 
-Safety properties:
+Safety:
 - no destructive migration
 - no read-time rewrite
-- safe-write upgrade path
-- tmp/bak recovery
-- backup/restore validation
+- safe-write upgrade
+- tmp/bak crash recovery
+- validated Backup/Restore
 - unsupported newer schema fails closed
+- FollowUps cannot own Project membership
 
-Primary dependency direction remains:
-`Presentation → Application → Domain`
+## Recent Completed Slices
+### #153 — Date-based Reports
+Completed and merged.
+- one Jalali day or inclusive Jalali range
+- root appears once
+- only matching FollowUps are included
+- root creation date alone does not count
+- existing PDF/Print/Share path reused
 
-`Infrastructure/Data → Domain contracts`
+### #149 / PR #157 — Home Single Snapshot
+Completed.
+- Home calls the repository once per reload and groups roots/children in memory
+- Projects, description, search and FollowUp ordering preserved
+- no cache, store, schema or dependency added
 
-## Canonical Contract Completion
-Issue #121 is already **Completed**. Its main delivery waves were:
-- #122 / PR #124: tracked-task/root + persistent FollowUp foundation
-- #126 / PR #130: Jalali/Persian date-time foundation
-- #129 / PR #133: computed Persian duration foundation
-- #128: final FollowUp capture/edit/Home/detail semantics
-- #125 / PR #138 + #139: Persian PDF + all/selected/single + share/print
-- #140 / PR #141 + #142: optional description storage/UI/PDF
-- PR #143: canonical documentation closure
+Merged main after PR #157:
+`2f360ca952ffdd706461c6fb428d67853f8e27b9`
 
-Issue #117 is also already **Completed**. Do not treat #117 or #121 as future work.
+Post-main CI and Android full chain were Green; #149 is Closed / Completed.
 
-## Latest Product Slice — #144 / PR #145
-Fresh audit found the Home search hint promised search in tasks and FollowUps, while the implementation only matched root titles.
-
-Delivered behavior:
-- task-title match returns the root
-- description-only match returns the root
-- child-FollowUp-text match returns the root
-- no duplicate roots
-- current ordering/hierarchy preserved
-- no repository/disk read per keystroke
-- no schema/model/store/scheduler/dependency change
+### #151 / PR #159 — Home/FollowUp UX
+Completed.
 
 Final PR head:
-`b876bade5c89d5215d7955c8b1ffc250bd8f627e`
+`0e27cfd8083ca5428b1fb7a321982cc6d4b7f936`
 
-Fresh pre-merge scope: exactly two files, `behind=0`.
+Final scope: exactly two files, `behind=0`.
 
-Pre-merge evidence:
-- YadNegar CI `33183658883`: success
-- YadNegar UI Evidence `33183658891`: success
-- YadNegar Android Build `33183658875`: success full chain
+Exact-head evidence:
+- YadNegar CI #396 `33209126088`: success
+- YadNegar UI Evidence #39 `33209126046`: success
+- YadNegar Android Build #169 `33209126028`: full chain success
+  - Debug APK
+  - Release Candidate
+  - Emulator Smoke/Recovery
+  - Release Readiness
+  - Release Draft
+  - Release Approval/Rollback
 
 Merged with exact expected-head lock to:
-`9b577cc655cb53c9cfb2ed396fa8a71ad4eb3262`
+`64460c5cb0cf1e70f6361a32acf9e77a6bfdfdfe`
 
-Post-main proof on exact merged SHA:
-- YadNegar CI `33185558030`: success
-- YadNegar Android Build `33185558017`: success full chain
-  - debug APK build/verify/upload
-  - release-candidate build/evidence
-  - emulator startup + storage recovery
+Post-main exact SHA:
+- CI #397 `33209875036`: success
+- Android #170 `33209875095`: full chain success
+  - debug APK
+  - release candidate
+  - emulator smoke/storage recovery
   - release readiness
   - deterministic release draft
-  - release approval/rollback evidence
+  - release approval/rollback
 
-Issue #144 is **Completed**.
+Issue #151 is Closed / Completed.
 
-## Reminder / Release Baseline
-Existing one-shot + daily/weekly Reminder foundation remains reused with device-local timezone handling and fail-closed behavior.
-
-Verified automation chain:
-`Fast CI → Android Build → Candidate → Smoke/Recovery → Readiness → Release Draft → Approval/Rollback Evidence`
+## Release Baseline
+Verified release automation:
+`Fast CI → Android Build → Candidate → Smoke/Recovery → Readiness → Release Draft → Approval/Rollback`
 
 Release status:
 `candidate verified / governance verified / production signing blocked / not Play-Store-ready`
 
-No production keystore/secret, real tag, GitHub Release or Play Store publish has been created.
+No production keystore/secret, real release tag, GitHub Release or Play Store publish is created without an explicit Owner/Security decision.
 
-## Automation Gap — Issue #19
-Issue #19 remains intentionally open. `main-protection` is active and requires pull requests while blocking deletion and non-fast-forward updates. Required status checks are still not Platform-level enforced because connected tooling exposes Ruleset read but not Ruleset write.
+## Platform Gap — Issue #19
+#19 remains open and Platform-limited. `main-protection` requires PRs and blocks deletion/non-fast-forward updates, but connected tooling still does not expose Ruleset Write for enforcing required check contexts.
 
-Operational merge contract until enforcement is writable:
+Until then:
 `exact head + exact-head relevant gates + fresh scope + live mergeability + expected_head_sha + post-main proof`
+
+## Next Product Slice — Issue #160
+`Today Center: اقدام بعدی، امروز، عقب‌افتاده و آینده بدون تداخل با Reminder`
+
+Fresh audit decisions:
+- optional root-only `nextActionAt`
+- Next Action is distinct from Notification/Reminder
+- derived buckets are not persisted
+- local calendar-day semantics:
+  - Today = anywhere on the current local day
+  - Overdue = before start of today
+  - Upcoming = after end of today
+  - No Next Action = null
+- reuse `TimelineItem`, `QuickCapture`, `EditTimelineItem`, JSON repository, Jalali grid, 24h dial and Home single-snapshot projection
+- no second store/calendar/search/reminder foundation
+
+Implementation decomposition:
+1. Slice A — schema v7 + domain/application + derived buckets + tests
+2. Slice B — create/edit/detail/Home Today Center UI
 
 ## Documentation Lane
 Active branch:
-`docs/tracked-subject-search-content`
+`docs/current-state-after-151`
 
-It was kept untouched until #145 post-main proof finished, then fast-forwarded **without force** to exact verified main `9b577cc...`.
-
-Expected docs-only scope is exactly:
+Final intended scope is exactly four canonical documents:
 - `docs/AI_CONTINUATION_STATE.md`
 - `docs/AI_HANDOFF_CURRENT_FA.md`
 - `docs/YADNEGAR_OPERATION_PLAN.md`
 - `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
 
-After exact-head docs Fast CI, fresh four-doc scope, live mergeability and expected-head merge, run post-main Fast CI and refresh #19 to the newest canonical main.
+Before merge: exact-head Fast CI + fresh four-doc scope + live mergeability + expected-head lock + post-main Fast CI.
 
 ## Maximum Parallel Rules
 - independent Product / Release / Automation / Docs lanes move concurrently
-- a blocked runner pauses only its lane
 - reuse before rebuild
-- small reversible PRs
+- small reversible slices
+- one source of truth for data
 - no stale/fake evidence
-- no duplicate workflow/storage/foundation
-- no force integration when a fresh rebuild/fast-forward is safer
+- no duplicate storage/workflow/foundation
+- stacked work must be fresh-compared after base moves
 - documentation records only verified reality
 
 ## Current Queue
-Fresh issue/PR audit after #144 completion:
-- no open product PRs
-- no known open product issue
-- #19 is the only known open issue and is Platform-limited
-
-Do not invent backlog merely to keep work moving. The next product slice must come from a fresh, concrete UX/code audit with a small reuse-first Definition of Done.
+- #160: active next product lane
+- #19: independent Platform-limited governance gap
 
 ## Trigger
 `ادامه یادنگار`
