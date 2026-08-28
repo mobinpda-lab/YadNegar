@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   patch:
-    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,25 +17,26 @@ jobs:
           ref: perf/home-single-snapshot-v6
           fetch-depth: 0
       - name: Patch Home and remove one-shot workflow
-        shell: python
         run: |
+          python3 - <<'PY'
           from pathlib import Path
           path = Path('lib/features/timeline/presentation/tracked_subject_home.dart')
           text = path.read_text()
-          old = '''      final subjects = await widget.loadSubjects.load();
+          old = """      final subjects = await widget.loadSubjects.load();
           final followUps = <String, List<TimelineItem>>{};
           for (final subject in subjects) {
             followUps[subject.id] = await widget.loadFollowUps.load(subject.id);
           }
-'''
-          new = '''      final homeData = await widget.loadSubjects.loadHomeData();
+          """
+          new = """      final homeData = await widget.loadSubjects.loadHomeData();
           final subjects = homeData.subjects;
           final followUps = homeData.followUpsBySubject;
-'''
+          """
           if old not in text:
               raise SystemExit('Expected Home reload snippet not found; refusing unsafe patch.')
           path.write_text(text.replace(old, new, 1))
           Path('.github/workflows/patch-home-single-snapshot.yml').unlink()
+          PY
       - name: Commit exact scoped patch
         run: |
           git config user.name "github-actions[bot]"
