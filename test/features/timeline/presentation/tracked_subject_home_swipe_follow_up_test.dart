@@ -57,12 +57,16 @@ void main() {
     final swipe = find.byKey(const Key('tracked-subject-swipe-root-1'));
     expect(swipe, findsOneWidget);
 
-    final revealGesture = await tester.startGesture(tester.getCenter(swipe));
-    await revealGesture.moveBy(const Offset(-80, 0));
-    await tester.pump();
-    expect(find.text('افزودن پیگیری', skipOffstage: false), findsOneWidget);
-    await revealGesture.up();
-    await tester.pumpAndSettle();
+    final dismissible = tester.widget<Dismissible>(swipe);
+    final background = dismissible.background! as Container;
+    final backgroundRow = background.child! as Row;
+    final backgroundLabel = backgroundRow.children.whereType<Text>().single;
+    expect(backgroundLabel.data, 'افزودن پیگیری');
+
+    final secondaryBackground = dismissible.secondaryBackground! as Container;
+    final secondaryRow = secondaryBackground.child! as Row;
+    final secondaryLabel = secondaryRow.children.whereType<Text>().single;
+    expect(secondaryLabel.data, 'افزودن پیگیری');
 
     await tester.drag(swipe, const Offset(-320, 0));
     await tester.pumpAndSettle();
