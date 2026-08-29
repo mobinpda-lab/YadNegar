@@ -21,6 +21,10 @@ class EditTimelineItem {
     String? description,
     bool replaceProjectId = false,
     String? projectId,
+    bool replaceCategoryId = false,
+    String? categoryId,
+    bool replaceTagIds = false,
+    List<String>? tagIds,
     bool replaceNextActionAt = false,
     DateTime? nextActionAt,
     bool replaceOccurredAt = false,
@@ -70,6 +74,28 @@ class EditTimelineItem {
             ? replacementProjectId
             : existing.projectId;
 
+    final normalizedCategoryId = categoryId?.trim();
+    final replacementCategoryId =
+        normalizedCategoryId == null || normalizedCategoryId.isEmpty
+            ? null
+            : normalizedCategoryId;
+    final targetCategoryId = existing.isFollowUp
+        ? null
+        : replaceCategoryId
+            ? replacementCategoryId
+            : existing.categoryId;
+
+    final replacementTagIds = (tagIds ?? const <String>[])
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    final targetTagIds = existing.isFollowUp
+        ? const <String>[]
+        : replaceTagIds
+            ? replacementTagIds
+            : existing.tagIds;
+
     if (existing.isFollowUp && replaceNextActionAt && nextActionAt != null) {
       throw ArgumentError.value(
         nextActionAt,
@@ -100,6 +126,8 @@ class EditTimelineItem {
       text: targetText,
       description: targetDescription,
       projectId: targetProjectId,
+      categoryId: targetCategoryId,
+      tagIds: targetTagIds,
       nextActionAt: targetNextActionAt,
       createdAt: existing.createdAt,
       occurredAt: changedToTypeWithoutOccurredAt
