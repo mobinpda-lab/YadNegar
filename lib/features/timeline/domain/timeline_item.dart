@@ -20,6 +20,8 @@ class TimelineItem {
     required this.createdAt,
     this.description,
     this.projectId,
+    this.categoryId,
+    this.tagIds = const <String>[],
     this.nextActionAt,
     this.parentId,
     this.occurredAt,
@@ -42,6 +44,14 @@ class TimelineItem {
   /// Optional Project membership for tracked task roots.
   /// FollowUps do not own project membership and inherit context from parent.
   final String? projectId;
+
+  /// Optional Category membership for tracked task roots.
+  /// FollowUps do not own Category membership and inherit context from parent.
+  final String? categoryId;
+
+  /// Optional multi-tag membership for tracked task roots.
+  /// FollowUps do not own tags and inherit context from parent.
+  final List<String> tagIds;
 
   /// Optional planned time for the next action on a tracked task root.
   /// This is product planning data and is intentionally distinct from
