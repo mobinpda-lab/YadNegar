@@ -1,3 +1,4 @@
+# CI bootstrap note: touching pubspec intentionally exercises the full Android post-main proof path.
 name: yadnegar
 description: Persian RTL personal memory assistant and knowledge organizer.
 publish_to: "none"
