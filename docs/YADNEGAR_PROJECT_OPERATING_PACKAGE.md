@@ -1,305 +1,345 @@
-# YADNEGAR PROJECT OPERATING PACKAGE v1.7
-## مرجع عملیاتی واحد پروژه یادنگار
-
-**Project:** YadNegar / یادنگار  
-**Repository:** `mobinpda-lab/YadNegar`  
-**Default Branch:** `main`  
-**Technology:** Flutter / Dart  
-**Architecture:** Feature-based + Clean boundaries + Persian RTL-first UI  
-**Reality Authority:** GitHub Repository State  
-**Status:** Canonical Governance
-
-## 0. اصول غیرقابل مذاکره
-1. GitHub مرجع حقیقت کد، Branch، Commit، PR، Workflow، CI، Build و مستندات است.
-2. هر Session مهم با Fresh Audit شروع می‌شود؛ Conversation یا Documentation قدیمی جای Audit را نمی‌گیرد.
-3. هدف، نرم‌افزار سالم در ساعت‌ها به‌جای روزهاست؛ سرعت از Parallel Work، Automation و Reuse می‌آید، نه حذف Gate.
-4. Laneهای مستقل همزمان حرکت می‌کنند؛ Block یک Lane، Lane مستقل دیگر را متوقف نمی‌کند.
-5. Evidence فقط برای Ref/SHA دقیق معتبر است؛ Green تاریخی به Head جدید منتقل نمی‌شود.
-6. قبل از Foundation جدید، موجودی فعلی Audit و reuse شود.
-7. Fake Build/Test/Persistence/Release Evidence ممنوع است.
-8. تغییر پرریسک مستقیم روی `main` انجام نمی‌شود؛ Branch/PR مسیر پیش‌فرض است.
-9. تغییرات کوچک، Reviewable، Reversible و Rollback-friendly باشند.
-10. مستندات همزمان با Implementation حرکت کنند و Canonical رقیب ساخته نشود.
-11. Stacked preparation مجاز است، اما Merge وابسته فقط بعد از Fresh compare، Scope مستقل، dependency post-main Green و Gate کامل انجام می‌شود.
-
-## 1. ترتیب مرجع حقیقت
-`GitHub Reality > approved architecture decisions > this canonical package > current execution docs > conversation memory`
-
-در اختلاف منابع:
-`Verify GitHub → identify discrepancy → repair docs → preserve material history`
-
-## 2. Trigger «ادامه یادنگار»
-این عبارت دستور اجرایی است:
-1. main/PR/Issue/Workflow زنده Audit شود.
-2. Canonical + Current State خوانده شود.
-3. نزدیک‌ترین Gap واقعی انتخاب شود.
-4. Work به Laneهای مستقل شکسته شود.
-5. reuse قبل از rebuild اعمال شود.
-6. Implementation واقعی روی GitHub انجام شود.
-7. exact-head Validation گرفته شود.
-8. Merge فقط با Gate امن انجام شود.
-9. post-main proof گرفته شود.
-10. Docs همزمان Sync و گزارش مالک کوتاه ارائه شود.
-
-## 3. مدل Maximum Parallel
-### Lane A — Core / Data
-- Domain contracts
-- Timeline model/repository
-- Persistence, schema, migration, recovery
-
-### Lane B — Product / UX
-- Persian RTL
-- Timeline / Quick Capture
-- Search/Filter/Edit/Delete/Undo
-- Backup/Restore/Reminder UX
-
-### Lane C — Release / Platform
-- Android build/release candidate
-- deterministic manifest/readiness/version/release-notes/approval evidence
-- emulator smoke/recovery
-- production signing فقط بعد از Audit امنیتی و تعیین مالک credentials
-
-### Lane D — CI / Automation / Documentation
-- GitHub Actions
-- Analyze/Test/Build
-- exact-run evidence
-- Current State / Handoff / Operation Plan / Canonical sync
-
-Rule:
-`Detect overlap → assign ownership → execute independently → validate → integrate`
-
-## 4. Definition of Ready / Done
-Ready:
-- objective/value روشن
-- reuse audit انجام‌شده
-- scope/out-of-scope مشخص
-- dependencies و evidence معلوم
-- parallel-safety مشخص
-
-Done:
-`Working Change + Tests/Validation + Exact Evidence + Documentation + Safe Integration`
-
-## 5. معماری و Reuse Contract
-Current implementation یک foundation مشترک دارد:
-- one `TimelineItem`
-- one `TimelineRepository` contract
-- one crash-recoverable JSON storage
-- one App Shell / Timeline flow
-- one schema-versioned parser/serializer path
-- one Reminder scheduling boundary
-
-Feature جدید نباید Foundation موازی ایجاد کند مگر Audit و ADR واقعی آن را لازم کند.
-
-Dependency direction:
-`Presentation → Application → Domain`
-
-Platform/Data implementations پشت boundary می‌مانند.
-
-## 6. Data Governance
-Production storage اکنون schema v3 است.
-
-Compatibility:
-- v1 reads supported
-- v2 reads supported
-- v3 reads/writes current
-- legacy read نباید فایل را mutation کند
-- اولین safe write از همان staging/tmp/bak path موجود نسخه قدیمی را به v3 می‌برد
-
-Schema v3 recurrence contract:
-- `none`
-- `daily`
-- `weekly`
-- recurrence بدون `reminderAt` به `none` normalize می‌شود
-
-هر schema/storage change:
-`Versioning + Backward Compatibility + Migration/Safe Upgrade + Validation + Recovery/Rollback`
-
-داده کاربر destructive rewrite نمی‌شود. Backup/Restore باید production parser/serializer/recovery path را reuse کند.
-
-## 7. Reminder Governance
-Reminder روی همان TimelineItem و storage موجود سوار است.
-
-قواعد:
-- no sidecar Reminder database/repository
-- notification plugin بیرون Domain
-- persist-first: schedule/cancel failure نباید داده ذخیره‌شده را rollback کند
-- startup/Restore reconciliation از persisted Timeline
-- recurring reminders محدود به contract versioned موجود باشند
-- exact-alarm permission فقط با نیاز واقعی و compatibility proof
-
-Recurring reminder behavior:
-- `none`: one-shot فعلی
-- `daily`: device-local clock time
-- `weekly`: device-local weekday + clock time
-- recurrence قدیمی باید به occurrence بعدی آینده منتقل شود
-- device timezone قبل از reconciliation تعیین شود
-- اگر timezone قابل Verify نیست، recurrence fail-closed باشد؛ UTC fallback ساختگی ممنوع است
-
-Presentation rule after recurrence foundation:
-- reminder state may be surfaced directly on Timeline cards by reusing existing `TimelineItem` fields
-- no second read/query/storage path is needed for reminder summaries
-
-## 8. CI / Quality
-Fast chain:
-`flutter pub get → flutter analyze → flutter test`
-
-Release chain:
-`Fast CI → Android Build → Debug APK → Release Candidate → Manifest → Smoke/Recovery → Release Readiness → Version/Release Notes Draft → Approval/Rollback Evidence → live mergeability → expected-head merge → post-main proof`
-
-Rules:
-- reuse موجود قبل از Workflow جدید
-- artifact واقعی و قابل Verify
-- Green یک SHA به SHA دیگر نسبت داده نشود
-- source Head SHA از temporary PR validation SHA تفکیک شود
-- downstream jobs exact-run artifacts را مصرف کنند
-- no duplicate validation بدون دلیل
-
-## 9. Git / PR Governance
-- Branch کوچک و هدفمند
-- PR یک هدف اصلی
-- Out-of-scope روشن
-- stale merge ممنوع
-- exact current head قبل از Merge Fresh-read شود
-- Product/Release فقط با exact-head Fast CI + Android/relevant jobs + live mergeability
-- Merge با `expected_head_sha`
-- main بعد از Merge Fresh-verify شود
-- stacked branch قبل از Merge نسبت به main جدید Fresh compare شود
-
-## 10. Merge Contract
-### Product / Release
-1. exact current head
-2. Fast CI Green همان Head
-3. Android/relevant gates Green همان Head
-4. stacked dependency post-main Green + Fresh isolated compare
-5. live mergeability=true
-6. `expected_head_sha=exact head`
-7. post-main CI/Android proof
-8. docs sync
-
-### Docs-only
-1. exact current head
-2. Fast CI Green
-3. live mergeability=true
-4. exact expected-head lock
-5. post-main Fast CI proof
-
-Historical Green برای Head جدید قابل انتقال نیست.
-
-## 11. Documentation-as-Code
-Canonical:
-`docs/YADNEGAR_PROJECT_OPERATING_PACKAGE.md`
-
-Execution plan:
-`docs/YADNEGAR_OPERATION_PLAN.md`
-
-Current state:
-`docs/AI_CONTINUATION_STATE.md`
-
-Persian Handoff:
-`docs/AI_HANDOFF_CURRENT_FA.md`
-
-Historical/product reference:
-`docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
-
-GitHub Reality و Current State برای وضعیت روز مقدم‌اند.
+# سند اجرایی یکپارچه پروژه یادنگار
 
-## 12. Verified Current Baseline — 2026-08-27
-Current main:
-`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
-
-Product flow:
-`Quick Capture → Persist → Timeline → Search/Filter → View/Edit → Delete/Undo → Export → Backup/Restore → Reminder`
-
-Release Governance کامل و post-main Green است.
-
-### Recurring Foundation — PR #96 / Issue #94
-Final head:
-`225c948eac7a95e63d5618254fab7e6213a5c835`
-
-Pre-merge:
-- CI `33078963061`: success
-- Android `33078963046`: success
-
-Post-main:
-- CI `33079988610`: success
-- Android `33079988616`: success
-
-### Scheduler + Persian UX — PR #97 / Issue #95
-Final head:
-`79bc8d84e8bab563ab63a688448fbf26d3a51dad`
-
-Pre-merge:
-- CI `33080762656`: success
-- Android `33080762586`: success
-
-Merged main:
-`1610e3221c1eec9af6de0f4b16b45d2fdfc9ebf6`
-
-Post-main:
-- CI `33081668902`: success
-- Android `33081668913`: success
-
-Current main therefore includes the complete safe `none/daily/weekly` recurring-reminder behavior using device-local timezone and the existing Timeline/Reminder foundations.
-
-### Active Docs Closure — PR #98
-PR #98 synchronizes all four canonical/live docs with the completed product outcome.
-
-It must pass a fresh exact-head Fast CI after the final factual refresh, merge with exact expected-head lock, and receive post-main Fast CI proof before parent #93 closes.
-
-### Next Product Candidate — Issue #99
-`product: surface reminder status on Timeline cards`
-
-Planned scope:
-- presentation-only reuse of existing reminder fields
-- one-shot date/time summary
-- daily clock summary
-- weekly weekday/clock summary
-- focused widget tests
-
-No schema/repository/storage/scheduler/navigation foundation change.
-
-## 13. Release Safety Boundary
-Android release build still uses debug signing config:
-`candidate verified / governance verified / production signing blocked / not Play-Store-ready`
-
-No production keystore/secret committed. No real tag, GitHub Release or store publication created.
-
-Production signing/key management is a separate security-sensitive Slice requiring verified credential ownership and explicit Owner/Security decision.
-
-## 14. Automation Gap — Issue #19
-Live main protection requires PR and blocks deletion/non-fast-forward, but required status checks are not yet Platform-level enforced.
-
-Connected tooling exposes Ruleset read but no Ruleset write.
-
-Until writable enforcement exists:
-`exact current head + exact-head relevant gates + live mergeability + expected_head_sha + post-main proof`
-
-## 15. Reliability / Recovery
-For important changes:
-`Detect → Classify → Contain → Recover → Validate → Document → Improve`
-
-Data/release changes require rollback/recovery thinking before integration.
-
-## 16. AI Decision Boundary
-Routine reversible scoped engineering work can continue autonomously after Audit.
-
-Extra owner/security decision for:
-- major product direction
-- major architecture
-- destructive migration/data-loss risk
-- production signing/secrets
-- irreversible tag/release/publishing
-- major visual redesign
-
-## 17. گزارش مالک
-کوتاه، غیر فنی و نتیجه‌محور:
-`کجا هستیم | انجام شد | وضعیت | مانع | قدم بعد`
-
-Inference نباید Fact گزارش شود.
-
-## 18. فرمول توسعه
-**Fast Delivery = Maximum Parallel + Safe Stacked Preparation + Automation + Reuse + Fast Feedback + Exact Evidence + Controlled Integration + Concurrent Documentation**
-
-**Professional Delivery = Speed + Quality + Architecture + Recovery + Traceability**
-
-اگر Implementation با این سند اختلاف داشت، GitHub Reality مقدم است و این سند باید اصلاح شود.
+## Maximum Parallel + Production Orchestrator
+
+از این لحظه فرآیند توسعه، تکمیل، تست، مستندسازی، Merge و Release پروژه **یادنگار (YadNegar)** باید تحت اصل دائمی زیر انجام شود:
+
+**ادامه با حالت Maximum Parallel؛ سریع، خودکار، مستند و با گزارش کوتاه غیر فنی.**
+
+Production Orchestrator بخشی از اجرای همین اصل است و جایگزین Maximum Parallel نیست.
+
+## 1. اصل اجرایی مادر
+تمام کارهای مستقل پروژه باید تا حد ممکن هم‌زمان انجام شوند. اگر یک Lane، PR، CI یا Integration مسدود شد، فقط همان مسیر متوقف شود و سایر Laneهای مستقل ادامه پیدا کنند.
+
+اصل دائمی:
+
+**Parallelism در توسعه حداکثری است، اما Merge به main سریالی، محافظت‌شده و Evidence-Based باقی می‌ماند.**
+
+هدف اصلی: کمترین زمان مرده بین توسعه، CI، Android validation، مستندسازی و Release.
+
+## 2. منبع حقیقت پروژه
+ترتیب اعتبار:
+
+**GitHub Reality > Product Contract تأییدشده > Governance > Current-State Docs > Conversation Memory**
+
+Repository اصلی: `mobinpda-lab/YadNegar`  
+Branch اصلی: `main`
+
+Baseline ثبت‌شده هنگام تدوین این سند: `b8f49ab4b1bd24991030f4090578b236c28710d0`
+
+آخرین Merge ثبت‌شده: `#170 — add 8-minute YadNegar Production Orchestrator`
+
+قبل از هر ادامه واقعی باید GitHub دوباره Fresh Audit شود. اگر main تغییر کرده بود، baseline جدید GitHub به‌صورت خودکار جایگزین این مقدار شود. Historical Green هرگز برای Head جدید معتبر تلقی نشود.
+
+## 3. مدل اصلی محصول
+مدل canonical یادنگار:
+
+`Tracked Task Root → Persistent FollowUps → Jalali/Persian History → Search → PDF/Print/Share`
+
+هر کار پیگیری‌دار یک Root پایدار دارد. FollowUpها فرزندان پایدار همان Root هستند. تاریخچه Parent و Siblingها باید حفظ شود. Flat Timeline قدیمی فقط Legacy tooling است و نباید تبدیل به foundation دوم محصول شود.
+
+## 4. قانون معماری
+یک منبع داده اصلی وجود دارد. یک JSON persistence foundation وجود دارد. نباید برای قابلیت‌های جدید Task store دوم، FollowUp store دوم، Reminder scheduler دوم، Search foundation دوم، PDF engine دوم، Backup engine دوم، Project database دوم یا Calendar/Today store دوم ساخته شود.
+
+اصل: **Reuse Before Add**
+
+هر قابلیت جدید ابتدا باید foundation موجود را توسعه دهد.
+
+## 5. Storage و Migration
+Storage باید backward-compatible باقی بماند.
+
+قوانین:
+- migration مخرب ممنوع
+- read-time rewrite ممنوع
+- safe-write upgrade
+- tmp/bak crash recovery
+- Backup/Restore معتبر
+- schema جدید فقط در صورت نیاز واقعی
+- schema جدید نباید فقط برای راحتی implementation ایجاد شود
+
+نسخه‌های قدیمی باید تا حد قرارداد جاری قابل خواندن باقی بمانند. FollowUp نباید Project membership مستقل از Parent داشته باشد.
+
+## 6. Maximum Parallel
+Laneهای مستقل باید هم‌زمان جلو بروند.
+
+Laneهای اصلی: Product، Reminder، Home / Today، FollowUp UX، Reports، Projects، Search، Release، Android Validation، Automation، Documentation و Governance.
+
+هر Lane باید به Sliceهای کوچک، کم‌ریسک و قابل برگشت شکسته شود. PRها ترجیحاً کوچک و کم‌Conflict باشند. حرکت main نباید کل پروژه را متوقف کند. فقط Lane متاثر Fresh Compare/Rebuild شود.
+
+## 7. Production Orchestrator
+یادنگار دارای Production Orchestrator مستقل است.
+
+Cadence: **هر 8 دقیقه**
+
+وظیفه Orchestrator:
+- بررسی PRهای مجاز
+- Fresh-read کردن current main
+- بررسی exact Head SHA
+- بررسی Fast CI
+- بررسی Android/Release chain
+- جلوگیری از stale evidence
+- جلوگیری از Merge روی base قدیمی
+- Merge فقط با expected-head
+- Merge یکی‌یکی
+- Post-main validation
+- ادامه Queue بعد از هر Merge
+
+Production Orchestrator باید ابزار اجرایی Maximum Parallel باشد، نه مانع توسعه موازی.
+
+## 8. قانون CI
+هیچ Head تغییرکرده‌ای حق استفاده از CI قبلی را ندارد.
+
+برای هر PR باید در صورت مرتبط بودن exact-head Fast CI، UI Evidence، Android Full Chain، fresh compare، mergeability و expected-head lock بررسی شود.
+
+Android Full Chain موجود یادنگار:
+
+`Fast CI → Android Build → Candidate → Smoke/Recovery → Readiness → Release Draft → Approval/Rollback`
+
+تا زمانی که قرارداد CI تغییر نکرده، foundation جدید CI ساخته نشود.
+
+## 9. قانون Merge
+توسعه: **Maximum Parallel**  
+Merge: **Serial**
+
+هر Merge باید روی current main معتبر باشد، Head ثابت داشته باشد، stale نباشد، CI مربوط به همان exact Head باشد، Fresh Compare معتبر داشته باشد، behind=0 یا معادل معتبر آن داشته باشد، mergeability زنده بررسی شود، expected_head_sha استفاده شود و Post-main proof داشته باشد.
+
+Merge دو PR به‌صورت مخرب و هم‌زمان ممنوع است.
+
+## 10. وضعیت فعلی محصول
+قابلیت‌های اصلی موجود:
+- Tracked Task Root
+- Persistent FollowUps
+- تاریخچه فارسی/جلالی
+- Description
+- Search
+- Project membership
+- Home root-only
+- one repository snapshot per reload
+- latest real FollowUp semantics
+- FollowUp swipe امن
+- Jalali monthly grid
+- 24-hour time picker
+- PDF / Print / Share
+- date-based reports
+- JSON Backup/Restore
+- Reminder foundation
+- recurrence none/daily/weekly
+- Today Center
+- Next Action
+
+این قابلیت‌ها foundation موجود پروژه هستند و نباید با نسخه دوم بازسازی شوند.
+
+## 11. Home Contract
+Home فقط Root Taskها را نمایش دهد. FollowUpها داخل history/detail متعلق به همان Root هستند. Home باید از یک repository snapshot در هر reload استفاده کند.
+
+Search حداقل Task title، Description و FollowUp text را پوشش دهد. Latest FollowUp واقعی مبنای نمایش آخرین پیگیری است و زمان ایجاد Root نباید به‌جای FollowUp واقعی نمایش داده شود.
+
+## 12. FollowUp Contract
+FollowUp باید به یک Root مشخص متصل باشد، history Parent را حفظ کند، siblingها را حذف یا overwrite نکند، Project context را از Parent بگیرد، قابلیت ویرایش امن داشته باشد و Reminder مستقل خود را در صورت فعال‌بودن داشته باشد.
+
+Swipe چپ یا راست روی Task باید FollowUp capture برای همان Root باز کند. Swipe نباید Root را delete/dismiss کند.
+
+## 13. Lane فعال فعلی — Reminder
+PR فعال ثبت‌شده: `#168 — complete tracked task and follow-up reminders`
+
+این Lane اکنون یکی از Critical Product Lanes است.
+
+Root Task: set/change/clear reminder + recurrence none/daily/weekly.  
+FollowUp: reminder مستقل + edit + clear + recurrence + parent/history preservation.  
+Detail: نمایش Reminder و recurrence با Jalali/Persian و 24-hour.
+
+قانون:
+
+`Next Action = برنامه اقدام`  
+`Reminder = اعلان`
+
+این دو نباید در مدل یا UI با هم ادغام شوند.
+
+## 14. Reminder Architecture
+Foundation موجود باید reuse شود:
+- Reminder model
+- JSON persistence
+- TimelineReminderScheduler
+- AndroidLocalTimelineReminderScheduler
+- flutter_local_notifications
+- startup reconcile
+- restore reconcile
+- Persian reminder picker
+
+ممنوع: scheduler دوم، notification engine دوم، reminder store دوم یا picker دوم بدون نیاز واقعی.
+
+ترتیب write:
+
+**Durable Save → Schedule / Reschedule / Cancel**
+
+نه برعکس.
+
+## 15. Reminder Safety
+باید set، change، clear، delete، restart، restore، reconciliation، permission denied، past-time fail-safe، daily recurrence و weekly recurrence پوشش داده شود. FollowUp reminder نباید Parent history را تغییر دهد.
+
+## 16. Today Center / Next Action
+Today Center باید بر اساس `nextActionAt` مستقل کار کند. Bucketها derived هستند و ذخیره نمی‌شوند: Today، Overdue، Upcoming و No Next Action.
+
+Next Action فقط روی Root Task باشد. تقسیم روزها بر اساس local calendar day باشد. Today و Reminder به هیچ عنوان یک مفهوم تلقی نشوند.
+
+## 17. Projects
+Projectها First-Class هستند. Root Task می‌تواند Project داشته باشد. FollowUp Project مستقل ندارد و context را از Parent می‌گیرد. Projectها در همان JSON foundation ذخیره شوند و Database دوم ممنوع است.
+
+Project باید create، rename، color، assign، reassign و safe delete را با حفظ canonical Task data پشتیبانی کند.
+
+## 18. Search
+Search باید canonical و reuse-based باقی بماند و حداقل در Root title، Description و FollowUp text جستجو کند. ساخت Index/Store مستقل فقط در صورت نیاز اثبات‌شده performance مجاز است.
+
+## 19. Reports / PDF
+مسیر گزارش موجود foundation اصلی است.
+
+Scope موجود: All، Selected، Single Task، Selected Jalali day و Inclusive date range.
+
+PDF باید Persian، RTL، Jalali و history-aware باشد. برای date report فقط FollowUpهای match شده وارد شوند. صرف تاریخ ایجاد Root نباید باعث match شدن گزارش FollowUp شود. PDF / Print / Share باید یک document/report foundation مشترک داشته باشند.
+
+## 20. Backup / Restore
+Backup و Restore بخشی از Release Contract هستند.
+
+باید schema validation، backward compatibility، crash-safe write، unsupported newer schema fail-closed، restore reconciliation و reminder reconciliation حفظ شود. هیچ Release نهایی بدون Backup/Restore regression معتبر نباشد.
+
+## 21. Android Validation
+Android chain باید برای تغییرات Product/Release مرتبط اجرا شود و حداقل موارد مرتبط Debug APK، Release Candidate، Emulator startup، storage recovery، Reminder scheduling، Persian/RTL، Jalali date، Home، FollowUp، Backup/Restore و Release readiness را پوشش دهد.
+
+Evidence باید واقعی باشد. Mock یا screenshot مصنوعی به‌جای Device evidence پذیرفته نیست.
+
+## 22. Release Strategy
+هدف فعلی: **Production Local APK پایدار**
+
+Release محلی نباید به Play Store یا Signing Production وابسته شود مگر Owner صریحاً چنین تصمیمی بگیرد.
+
+وضعیت Release ممکن است candidate verified، local production usable، governance verified، production signing blocked و Play-Store publish pending باشد و نباید این وضعیت‌ها با هم اشتباه شوند.
+
+## 23. Signing / Play Store
+بدون تصمیم صریح Owner/Security:
+- Production Keystore ساخته نشود
+- Secret ثبت نشود
+- Real Release Tag ساخته نشود
+- GitHub Release نهایی ساخته نشود
+- Play Store Publish انجام نشود
+
+این موارد مستقل از آماده‌بودن APK محلی هستند.
+
+## 24. Governance Gap
+Issue: `#19 — require YadNegar CI in main ruleset`
+
+این Gap وابسته به Platform capability است. تا زمانی که Ruleset Write واقعاً در دسترس نیست، نباید توسعه Product را Block کند.
+
+Operational Safety باید جای آن را پوشش دهد: exact head، relevant green CI، fresh scope، mergeability، expected head و post-main proof.
+
+Platform blocker فقط همان Governance Lane را متوقف کند.
+
+## 25. Documentation
+مستندات بخشی از محصول هستند. Canonical docs موجود باید حفظ شوند، از جمله AI Continuation State، AI Handoff، Operation Plan، Comprehensive Project Document، Product Roadmap، Project Operating Package، Production Orchestrator docs و Development History.
+
+هیچ تاریخچه معتبر حذف نشود. موارد قدیمی Historical، Superseded یا Archived علامت‌گذاری شوند ولی قابل بازیابی بمانند.
+
+## 26. اولویت Merge
+Merge Priority با Development Parallelism فرق دارد.
+
+ترتیب پیشنهادی فعلی:
+1. Reminder integration
+2. Reminder Android/full-chain validation
+3. Today/Next Action regression
+4. FollowUp regression
+5. Home regression
+6. Project regression
+7. Search regression
+8. Reports/PDF regression
+9. Backup/Restore regression
+10. Release stabilization
+
+اما همه Laneهای مستقل می‌توانند هم‌زمان توسعه پیدا کنند.
+
+## 27. Release Stabilization Lane
+این Lane باید دائماً در Parallel فعال باشد و منتظر تمام‌شدن Features نماند.
+
+به‌طور پیوسته analyze، tests، Android build، Release Candidate، emulator smoke، persistence regression، Backup/Restore، Reminder reconciliation، Home/FollowUp smoke، RTL، Jalali، Search و PDF بررسی شوند.
+
+هدف: پیدا کردن regression قبل از Release Lock.
+
+## 28. Release Candidate Definition
+RC وقتی مجاز است که current main در scope فعلی دارای Fast CI Green، Android Build Green، Candidate generated، Smoke/Recovery Green و Core CRUD، FollowUp، Reminder، Today/Next Action، Projects، Search، PDF/Print/Share و Backup/Restore سالم باشد.
+
+## 29. Production Local APK Definition
+Production Local APK وقتی قابل تحویل است که Release build موفق باشد، clean install و upgrade path مرتبط سالم باشد، storage reload سالم باشد، FollowUp history، Reminder scheduling/reconcile، Today/Next Action، Project persistence، Backup/Restore، RTL/Jalali و Android Smoke معتبر باشند و regression بحرانی باز وجود نداشته باشد.
+
+## 30. برخورد با PR قدیمی
+هیچ PR قدیمی کورکورانه Merge نشود.
+
+اگر main جلو رفته: Fresh Compare → intent extraction → rebuild on current main → transfer relevant tests → new small PR.
+
+Force Merge تاریخچه قدیمی ممنوع است.
+
+## 31. رفتار بعد از Merge
+بعد از هر Merge:
+1. main جدید Fresh-read شود
+2. exact SHA ثبت شود
+3. PRهای باز دوباره مقایسه شوند
+4. stale branches تشخیص داده شوند
+5. فقط Laneهای impacted rebuild شوند
+6. Historical CI invalid شود
+7. Post-main CI اجرا/بررسی شود
+8. سایر Laneها ادامه پیدا کنند
+
+## 32. گزارش‌دهی
+بعد از هر موج فقط گزارش کوتاه غیر فنی:
+
+**کجا هستیم:** مرحله کلی پروژه.  
+**انجام شد:** فقط چیزهایی که واقعاً complete/merge شده‌اند.  
+**در حال انجام:** Laneها یا PRهای فعال.  
+**مانع:** فقط blocker واقعی.  
+**قدم بعد:** نزدیک‌ترین حرکت اجرایی.
+
+گزارش نباید تبدیل به توضیح طولانی فنی شود مگر درخواست مستقیم Owner.
+
+## 33. رفتار خودکار هنگام ادامه پروژه
+وقتی در صفحه پروژه نوشته شد «ادامه یادنگار»، «ادامه با حالت Maximum Parallel؛ سریع، خودکار، مستند و با گزارش کوتاه غیر فنی» یا «Maximum Parallel Extreme»، باید:
+1. GitHub Fresh-read شود
+2. current main مشخص شود
+3. open PRها بررسی شوند
+4. open Issues مرتبط بررسی شوند
+5. CI/Android evidence بررسی شود
+6. eligible work جلو برود
+7. stale work rebuild شود
+8. Laneهای مستقل موازی ادامه پیدا کنند
+9. Mergeها یکی‌یکی انجام شوند
+10. Post-main proof گرفته شود
+11. docs sync شوند
+12. گزارش کوتاه داده شود
+
+نباید فقط برنامه داده شود. در صورت وجود امکان واقعی باید کار انجام شود.
+
+## 34. قانون عدم توقف
+یک blocker نباید کل یادنگار را متوقف کند.
+
+اگر Reminder Android گیر کرد: Docs / Reports / Regression / Release audit ادامه یابد.  
+اگر Ruleset #19 گیر است: Product Development ادامه یابد.  
+اگر یک PR stale شد: فقط همان Lane rebuild شود.
+
+اصل:
+
+**One blocker pauses one lane, not YadNegar.**
+
+## 35. دستور دائمی نهایی
+از آخرین وضعیت واقعی GitHub یادنگار ادامه بده.
+
+حالت دائمی:
+
+**Maximum Parallel؛ سریع، خودکار، مستند، کم‌توقف و با گزارش کوتاه غیر فنی.**
+
+Production Orchestrator هشت‌دقیقه‌ای باید جریان PR/CI/Merge را محافظت کند.
+
+توسعه: **حداکثر Parallel**  
+CI: **Exact-Head + Evidence-Based**  
+Merge: **One-by-One**  
+Architecture: **Reuse-First**  
+Release: **Android-Validated**
+
+هدف:
+
+**کوتاه‌ترین مسیر امن از current main به یک YadNegar Production Local APK پایدار و قابل تحویل، بدون خراب‌کردن تاریخچه، داده یا معماری canonical پروژه.**
