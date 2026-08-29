@@ -48,27 +48,14 @@ Future<void> main() async {
     final timezoneInfo = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
     localTimezoneReady = true;
-  } catch (_) {
-    // Recurring reminders fail closed if device timezone cannot be resolved.
-  }
+  } catch (_) {}
 
   final notifications = FlutterLocalNotificationsPlugin();
-  await notifications.initialize(
-    const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-    ),
-  );
-
+  await notifications.initialize(const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')));
   final hasLicensedIranSansX = await AppFonts.loadLicensedIranSansX();
-
   final supportDirectory = await getApplicationSupportDirectory();
-  final repository = JsonFileTimelineRepository(
-    File('${supportDirectory.path}/timeline.json'),
-  );
-  final backupService = JsonTimelineBackupService(
-    repository: repository,
-    clock: DateTime.now,
-  );
+  final repository = JsonFileTimelineRepository(File('${supportDirectory.path}/timeline.json'));
+  final backupService = JsonTimelineBackupService(repository: repository, clock: DateTime.now);
   final reminderScheduler = AndroidLocalTimelineReminderScheduler(
     notifications: notifications,
     clock: DateTime.now,
@@ -77,15 +64,9 @@ Future<void> main() async {
 
   try {
     await reminderScheduler.reconcile(await repository.listNewestFirst());
-  } catch (_) {
-    // Reminder reconciliation is best-effort and must never block app startup.
-  }
+  } catch (_) {}
 
-  final quickCapture = QuickCapture(
-    repository: repository,
-    clock: DateTime.now,
-    idGenerator: _generateTimelineId,
-  );
+  final quickCapture = QuickCapture(repository: repository, clock: DateTime.now, idGenerator: _generateTimelineId);
   final loadTimeline = LoadTimeline(repository: repository);
   final editTimelineItem = EditTimelineItem(repository: repository);
   final deleteTimelineItem = DeleteTimelineItem(repository: repository);
@@ -94,39 +75,19 @@ Future<void> main() async {
   final dateFilter = FilterTimelineByDateRange(repository: repository);
   final loadSubjects = LoadTrackedSubjects(repository: repository);
   final loadFollowUps = LoadTimelineFollowUps(repository: repository);
-  final addFollowUp = AddTimelineFollowUp(
-    repository: repository,
-    clock: DateTime.now,
-    idGenerator: _generateTimelineId,
-  );
-  final manageProjects = ManageProjects(
-    projectRepository: repository,
-    timelineRepository: repository,
-    idGenerator: _generateTimelineId,
-  );
-  final buildTrackedSubjectExport = BuildTrackedSubjectExport(
-    repository: repository,
-  );
+  final addFollowUp = AddTimelineFollowUp(repository: repository, clock: DateTime.now, idGenerator: _generateTimelineId);
+  final manageProjects = ManageProjects(projectRepository: repository, timelineRepository: repository, idGenerator: _generateTimelineId);
+  final buildTrackedSubjectExport = BuildTrackedSubjectExport(repository: repository);
   const trackedSubjectPdfDocument = TrackedSubjectPdfDocument();
 
   Future<Uint8List> buildTrackedSubjectPdf(Set<String>? subjectIds) async {
     final export = await buildTrackedSubjectExport.build(subjectIds: subjectIds);
-    final regular = await rootBundle.load(
-      'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Regular.ttf',
-    );
-    final bold = await rootBundle.load(
-      'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Bold.ttf',
-    );
+    final regular = await rootBundle.load('assets/fonts/vazirmatn/Vazirmatn-UI-FD-Regular.ttf');
+    final bold = await rootBundle.load('assets/fonts/vazirmatn/Vazirmatn-UI-FD-Bold.ttf');
     return trackedSubjectPdfDocument.build(
       export: export,
-      regularFontBytes: regular.buffer.asUint8List(
-        regular.offsetInBytes,
-        regular.lengthInBytes,
-      ),
-      boldFontBytes: bold.buffer.asUint8List(
-        bold.offsetInBytes,
-        bold.lengthInBytes,
-      ),
+      regularFontBytes: regular.buffer.asUint8List(regular.offsetInBytes, regular.lengthInBytes),
+      boldFontBytes: bold.buffer.asUint8List(bold.offsetInBytes, bold.lengthInBytes),
     );
   }
 
@@ -141,45 +102,25 @@ Future<void> main() async {
 
   Future<void> shareTrackedSubjectPdf(Set<String>? subjectIds) async {
     final file = await createTrackedSubjectPdfFile(subjectIds);
-    await Share.shareXFiles(
-      <XFile>[XFile(file.path, mimeType: 'application/pdf')],
-      subject: 'گزارش یادنگار',
-      text: 'گزارش کارها و پیگیری‌های یادنگار',
-    );
+    await Share.shareXFiles(<XFile>[XFile(file.path, mimeType: 'application/pdf')], subject: 'گزارش یادنگار', text: 'گزارش کارها و پیگیری‌های یادنگار');
   }
 
   Future<void> printTrackedSubjectPdf(Set<String>? subjectIds) async {
     final bytes = await buildTrackedSubjectPdf(subjectIds);
-    await Printing.layoutPdf(
-      name: 'yadnegar-report.pdf',
-      onLayout: (_) async => bytes,
-    );
+    await Printing.layoutPdf(name: 'yadnegar-report.pdf', onLayout: (_) async => bytes);
   }
 
   Future<TimelineSnapshotRestoreResult> restoreTimelineSnapshot() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: <String>['json'],
-      withData: true,
-    );
-    if (result == null || result.files.isEmpty) {
-      return TimelineSnapshotRestoreResult.cancelled;
-    }
-
+    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: <String>['json'], withData: true);
+    if (result == null || result.files.isEmpty) return TimelineSnapshotRestoreResult.cancelled;
     final selected = result.files.single;
-    final bytes = selected.bytes ??
-        (selected.path == null ? null : await File(selected.path!).readAsBytes());
-    if (bytes == null) {
-      return TimelineSnapshotRestoreResult.invalidBackup;
-    }
-
+    final bytes = selected.bytes ?? (selected.path == null ? null : await File(selected.path!).readAsBytes());
+    if (bytes == null) return TimelineSnapshotRestoreResult.invalidBackup;
     try {
       await repository.restoreValidatedSnapshotBytes(bytes);
       try {
         await reminderScheduler.reconcile(await repository.listNewestFirst());
-      } catch (_) {
-        // The restore is durable; reminder sync can retry at startup.
-      }
+      } catch (_) {}
       return TimelineSnapshotRestoreResult.restored;
     } on UnsupportedTimelineStorageSchemaException {
       return TimelineSnapshotRestoreResult.unsupportedSchema;
@@ -215,18 +156,12 @@ Future<void> main() async {
         printPdf: printTrackedSubjectPdf,
         loadSubjects: loadSubjects.load,
         child: YadNegarApp(
-          fontFamily: hasLicensedIranSansX
-              ? AppFonts.iranSansXFamily
-              : AppFonts.vazirmatnFamily,
+          fontFamily: hasLicensedIranSansX ? AppFonts.iranSansXFamily : AppFonts.vazirmatnFamily,
           home: TimelineBackupScope(
             backupAction: () async {
               final temporaryDirectory = await getTemporaryDirectory();
               final snapshot = await backupService.createSnapshot(temporaryDirectory);
-              await Share.shareXFiles(
-                <XFile>[XFile(snapshot.path)],
-                subject: 'پشتیبان یادنگار',
-                text: 'فایل پشتیبان یادنگار',
-              );
+              await Share.shareXFiles(<XFile>[XFile(snapshot.path)], subject: 'پشتیبان یادنگار', text: 'فایل پشتیبان یادنگار');
             },
             child: TrackedSubjectHome(
               quickCapture: quickCapture,
@@ -234,6 +169,7 @@ Future<void> main() async {
               loadFollowUps: loadFollowUps,
               addFollowUp: addFollowUp,
               editTimelineItem: editTimelineItem,
+              reminderScheduler: reminderScheduler,
               legacyTimeline: legacyTimeline,
             ),
           ),
@@ -245,18 +181,12 @@ Future<void> main() async {
 
 String _generateTimelineId() {
   final timestamp = DateTime.now().toUtc().microsecondsSinceEpoch;
-  final randomPart =
-      _secureRandom.nextInt(1 << 32).toRadixString(16).padLeft(8, '0');
+  final randomPart = _secureRandom.nextInt(1 << 32).toRadixString(16).padLeft(8, '0');
   return '$timestamp-$randomPart';
 }
 
 class YadNegarApp extends StatelessWidget {
-  const YadNegarApp({
-    super.key,
-    this.home = const TimelineScreen(),
-    this.fontFamily = AppFonts.vazirmatnFamily,
-  });
-
+  const YadNegarApp({super.key, this.home = const TimelineScreen(), this.fontFamily = AppFonts.vazirmatnFamily});
   final Widget home;
   final String fontFamily;
 
@@ -269,14 +199,9 @@ class YadNegarApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: fontFamily,
-        dialogTheme: const DialogThemeData(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        ),
+        dialogTheme: const DialogThemeData(insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 24)),
       ),
-      builder: (context, child) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder: (context, child) => Directionality(textDirection: TextDirection.rtl, child: child ?? const SizedBox.shrink()),
       home: home,
     );
   }
