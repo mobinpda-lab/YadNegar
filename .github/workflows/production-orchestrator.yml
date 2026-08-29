@@ -17,7 +17,7 @@ concurrency:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
   issues: write
   pull-requests: write
 
@@ -37,7 +37,7 @@ jobs:
               'orchestrator:manual',
               'do-not-merge',
             ]);
-            const gateNames = {
+            const gates = {
               ci: 'YadNegar CI',
               ui: 'YadNegar UI Evidence',
               android: 'YadNegar Android Build',
@@ -48,13 +48,7 @@ jobs:
                 await github.rest.issues.getLabel({ owner, repo, name });
               } catch (error) {
                 if (error.status !== 404) throw error;
-                await github.rest.issues.createLabel({
-                  owner,
-                  repo,
-                  name,
-                  color,
-                  description,
-                });
+                await github.rest.issues.createLabel({ owner, repo, name, color, description });
               }
             }
 
@@ -69,13 +63,22 @@ jobs:
               'This PR requires manual merge governance.',
             );
 
-            const branch = await github.rest.repos.getBranch({
-              owner,
-              repo,
-              branch: 'main',
-            });
-            const currentMain = branch.data.commit.sha;
+            async function mainSha() {
+              return (await github.rest.repos.getBranch({
+                owner,
+                repo,
+                branch: 'main',
+              })).data.commit.sha;
+            }
 
+            async function compare(base, head) {
+              return (await github.request(
+                'GET /repos/{owner}/{repo}/compare/{basehead}',
+                { owner, repo, basehead: `${base}...${head}` },
+              )).data;
+            }
+
+            const currentMain = await mainSha();
             const pulls = await github.paginate(github.rest.pulls.list, {
               owner,
               repo,
@@ -85,7 +88,6 @@ jobs:
               direction: 'asc',
               per_page: 100,
             });
-
             core.info(`main=${currentMain}; open PRs=${pulls.length}`);
 
             for (const listed of pulls) {
@@ -97,11 +99,11 @@ jobs:
               const labels = new Set((pr.labels || []).map((label) => label.name));
 
               if (pr.head.repo?.full_name !== fullRepo) {
-                core.info(`#${pr.number}: skipped fork PR`);
+                core.info(`#${pr.number}: fork PR skipped`);
                 continue;
               }
               if ([...blockedLabels].some((label) => labels.has(label))) {
-                core.info(`#${pr.number}: held by governance label`);
+                core.info(`#${pr.number}: governance hold`);
                 continue;
               }
               if (pr.base.ref !== 'main' || pr.base.sha !== currentMain) {
@@ -110,16 +112,9 @@ jobs:
               }
 
               const headSha = pr.head.sha;
-              const comparison = await github.request(
-                'GET /repos/{owner}/{repo}/compare/{basehead}',
-                {
-                  owner,
-                  repo,
-                  basehead: `${currentMain}...${headSha}`,
-                },
-              );
-              if (comparison.data.behind_by !== 0) {
-                core.info(`#${pr.number}: behind=${comparison.data.behind_by}; skipped`);
+              const initialCompare = await compare(currentMain, headSha);
+              if (initialCompare.behind_by !== 0) {
+                core.info(`#${pr.number}: behind=${initialCompare.behind_by}`);
                 continue;
               }
 
@@ -131,9 +126,7 @@ jobs:
               });
               const names = files.map((file) => file.filename);
               const docsOnly = names.length > 0 && names.every((name) =>
-                name.startsWith('docs/') ||
-                name === 'README.md' ||
-                name.endsWith('.md')
+                name.startsWith('docs/') || name === 'README.md' || name.endsWith('.md')
               );
               const uiAffecting = names.some((name) =>
                 name.includes('/presentation/') ||
@@ -144,20 +137,13 @@ jobs:
 
               const runs = await github.paginate(
                 github.rest.actions.listWorkflowRunsForRepo,
-                {
-                  owner,
-                  repo,
-                  head_sha: headSha,
-                  event: 'pull_request',
-                  per_page: 100,
-                },
+                { owner, repo, head_sha: headSha, event: 'pull_request', per_page: 100 },
               );
-
               function latestGate(name) {
                 const matching = runs
                   .filter((run) => run.name === name && run.head_sha === headSha)
                   .sort((a, b) => b.id - a.id);
-                if (matching.length === 0) return null;
+                if (!matching.length) return null;
                 const run = matching[0];
                 return {
                   id: run.id,
@@ -167,9 +153,9 @@ jobs:
                 };
               }
 
-              const ci = latestGate(gateNames.ci);
-              const ui = latestGate(gateNames.ui);
-              const android = latestGate(gateNames.android);
+              const ci = latestGate(gates.ci);
+              const ui = latestGate(gates.ui);
+              const android = latestGate(gates.android);
               core.info(
                 `#${pr.number} head=${headSha} docsOnly=${docsOnly} ui=${uiAffecting} ` +
                 `CI=${ci?.conclusion ?? ci?.status ?? 'missing'} ` +
@@ -179,7 +165,7 @@ jobs:
 
               if (pr.draft) {
                 if (!ci?.ok) {
-                  core.info(`#${pr.number}: draft stays draft until exact-head CI is green`);
+                  core.info(`#${pr.number}: stays Draft until exact-head CI is green`);
                   continue;
                 }
                 await github.graphql(
@@ -190,24 +176,24 @@ jobs:
                   }`,
                   { id: pr.node_id },
                 );
-                core.notice(`#${pr.number}: marked Ready after exact-head CI on current main`);
+                core.notice(`#${pr.number}: Ready after exact-head CI on current main`);
                 continue;
               }
 
               if (!ci?.ok) {
-                core.info(`#${pr.number}: CI is not green; merge blocked`);
+                core.info(`#${pr.number}: CI blocks merge`);
                 continue;
               }
               if (!docsOnly && !android?.ok) {
-                core.info(`#${pr.number}: Android full chain is not green; merge blocked`);
+                core.info(`#${pr.number}: Android full chain blocks merge`);
                 continue;
               }
               if (uiAffecting && !ui?.ok) {
-                core.info(`#${pr.number}: UI Evidence is not green; merge blocked`);
+                core.info(`#${pr.number}: UI Evidence blocks merge`);
                 continue;
               }
               if (pr.mergeable !== true || pr.mergeable_state === 'dirty') {
-                core.info(`#${pr.number}: GitHub does not report a clean mergeable PR`);
+                core.info(`#${pr.number}: not cleanly mergeable`);
                 continue;
               }
 
@@ -216,31 +202,18 @@ jobs:
                 repo,
                 pull_number: pr.number,
               });
-              const freshMain = (await github.rest.repos.getBranch({
-                owner,
-                repo,
-                branch: 'main',
-              })).data.commit.sha;
+              const freshMain = await mainSha();
               if (
                 fresh.head.sha !== headSha ||
                 fresh.base.sha !== currentMain ||
                 freshMain !== currentMain ||
                 fresh.draft
               ) {
-                core.warning(`#${pr.number}: state moved during evaluation; fail closed`);
+                core.warning(`#${pr.number}: state moved; fail closed`);
                 continue;
               }
-
-              const freshComparison = await github.request(
-                'GET /repos/{owner}/{repo}/compare/{basehead}',
-                {
-                  owner,
-                  repo,
-                  basehead: `${freshMain}...${headSha}`,
-                },
-              );
-              if (freshComparison.data.behind_by !== 0) {
-                core.info(`#${pr.number}: became behind before merge; blocked`);
+              if ((await compare(freshMain, headSha)).behind_by !== 0) {
+                core.info(`#${pr.number}: became behind before merge`);
                 continue;
               }
 
@@ -253,14 +226,11 @@ jobs:
                 commit_title: `${pr.title} (#${pr.number})`,
               });
               if (!result.data.merged) {
-                core.warning(`#${pr.number}: GitHub rejected merge: ${result.data.message}`);
+                core.warning(`#${pr.number}: merge rejected: ${result.data.message}`);
                 continue;
               }
 
-              core.notice(
-                `#${pr.number}: merged exact head ${headSha}; ` +
-                `stopping after one merge so main advances serially.`,
-              );
+              core.notice(`#${pr.number}: merged exact head ${headSha}; stopping after one merge.`);
               return;
             }
 
