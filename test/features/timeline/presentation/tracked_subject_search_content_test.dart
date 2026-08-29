@@ -24,9 +24,7 @@ class _MemoryTimelineRepository implements TimelineRepository {
   @override
   Future<TimelineItem?> findById(String id) async {
     for (final item in items) {
-      if (item.id == id) {
-        return item;
-      }
+      if (item.id == id) return item;
     }
     return null;
   }
@@ -121,26 +119,35 @@ void main() {
       await tester.pumpAndSettle();
 
       final search = find.byKey(const Key('tracked-subject-search'));
+      final homeList = find.byKey(const Key('tracked-subject-home-scroll'));
       expect(find.text('۴ مورد'), findsOneWidget);
 
-      await tester.enterText(search, 'علی');
-      await tester.pump();
-      expect(find.text('۱ مورد'), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-title-root')), findsOneWidget);
+      Future<void> expectVisibleResult(String query, Key key) async {
+        await tester.enterText(search, query);
+        await tester.pump();
+        await tester.drag(homeList, const Offset(0, -520));
+        await tester.pumpAndSettle();
+        final result = find.byKey(key);
+        expect(find.text('۱ مورد'), findsOneWidget);
+        expect(result, findsOneWidget);
+
+        // Return Home to the top so the persistent search field is mounted
+        // before the next query. Today Center makes the list tall enough for
+        // lazy ListView children to be disposed when scrolled down.
+        await tester.drag(homeList, const Offset(0, 520));
+        await tester.pumpAndSettle();
+        expect(search, findsOneWidget);
+      }
+
+      await expectVisibleResult('علی', const Key('tracked-subject-title-root'));
       expect(find.byKey(const Key('tracked-subject-description-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsNothing);
 
-      await tester.enterText(search, 'نسخه نهایی');
-      await tester.pump();
-      expect(find.text('۱ مورد'), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-description-root')), findsOneWidget);
+      await expectVisibleResult('نسخه نهایی', const Key('tracked-subject-description-root'));
       expect(find.byKey(const Key('tracked-subject-title-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsNothing);
 
-      await tester.enterText(search, 'حسابدار');
-      await tester.pump();
-      expect(find.text('۱ مورد'), findsOneWidget);
-      expect(find.byKey(const Key('tracked-subject-follow-up-root')), findsOneWidget);
+      await expectVisibleResult('حسابدار', const Key('tracked-subject-follow-up-root'));
       expect(find.byKey(const Key('tracked-subject-description-root')), findsNothing);
       expect(find.byKey(const Key('tracked-subject-unrelated-root')), findsNothing);
 

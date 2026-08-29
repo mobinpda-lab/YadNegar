@@ -95,11 +95,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('tracked-subject-car')), findsOneWidget);
+    final rootCard = find.byKey(const Key('tracked-subject-car'));
+    await tester.drag(
+      find.byKey(const Key('tracked-subject-home-scroll')),
+      const Offset(0, -520),
+    );
+    await tester.pumpAndSettle();
+    expect(rootCard, findsOneWidget);
     expect(find.text('۱ پیگیری'), findsOneWidget);
     expect(find.textContaining('۱۴۰۵/۰۶/۰۶'), findsWidgets);
 
-    await tester.tap(find.byKey(const Key('tracked-subject-car')));
+    await tester.tap(rootCard);
     await tester.pumpAndSettle();
 
     expect(find.text('بررسی روغن انجام شد'), findsOneWidget);
@@ -112,7 +118,6 @@ void main() {
     expect(find.text('۱۴۰۵/۰۶/۰۶'), findsOneWidget);
     expect(find.text('۱۱:۳۰'), findsOneWidget);
 
-    // Leave the optional title blank: the application must store «پیگیری».
     await tester.tap(find.byKey(const Key('follow-up-editor-confirm')));
     await tester.pumpAndSettle();
 
@@ -125,7 +130,6 @@ void main() {
     expect(newFollowUp.text, 'پیگیری');
     expect(newFollowUp.occurredAt, now);
 
-    // Edit only this follow-up; it must remain a child and keep its sibling history.
     await tester.tap(find.byKey(const Key('follow-up-follow-0')));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -140,7 +144,6 @@ void main() {
     expect(editedFollowUp.parentId, root.id);
     expect(repository.items.where((item) => item.parentId == root.id), hasLength(2));
 
-    // Edit the root task without affecting its children.
     await tester.tap(find.byKey(const Key('tracked-subject-edit')));
     await tester.pumpAndSettle();
     await tester.enterText(

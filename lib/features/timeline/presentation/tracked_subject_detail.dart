@@ -56,17 +56,13 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
     });
     try {
       final followUps = await widget.loadFollowUps.load(_subject.id);
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
         _followUps = followUps;
         _isLoading = false;
       });
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _errorMessage = 'بارگذاری پیگیری‌ها انجام نشد.';
@@ -86,9 +82,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
         ),
       ),
     );
-    if (saved != null && mounted) {
-      await _reload();
-    }
+    if (saved != null && mounted) await _reload();
   }
 
   Future<void> _editSubject() async {
@@ -118,9 +112,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
         ),
       ),
     );
-    if (updated != null && mounted) {
-      await _reload();
-    }
+    if (updated != null && mounted) await _reload();
   }
 
   @override
@@ -128,12 +120,10 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
     final latest = _followUps.isEmpty ? null : _followUps.first;
     final hasPdfActions = TrackedSubjectPdfScope.maybeOf(context) != null;
     final description = _subject.description;
+    final nextActionAt = _subject.nextActionAt;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _subject.text,
-          key: const Key('tracked-subject-detail-title'),
-        ),
+        title: Text(_subject.text, key: const Key('tracked-subject-detail-title')),
         actions: [
           if (hasPdfActions)
             IconButton(
@@ -165,15 +155,9 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _subject.text,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+                    Text(_subject.text, style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 10),
-                    const Text(
-                      'شرح کار',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    const Text('شرح کار', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
                     Text(
                       description == null || description.isEmpty
@@ -183,10 +167,28 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                       softWrap: true,
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      'آخرین پیگیری',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    const Text('اقدام بعدی', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 6),
+                    Row(
+                      key: const Key('tracked-subject-next-action'),
+                      children: [
+                        Icon(
+                          nextActionAt == null ? Icons.event_busy_outlined : Icons.event_available_outlined,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            nextActionAt == null
+                                ? 'اقدام بعدی تعیین نشده است'
+                                : widget.dateTimeFormatter.formatDateTime(nextActionAt),
+                            key: const Key('tracked-subject-next-action-value'),
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 14),
+                    const Text('آخرین پیگیری', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 6),
                     Text(
                       latest == null
@@ -208,10 +210,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              'تاریخچه پیگیری‌ها',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+            child: Text('تاریخچه پیگیری‌ها', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ),
           Expanded(child: _buildFollowUpList()),
         ],
@@ -226,12 +225,8 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
   }
 
   Widget _buildFollowUpList() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!));
-    }
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_errorMessage != null) return Center(child: Text(_errorMessage!));
     if (_followUps.isEmpty) {
       return const Center(
         child: Padding(

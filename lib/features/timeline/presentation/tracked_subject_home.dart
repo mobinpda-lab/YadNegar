@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:yadnegar/core/presentation/persian_date_picker.dart';
 import 'package:yadnegar/core/presentation/persian_datetime_formatter.dart';
 import 'package:yadnegar/core/presentation/persian_duration_formatter.dart';
+import 'package:yadnegar/core/presentation/persian_time_picker.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
+import 'package:yadnegar/features/timeline/application/classify_tracked_subject_next_action.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
+import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/project_management_sheet.dart';
 import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
-import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_detail.dart';
@@ -50,6 +53,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
   static const _surfaceTint = Color(0xFFF4F2FF);
   static const _background = Color(0xFFF8F8FC);
   static const _muted = Color(0xFF77788A);
+  static const _classifyNextAction = ClassifyTrackedSubjectNextAction();
 
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -61,6 +65,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
   bool _isLoading = true;
   String? _errorMessage;
   String _query = '';
+  TrackedSubjectNextActionBucket? _selectedNextActionBucket;
 
   @override
   void initState() {
@@ -86,10 +91,15 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
 
   List<TimelineItem> get _visibleSubjects {
     final query = _query.trim().toLowerCase();
-    if (query.isEmpty) {
-      return _subjects;
-    }
     return _subjects.where((subject) {
+      if (_selectedNextActionBucket != null &&
+          _classifyNextAction(subject: subject, now: widget.clock()) !=
+              _selectedNextActionBucket) {
+        return false;
+      }
+      if (query.isEmpty) {
+        return true;
+      }
       if (subject.text.toLowerCase().contains(query)) {
         return true;
       }
@@ -125,6 +135,13 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           latest.month == now.month &&
           latest.day == now.day;
     }).length;
+  }
+
+  int _nextActionBucketCount(TrackedSubjectNextActionBucket bucket) {
+    final now = widget.clock();
+    return _subjects
+        .where((subject) => _classifyNextAction(subject: subject, now: now) == bucket)
+        .length;
   }
 
   YadNegarProject? _projectFor(String? projectId) {
@@ -198,6 +215,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     var descriptionDraft = '';
     var selectedType = TimelineItemType.activity;
     String? selectedProjectId;
+    DateTime? selectedNextActionAt;
     final result = await showDialog<_TrackedSubjectDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -242,6 +260,89 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                     ),
                   ),
                   onChanged: (value) => descriptionDraft = value,
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  key: const Key('tracked-subject-next-action-input'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _surfaceTint,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('اقدام بعدی (اختیاری)', style: TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      Text(
+                        selectedNextActionAt == null
+                            ? 'زمانی تعیین نشده است'
+                            : widget.dateTimeFormatter.formatDateTime(selectedNextActionAt!),
+                        key: const Key('tracked-subject-next-action-input-value'),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            key: const Key('tracked-subject-next-action-date'),
+                            onPressed: () async {
+                              final initial = selectedNextActionAt ?? widget.clock();
+                              final selected = await showYadNegarPersianDatePicker(
+                                context: dialogContext,
+                                initialDate: initial,
+                              );
+                              if (selected == null) return;
+                              final current = selectedNextActionAt ?? initial;
+                              setDialogState(() {
+                                selectedNextActionAt = DateTime(
+                                  selected.year,
+                                  selected.month,
+                                  selected.day,
+                                  current.hour,
+                                  current.minute,
+                                );
+                              });
+                            },
+                            icon: const Icon(Icons.calendar_month_outlined),
+                            label: const Text('تاریخ'),
+                          ),
+                          OutlinedButton.icon(
+                            key: const Key('tracked-subject-next-action-time'),
+                            onPressed: () async {
+                              final initial = selectedNextActionAt ?? widget.clock();
+                              final selected = await showYadNegarPersianTimePicker(
+                                context: dialogContext,
+                                initialTime: TimeOfDay.fromDateTime(initial),
+                              );
+                              if (selected == null) return;
+                              final current = selectedNextActionAt ?? initial;
+                              setDialogState(() {
+                                selectedNextActionAt = DateTime(
+                                  current.year,
+                                  current.month,
+                                  current.day,
+                                  selected.hour,
+                                  selected.minute,
+                                );
+                              });
+                            },
+                            icon: const Icon(Icons.schedule_outlined),
+                            label: const Text('ساعت'),
+                          ),
+                          if (selectedNextActionAt != null)
+                            TextButton.icon(
+                              key: const Key('tracked-subject-next-action-clear'),
+                              onPressed: () => setDialogState(() => selectedNextActionAt = null),
+                              icon: const Icon(Icons.close),
+                              label: const Text('پاک کردن'),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 if (_projects.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -338,6 +439,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                         ? null
                         : normalizedDescription,
                     projectId: selectedProjectId,
+                    nextActionAt: selectedNextActionAt,
                     type: selectedType,
                   ),
                 );
@@ -358,6 +460,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
         text: result.text,
         description: result.description,
         projectId: result.projectId,
+        nextActionAt: result.nextActionAt,
         type: result.type,
       );
       await _reload();
@@ -609,6 +712,8 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           _buildSearch(),
           const SizedBox(height: 18),
           _buildStats(),
+          const SizedBox(height: 22),
+          _buildTodayCenter(),
           if (_projects.isNotEmpty) ...[
             const SizedBox(height: 22),
             _buildProjectsStrip(),
@@ -622,6 +727,12 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                   style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
                 ),
               ),
+              if (_selectedNextActionBucket != null)
+                TextButton(
+                  key: const Key('today-center-clear-filter'),
+                  onPressed: () => setState(() => _selectedNextActionBucket = null),
+                  child: const Text('نمایش همه'),
+                ),
               Text(
                 widget.dateTimeFormatter.persianDigits('${visibleSubjects.length} مورد'),
                 style: const TextStyle(color: _primary, fontWeight: FontWeight.w600),
@@ -779,6 +890,82 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     );
   }
 
+  Widget _buildTodayCenter() {
+    const buckets = <_TodayBucketData>[
+      _TodayBucketData(TrackedSubjectNextActionBucket.today, 'امروز', Icons.today_outlined, Color(0xFF3176D5), Color(0xFFEAF2FF)),
+      _TodayBucketData(TrackedSubjectNextActionBucket.overdue, 'عقب‌افتاده', Icons.warning_amber_rounded, Color(0xFFD9516A), Color(0xFFFFEDEF)),
+      _TodayBucketData(TrackedSubjectNextActionBucket.upcoming, 'آینده', Icons.upcoming_outlined, Color(0xFF25A55A), Color(0xFFEAF8EF)),
+      _TodayBucketData(TrackedSubjectNextActionBucket.noNextAction, 'بدون اقدام', Icons.event_busy_outlined, Color(0xFF77788A), Color(0xFFF0F0F4)),
+    ];
+    return Column(
+      key: const Key('today-center'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('مرکز امروز', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 4),
+        const Text('اقدام بعدی مستقل از یادآوری و اعلان است.', style: TextStyle(color: _muted, fontSize: 12.5)),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (var index = 0; index < buckets.length; index++) ...[
+                _buildTodayBucketCard(buckets[index]),
+                if (index != buckets.length - 1) const SizedBox(width: 10),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTodayBucketCard(_TodayBucketData data) {
+    final selected = _selectedNextActionBucket == data.bucket;
+    final count = _nextActionBucketCount(data.bucket);
+    return InkWell(
+      key: Key('today-center-${data.bucket.name}'),
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        setState(() {
+          _selectedNextActionBucket = selected ? null : data.bucket;
+        });
+      },
+      child: Container(
+        width: 122,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: selected ? data.tint : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: selected ? data.color : const Color(0xFFEEEFFA), width: selected ? 1.5 : 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(color: data.tint, borderRadius: BorderRadius.circular(11)),
+              child: Icon(data.icon, color: data.color, size: 19),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.dateTimeFormatter.persianDigits(count.toString()),
+                    style: TextStyle(color: data.color, fontSize: 18, fontWeight: FontWeight.w900),
+                  ),
+                  Text(data.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildProjectsStrip() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -907,6 +1094,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     final statusTint = hasFollowUp ? const Color(0xFFEAF2FF) : const Color(0xFFFFF4DF);
     final statusText = hasFollowUp ? 'در حال پیگیری' : 'نیازمند پیگیری';
     final project = _projectFor(subject.projectId);
+    final nextActionAt = subject.nextActionAt;
 
     return Material(
       color: Colors.white,
@@ -981,6 +1169,24 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
+                      ),
+                    ],
+                    if (nextActionAt != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        key: Key('tracked-subject-next-action-${subject.id}'),
+                        children: [
+                          const Icon(Icons.event_available_outlined, size: 15, color: _primary),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              'اقدام بعدی: ${_compactDateTime(nextActionAt)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: _primary, fontSize: 12, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                     const SizedBox(height: 5),
@@ -1097,7 +1303,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
       child: const Text(
-        'موردی مطابق جستجو پیدا نشد.',
+        'موردی مطابق جستجو/فیلتر پیدا نشد.',
         key: Key('tracked-subject-search-empty'),
         textAlign: TextAlign.center,
         style: TextStyle(color: _muted),
@@ -1112,11 +1318,13 @@ class _TrackedSubjectDraft {
     required this.type,
     this.description,
     this.projectId,
+    this.nextActionAt,
   });
 
   final String text;
   final String? description;
   final String? projectId;
+  final DateTime? nextActionAt;
   final TimelineItemType type;
 }
 
@@ -1125,6 +1333,16 @@ class _StatData {
 
   final String label;
   final int value;
+  final IconData icon;
+  final Color color;
+  final Color tint;
+}
+
+class _TodayBucketData {
+  const _TodayBucketData(this.bucket, this.label, this.icon, this.color, this.tint);
+
+  final TrackedSubjectNextActionBucket bucket;
+  final String label;
   final IconData icon;
   final Color color;
   final Color tint;
