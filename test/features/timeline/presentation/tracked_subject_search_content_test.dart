@@ -130,6 +130,13 @@ void main() {
         final result = find.byKey(key);
         expect(find.text('۱ مورد'), findsOneWidget);
         expect(result, findsOneWidget);
+
+        // Return Home to the top so the persistent search field is mounted
+        // before the next query. Today Center makes the list tall enough for
+        // lazy ListView children to be disposed when scrolled down.
+        await tester.drag(homeList, const Offset(0, 520));
+        await tester.pumpAndSettle();
+        expect(search, findsOneWidget);
       }
 
       await expectVisibleResult('علی', const Key('tracked-subject-title-root'));
