@@ -9,8 +9,24 @@ import android.widget.RemoteViews
 
 class YadNegarWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        ids.forEach { widgetId ->
+        ids.forEach { update(context, it) }
+    }
+
+    companion object {
+        fun update(context: Context, widgetId: Int) {
+            val manager = AppWidgetManager.getInstance(context)
             val views = RemoteViews(context.packageName, R.layout.yadnegar_widget)
+            val prefs = context.getSharedPreferences(
+                YadNegarWidgetConfigureActivity.PREFS,
+                Context.MODE_PRIVATE,
+            )
+            val mode = prefs.getString("time_filter_$widgetId", "today")
+            val label = when (mode) {
+                "week" -> "هفته جاری"
+                "all" -> "همه کارها"
+                else -> "امروز"
+            }
+            views.setTextViewText(R.id.widget_header, "یادنگار · $label")
             val openApp = Intent(context, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(
                 context,
