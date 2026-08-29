@@ -20,7 +20,7 @@ class TrackedSubjectDetail extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
-    required this.reminderScheduler,
+    this.reminderScheduler,
     this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
     this.durationFormatter = const PersianDurationFormatter(),
@@ -30,7 +30,7 @@ class TrackedSubjectDetail extends StatefulWidget {
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
-  final TimelineReminderScheduler reminderScheduler;
+  final TimelineReminderScheduler? reminderScheduler;
   final TrackedSubjectDetailClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
   final PersianDurationFormatter durationFormatter;
@@ -76,9 +76,9 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
   Future<void> _syncReminder(TimelineItem item) async {
     try {
       if (item.reminderAt == null) {
-        await widget.reminderScheduler.cancel(item.id);
+        await widget.reminderScheduler?.cancel(item.id);
       } else {
-        await widget.reminderScheduler.schedule(item);
+        await widget.reminderScheduler?.schedule(item);
       }
     } catch (_) {
       if (!mounted) return;

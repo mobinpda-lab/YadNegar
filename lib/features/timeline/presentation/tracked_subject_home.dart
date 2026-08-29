@@ -29,7 +29,7 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
-    required this.reminderScheduler,
+    this.reminderScheduler,
     this.legacyTimeline,
     this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
@@ -41,7 +41,7 @@ class TrackedSubjectHome extends StatefulWidget {
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
-  final TimelineReminderScheduler reminderScheduler;
+  final TimelineReminderScheduler? reminderScheduler;
   final Widget? legacyTimeline;
   final TrackedSubjectHomeClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
@@ -492,9 +492,9 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     if (saved != null && mounted) {
       try {
         if (saved.reminderAt == null) {
-          await widget.reminderScheduler.cancel(saved.id);
+          await widget.reminderScheduler?.cancel(saved.id);
         } else {
-          await widget.reminderScheduler.schedule(saved);
+          await widget.reminderScheduler?.schedule(saved);
         }
       } catch (_) {
         if (mounted) {
