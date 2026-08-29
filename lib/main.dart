@@ -26,6 +26,7 @@ import 'package:yadnegar/features/timeline/application/restore_timeline_item.dar
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/application/tracked_subject_pdf_document.dart';
 import 'package:yadnegar/features/timeline/data/android_local_timeline_reminder_scheduler.dart';
+import 'package:yadnegar/features/timeline/data/android_widget_projection.dart';
 import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.dart';
 import 'package:yadnegar/features/timeline/data/json_timeline_backup_service.dart';
 import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
@@ -40,6 +41,7 @@ import 'package:yadnegar/features/timeline/presentation/tracked_subject_pdf_scop
 import 'package:yadnegar/theme/app_fonts.dart';
 
 final Random _secureRandom = Random.secure();
+const MethodChannel _widgetChannel = MethodChannel('com.mobinpda.lab.yadnegar/widget');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +65,19 @@ Future<void> main() async {
   final repository = JsonFileTimelineRepository(
     File('${supportDirectory.path}/timeline.json'),
   );
+  final widgetProjection = AndroidWidgetProjection(
+    timelineRepository: repository,
+    projectRepository: repository,
+    taxonomyRepository: repository,
+  );
+  _widgetChannel.setMethodCallHandler((call) async {
+    if (call.method == 'refreshProjection') {
+      await widgetProjection.refresh();
+    }
+  });
+  try {
+    await widgetProjection.refresh();
+  } catch (_) {}
   final backupService = JsonTimelineBackupService(
     repository: repository,
     clock: DateTime.now,
@@ -176,6 +191,9 @@ Future<void> main() async {
       await repository.restoreValidatedSnapshotBytes(bytes);
       try {
         await reminderScheduler.reconcile(await repository.listNewestFirst());
+      } catch (_) {}
+      try {
+        await widgetProjection.refresh();
       } catch (_) {}
       return TimelineSnapshotRestoreResult.restored;
     } on UnsupportedTimelineStorageSchemaException {
