@@ -1,0 +1,41 @@
+name: Patch Root Reminder Create
+on:
+  push:
+    branches: [feat/tracked-reminder-integration]
+    paths: [.github/workflows/patch-reminder-root-create.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/tracked-reminder-integration
+      - name: Patch root create reminder and remove self
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/features/timeline/presentation/tracked_subject_home.dart')
+          s=p.read_text()
+          reps=[
+          ("import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';\n", "import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';\nimport 'package:yadnegar/features/timeline/presentation/timeline_persian_pickers.dart';\n"),
+          ("    DateTime? selectedNextActionAt;\n    final result = await showDialog<_TrackedSubjectDraft>(", "    DateTime? selectedNextActionAt;\n    DateTime? selectedReminderAt;\n    var selectedReminderRecurrence = TimelineReminderRecurrence.none;\n    final result = await showDialog<_TrackedSubjectDraft>("),
+          ("                if (_projects.isNotEmpty) ...[", "                const SizedBox(height: 12),\n                Container(\n                  key: const Key('tracked-subject-reminder-input'),\n                  width: double.infinity,\n                  padding: const EdgeInsets.all(12),\n                  decoration: BoxDecoration(\n                    color: _surfaceTint,\n                    borderRadius: BorderRadius.circular(16),\n                  ),\n                  child: Column(\n                    crossAxisAlignment: CrossAxisAlignment.start,\n                    children: [\n                      const Text('یادآور (اختیاری)', style: TextStyle(fontWeight: FontWeight.w700)),\n                      const SizedBox(height: 6),\n                      Text(\n                        selectedReminderAt == null\n                            ? 'یادآوری تعیین نشده است'\n                            : widget.dateTimeFormatter.formatDateTime(selectedReminderAt!),\n                        key: const Key('tracked-subject-reminder-input-value'),\n                      ),\n                      const SizedBox(height: 8),\n                      Wrap(\n                        spacing: 8,\n                        runSpacing: 8,\n                        children: [\n                          OutlinedButton.icon(\n                            key: const Key('tracked-subject-reminder-pick'),\n                            onPressed: () async {\n                              final selected = await pickPersianFutureReminderDateTime(\n                                dialogContext,\n                                selectedReminderAt ?? widget.clock().add(const Duration(hours: 1)),\n                              );\n                              if (selected == null) return;\n                              setDialogState(() => selectedReminderAt = selected);\n                            },\n                            icon: const Icon(Icons.notifications_active_outlined),\n                            label: Text(selectedReminderAt == null ? 'تنظیم یادآور' : 'تغییر زمان'),\n                          ),\n                          if (selectedReminderAt != null)\n                            TextButton.icon(\n                              key: const Key('tracked-subject-reminder-clear'),\n                              onPressed: () => setDialogState(() {\n                                selectedReminderAt = null;\n                                selectedReminderRecurrence = TimelineReminderRecurrence.none;\n                              }),\n                              icon: const Icon(Icons.notifications_off_outlined),\n                              label: const Text('پاک کردن'),\n                            ),\n                        ],\n                      ),\n                      if (selectedReminderAt != null) ...[\n                        const SizedBox(height: 10),\n                        DropdownButtonFormField<TimelineReminderRecurrence>(\n                          key: const Key('tracked-subject-reminder-recurrence'),\n                          initialValue: selectedReminderRecurrence,\n                          decoration: const InputDecoration(\n                            labelText: 'تکرار یادآور',\n                            border: OutlineInputBorder(),\n                          ),\n                          items: const [\n                            DropdownMenuItem(value: TimelineReminderRecurrence.none, child: Text('بدون تکرار')),\n                            DropdownMenuItem(value: TimelineReminderRecurrence.daily, child: Text('روزانه')),\n                            DropdownMenuItem(value: TimelineReminderRecurrence.weekly, child: Text('هفتگی')),\n                          ],\n                          onChanged: (value) {\n                            if (value != null) setDialogState(() => selectedReminderRecurrence = value);\n                          },\n                        ),\n                      ],\n                    ],\n                  ),\n                ),\n                if (_projects.isNotEmpty) ...["),
+          ("                    nextActionAt: selectedNextActionAt,\n                    type: selectedType,", "                    nextActionAt: selectedNextActionAt,\n                    reminderAt: selectedReminderAt,\n                    reminderRecurrence: selectedReminderRecurrence,\n                    type: selectedType,"),
+          ("      await widget.quickCapture.capture(\n        text: result.text,\n        description: result.description,\n        projectId: result.projectId,\n        nextActionAt: result.nextActionAt,\n        type: result.type,\n      );\n      await _reload();", "      final saved = await widget.quickCapture.capture(\n        text: result.text,\n        description: result.description,\n        projectId: result.projectId,\n        nextActionAt: result.nextActionAt,\n        reminderAt: result.reminderAt,\n        reminderRecurrence: result.reminderRecurrence,\n        type: result.type,\n      );\n      if (saved.reminderAt != null && widget.reminderScheduler != null) {\n        try {\n          await widget.reminderScheduler!.schedule(saved);\n        } catch (_) {\n          if (mounted) {\n            ScaffoldMessenger.of(context).showSnackBar(\n              const SnackBar(content: Text('کار ذخیره شد؛ همگام‌سازی یادآور انجام نشد.')),\n            );\n          }\n        }\n      }\n      await _reload();"),
+          ("    this.nextActionAt,\n  });\n\n  final String text;\n  final String? description;\n  final String? projectId;\n  final DateTime? nextActionAt;\n  final TimelineItemType type;", "    this.nextActionAt,\n    this.reminderAt,\n    this.reminderRecurrence = TimelineReminderRecurrence.none,\n  });\n\n  final String text;\n  final String? description;\n  final String? projectId;\n  final DateTime? nextActionAt;\n  final DateTime? reminderAt;\n  final TimelineReminderRecurrence reminderRecurrence;\n  final TimelineItemType type;"),
+          ]
+          for old,new in reps:
+            count=s.count(old)
+            if count!=1:
+              raise SystemExit(f'anchor count={count}: {old[:90]!r}')
+            s=s.replace(old,new)
+          p.write_text(s)
+          PY
+          rm .github/workflows/patch-reminder-root-create.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/features/timeline/presentation/tracked_subject_home.dart .github/workflows/patch-reminder-root-create.yml
+          git commit -m 'feat(reminder): add reminder to root task creation'
+          git push origin HEAD:feat/tracked-reminder-integration
