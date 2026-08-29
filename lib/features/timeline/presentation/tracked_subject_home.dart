@@ -9,6 +9,7 @@ import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
+import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
 import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
@@ -16,6 +17,7 @@ import 'package:yadnegar/features/timeline/presentation/project_management_sheet
 import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_backup_scope.dart';
 import 'package:yadnegar/features/timeline/presentation/timeline_item_type_presentation.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_persian_pickers.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_detail.dart';
 
 typedef TrackedSubjectHomeClock = DateTime Function();
@@ -28,6 +30,7 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
+    this.reminderScheduler,
     this.legacyTimeline,
     this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
@@ -39,6 +42,7 @@ class TrackedSubjectHome extends StatefulWidget {
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
+  final TimelineReminderScheduler? reminderScheduler;
   final Widget? legacyTimeline;
   final TrackedSubjectHomeClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
@@ -216,6 +220,8 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     var selectedType = TimelineItemType.activity;
     String? selectedProjectId;
     DateTime? selectedNextActionAt;
+    DateTime? selectedReminderAt;
+    var selectedReminderRecurrence = TimelineReminderRecurrence.none;
     final result = await showDialog<_TrackedSubjectDraft>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -344,6 +350,78 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 12),
+                Container(
+                  key: const Key('tracked-subject-reminder-input'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _surfaceTint,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('یادآور (اختیاری)', style: TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      Text(
+                        selectedReminderAt == null
+                            ? 'یادآوری تعیین نشده است'
+                            : widget.dateTimeFormatter.formatDateTime(selectedReminderAt!),
+                        key: const Key('tracked-subject-reminder-input-value'),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            key: const Key('tracked-subject-reminder-pick'),
+                            onPressed: () async {
+                              final selected = await pickPersianFutureReminderDateTime(
+                                dialogContext,
+                                selectedReminderAt ?? widget.clock().add(const Duration(hours: 1)),
+                              );
+                              if (selected == null) return;
+                              setDialogState(() => selectedReminderAt = selected);
+                            },
+                            icon: const Icon(Icons.notifications_active_outlined),
+                            label: Text(selectedReminderAt == null ? 'تنظیم یادآور' : 'تغییر زمان'),
+                          ),
+                          if (selectedReminderAt != null)
+                            TextButton.icon(
+                              key: const Key('tracked-subject-reminder-clear'),
+                              onPressed: () => setDialogState(() {
+                                selectedReminderAt = null;
+                                selectedReminderRecurrence = TimelineReminderRecurrence.none;
+                              }),
+                              icon: const Icon(Icons.notifications_off_outlined),
+                              label: const Text('پاک کردن'),
+                            ),
+                        ],
+                      ),
+                      if (selectedReminderAt != null) ...[
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<TimelineReminderRecurrence>(
+                          key: const Key('tracked-subject-reminder-recurrence'),
+                          initialValue: selectedReminderRecurrence,
+                          decoration: const InputDecoration(
+                            labelText: 'تکرار یادآور',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: TimelineReminderRecurrence.none, child: Text('بدون تکرار')),
+                            DropdownMenuItem(value: TimelineReminderRecurrence.daily, child: Text('روزانه')),
+                            DropdownMenuItem(value: TimelineReminderRecurrence.weekly, child: Text('هفتگی')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) setDialogState(() => selectedReminderRecurrence = value);
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
                 if (_projects.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String?>(
@@ -440,6 +518,8 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                         : normalizedDescription,
                     projectId: selectedProjectId,
                     nextActionAt: selectedNextActionAt,
+                    reminderAt: selectedReminderAt,
+                    reminderRecurrence: selectedReminderRecurrence,
                     type: selectedType,
                   ),
                 );
@@ -456,13 +536,26 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     }
 
     try {
-      await widget.quickCapture.capture(
+      final saved = await widget.quickCapture.capture(
         text: result.text,
         description: result.description,
         projectId: result.projectId,
         nextActionAt: result.nextActionAt,
+        reminderAt: result.reminderAt,
+        reminderRecurrence: result.reminderRecurrence,
         type: result.type,
       );
+      if (saved.reminderAt != null && widget.reminderScheduler != null) {
+        try {
+          await widget.reminderScheduler!.schedule(saved);
+        } catch (_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('کار ذخیره شد؛ همگام‌سازی یادآور انجام نشد.')),
+            );
+          }
+        }
+      }
       await _reload();
     } catch (_) {
       if (!mounted) {
@@ -487,6 +580,19 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       ),
     );
     if (saved != null && mounted) {
+      try {
+        if (saved.reminderAt == null) {
+          await widget.reminderScheduler?.cancel(saved.id);
+        } else {
+          await widget.reminderScheduler?.schedule(saved);
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('پیگیری ذخیره شد؛ همگام‌سازی یادآور انجام نشد.')),
+          );
+        }
+      }
       await _reload();
     }
   }
@@ -499,6 +605,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           loadFollowUps: widget.loadFollowUps,
           addFollowUp: widget.addFollowUp,
           editTimelineItem: widget.editTimelineItem,
+          reminderScheduler: widget.reminderScheduler,
           clock: widget.clock,
           dateTimeFormatter: widget.dateTimeFormatter,
           durationFormatter: widget.durationFormatter,
@@ -1319,12 +1426,16 @@ class _TrackedSubjectDraft {
     this.description,
     this.projectId,
     this.nextActionAt,
+    this.reminderAt,
+    this.reminderRecurrence = TimelineReminderRecurrence.none,
   });
 
   final String text;
   final String? description;
   final String? projectId;
   final DateTime? nextActionAt;
+  final DateTime? reminderAt;
+  final TimelineReminderRecurrence reminderRecurrence;
   final TimelineItemType type;
 }
 

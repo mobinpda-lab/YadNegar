@@ -5,6 +5,7 @@ import 'package:yadnegar/core/presentation/persian_time_picker.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
+import 'package:yadnegar/features/timeline/presentation/timeline_persian_pickers.dart';
 
 typedef FollowUpEditorClock = DateTime Function();
 
@@ -33,6 +34,8 @@ class FollowUpEditorScreen extends StatefulWidget {
 class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
   late final TextEditingController _titleController;
   late DateTime _selectedDateTime;
+  late DateTime? _reminderAt;
+  late TimelineReminderRecurrence _reminderRecurrence;
   bool _saving = false;
 
   bool get _isEditing => widget.existing != null;
@@ -42,6 +45,9 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
     super.initState();
     _titleController = TextEditingController(text: widget.existing?.text ?? '');
     _selectedDateTime = widget.existing?.timelineAt ?? widget.clock();
+    _reminderAt = widget.existing?.reminderAt;
+    _reminderRecurrence =
+        widget.existing?.reminderRecurrence ?? TimelineReminderRecurrence.none;
   }
 
   @override
@@ -56,9 +62,7 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
       initialDate: _selectedDateTime,
       formatter: widget.dateTimeFormatter,
     );
-    if (selected == null || !mounted) {
-      return;
-    }
+    if (selected == null || !mounted) return;
     setState(() {
       _selectedDateTime = DateTime(
         selected.year,
@@ -76,9 +80,7 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
       initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
       formatter: widget.dateTimeFormatter,
     );
-    if (selected == null || !mounted) {
-      return;
-    }
+    if (selected == null || !mounted) return;
     setState(() {
       _selectedDateTime = DateTime(
         _selectedDateTime.year,
@@ -90,10 +92,32 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
     });
   }
 
+  Future<void> _pickReminder() async {
+    final selected = await pickPersianFutureReminderDateTime(
+      context,
+      _reminderAt ?? widget.clock().add(const Duration(hours: 1)),
+    );
+    if (selected == null || !mounted) return;
+    setState(() => _reminderAt = selected);
+  }
+
+  void _clearReminder() {
+    setState(() {
+      _reminderAt = null;
+      _reminderRecurrence = TimelineReminderRecurrence.none;
+    });
+  }
+
+  String _recurrenceLabel(TimelineReminderRecurrence value) {
+    return switch (value) {
+      TimelineReminderRecurrence.none => 'بدون تکرار',
+      TimelineReminderRecurrence.daily => 'روزانه',
+      TimelineReminderRecurrence.weekly => 'هفتگی',
+    };
+  }
+
   Future<void> _save() async {
-    if (_saving) {
-      return;
-    }
+    if (_saving) return;
     setState(() => _saving = true);
     try {
       final rawTitle = _titleController.text;
@@ -104,21 +128,23 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
           text: rawTitle,
           replaceOccurredAt: true,
           occurredAt: _selectedDateTime,
+          replaceReminderAt: true,
+          reminderAt: _reminderAt,
+          replaceReminderRecurrence: true,
+          reminderRecurrence: _reminderRecurrence,
         );
       } else {
         saved = await widget.addFollowUp.add(
           subject: widget.subject,
           text: rawTitle,
           occurredAt: _selectedDateTime,
+          reminderAt: _reminderAt,
+          reminderRecurrence: _reminderRecurrence,
         );
       }
-      if (mounted) {
-        Navigator.of(context).pop(saved);
-      }
+      if (mounted) Navigator.of(context).pop(saved);
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ذخیره پیگیری انجام نشد.')),
@@ -129,9 +155,7 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'ویرایش پیگیری' : 'ثبت پیگیری'),
-      ),
+      appBar: AppBar(title: Text(_isEditing ? 'ویرایش پیگیری' : 'ثبت پیگیری')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -196,6 +220,69 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            Card(
+              key: const Key('follow-up-reminder'),
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text('یادآور', style: TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    Text(
+                      _reminderAt == null
+                          ? 'یادآوری تعیین نشده است'
+                          : widget.dateTimeFormatter.formatDateTime(_reminderAt!),
+                      key: const Key('follow-up-reminder-value'),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton.icon(
+                          key: const Key('follow-up-reminder-pick'),
+                          onPressed: _pickReminder,
+                          icon: const Icon(Icons.notifications_active_outlined),
+                          label: Text(_reminderAt == null ? 'تنظیم یادآور' : 'تغییر زمان'),
+                        ),
+                        if (_reminderAt != null)
+                          TextButton.icon(
+                            key: const Key('follow-up-reminder-clear'),
+                            onPressed: _clearReminder,
+                            icon: const Icon(Icons.notifications_off_outlined),
+                            label: const Text('پاک کردن'),
+                          ),
+                      ],
+                    ),
+                    if (_reminderAt != null) ...[
+                      const SizedBox(height: 10),
+                      DropdownButtonFormField<TimelineReminderRecurrence>(
+                        key: const Key('follow-up-reminder-recurrence'),
+                        initialValue: _reminderRecurrence,
+                        decoration: const InputDecoration(
+                          labelText: 'تکرار یادآور',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: TimelineReminderRecurrence.values
+                            .map(
+                              (value) => DropdownMenuItem<TimelineReminderRecurrence>(
+                                value: value,
+                                child: Text(_recurrenceLabel(value)),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value != null) setState(() => _reminderRecurrence = value);
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 28),
             Row(

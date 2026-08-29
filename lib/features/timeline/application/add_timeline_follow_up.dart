@@ -19,6 +19,8 @@ class AddTimelineFollowUp {
     required TimelineItem subject,
     String text = '',
     DateTime? occurredAt,
+    DateTime? reminderAt,
+    TimelineReminderRecurrence reminderRecurrence = TimelineReminderRecurrence.none,
   }) async {
     if (!subject.isTrackedSubject) {
       throw ArgumentError.value(subject.id, 'subject', 'must be a root subject');
@@ -33,6 +35,8 @@ class AddTimelineFollowUp {
       text: normalized.isEmpty ? 'پیگیری' : normalized,
       createdAt: now,
       occurredAt: occurredAt ?? now,
+      reminderAt: reminderAt,
+      reminderRecurrence: reminderRecurrence,
     );
     await repository.upsert(followUp);
     return followUp;
