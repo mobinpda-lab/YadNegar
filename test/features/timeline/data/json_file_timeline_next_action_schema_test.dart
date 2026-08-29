@@ -37,12 +37,12 @@ void main() {
 
     await repository.upsert(before.single);
     final raw = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-    expect(raw['schemaVersion'], 7);
+    expect(raw['schemaVersion'], JsonFileTimelineRepository.schemaVersion);
     expect(((raw['items'] as List<dynamic>).single as Map<String, dynamic>)['nextActionAt'], isNull);
   });
 
-  test('schema v7 round-trips root nextActionAt independently from reminderAt', () async {
-    final directory = await Directory.systemTemp.createTemp('yadnegar-next-v7-');
+  test('current schema round-trips root nextActionAt independently from reminderAt', () async {
+    final directory = await Directory.systemTemp.createTemp('yadnegar-next-current-');
     addTearDown(() async => directory.delete(recursive: true));
     final file = File('${directory.path}/timeline.json');
     final repository = JsonFileTimelineRepository(file);
@@ -65,7 +65,7 @@ void main() {
     expect(loaded.reminderAt, reminderAt);
 
     final raw = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-    expect(raw['schemaVersion'], 7);
+    expect(raw['schemaVersion'], JsonFileTimelineRepository.schemaVersion);
     final item = (raw['items'] as List<dynamic>).single as Map<String, dynamic>;
     expect(item['nextActionAt'], nextActionAt.toIso8601String());
     expect(item['reminderAt'], reminderAt.toIso8601String());
