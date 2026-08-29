@@ -9,8 +9,8 @@ import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
 import org.json.JSONObject
-import java.time.LocalDate
-import java.time.OffsetDateTime
+import java.util.Calendar
+import java.util.Date
 
 class YadNegarWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -93,12 +93,24 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
         private fun matchesTime(item: JSONObject, mode: String?): Boolean {
             if (mode == "all") return true
             val raw = item.optString("nextActionAt").ifBlank { item.optString("timelineAt") }
-            val date = runCatching { OffsetDateTime.parse(raw).toLocalDate() }.getOrNull() ?: return mode == "all"
-            val today = LocalDate.now()
-            if (mode == "today") return date == today
-            val start = today.minusDays((today.dayOfWeek.value - 1).toLong())
-            val end = start.plusDays(6)
-            return !date.isBefore(start) && !date.isAfter(end)
+            val instant = runCatching { Date.from(java.time.Instant.parse(raw)) }.getOrNull() ?: return false
+            val target = Calendar.getInstance().apply { time = instant }
+            val today = Calendar.getInstance()
+            if (mode == "today") {
+                return target.get(Calendar.ERA) == today.get(Calendar.ERA) &&
+                    target.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                    target.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+            }
+            val firstDay = today.clone() as Calendar
+            firstDay.firstDayOfWeek = Calendar.SATURDAY
+            firstDay.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY)
+            firstDay.set(Calendar.HOUR_OF_DAY, 0)
+            firstDay.set(Calendar.MINUTE, 0)
+            firstDay.set(Calendar.SECOND, 0)
+            firstDay.set(Calendar.MILLISECOND, 0)
+            val lastDay = firstDay.clone() as Calendar
+            lastDay.add(Calendar.DAY_OF_YEAR, 7)
+            return !target.before(firstDay) && target.before(lastDay)
         }
     }
 }
