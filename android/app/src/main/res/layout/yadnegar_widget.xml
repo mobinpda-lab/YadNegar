@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layoutDirection="rtl"
+    android:background="@drawable/yadnegar_widget_background">
+
+    <TextView
+        android:id="@+id/widget_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="یادنگار"
+        android:textDirection="rtl"
+        android:textAlignment="viewEnd"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#111111" />
+
+    <TextView
+        android:id="@+id/widget_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="کارهای شما اینجا نمایش داده می‌شوند"
+        android:textDirection="rtl"
+        android:textAlignment="center"
+        android:textSize="14sp"
+        android:textColor="#555555" />
+</LinearLayout>
