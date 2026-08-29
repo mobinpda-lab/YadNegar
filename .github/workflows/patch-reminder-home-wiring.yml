@@ -1,0 +1,39 @@
+name: Patch Reminder Home Wiring
+on:
+  push:
+    branches: [feat/tracked-reminder-integration]
+    paths: [.github/workflows/patch-reminder-home-wiring.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/tracked-reminder-integration
+      - name: Apply exact wiring patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/features/timeline/presentation/tracked_subject_home.dart')
+          s=p.read_text()
+          reps=[
+          ("import 'package:yadnegar/features/timeline/application/quick_capture.dart';\n", "import 'package:yadnegar/features/timeline/application/quick_capture.dart';\nimport 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';\n"),
+          ("    required this.editTimelineItem,\n    this.legacyTimeline,", "    required this.editTimelineItem,\n    required this.reminderScheduler,\n    this.legacyTimeline,"),
+          ("  final EditTimelineItem editTimelineItem;\n  final Widget? legacyTimeline;", "  final EditTimelineItem editTimelineItem;\n  final TimelineReminderScheduler reminderScheduler;\n  final Widget? legacyTimeline;"),
+          ("    if (saved != null && mounted) {\n      await _reload();\n    }\n  }\n\n  Future<void> _openSubject", "    if (saved != null && mounted) {\n      try {\n        if (saved.reminderAt == null) {\n          await widget.reminderScheduler.cancel(saved.id);\n        } else {\n          await widget.reminderScheduler.schedule(saved);\n        }\n      } catch (_) {\n        if (mounted) {\n          ScaffoldMessenger.of(context).showSnackBar(\n            const SnackBar(content: Text('پیگیری ذخیره شد؛ همگام‌سازی یادآور انجام نشد.')),\n          );\n        }\n      }\n      await _reload();\n    }\n  }\n\n  Future<void> _openSubject"),
+          ("          editTimelineItem: widget.editTimelineItem,\n          clock: widget.clock,\n          dateTimeFormatter: widget.dateTimeFormatter,\n          durationFormatter: widget.durationFormatter,", "          editTimelineItem: widget.editTimelineItem,\n          reminderScheduler: widget.reminderScheduler,\n          clock: widget.clock,\n          dateTimeFormatter: widget.dateTimeFormatter,\n          durationFormatter: widget.durationFormatter,"),
+          ]
+          for old,new in reps:
+            if s.count(old)!=1:
+              raise SystemExit(f'anchor count {s.count(old)} for {old[:60]!r}')
+            s=s.replace(old,new)
+          p.write_text(s)
+          PY
+          rm .github/workflows/patch-reminder-home-wiring.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/features/timeline/presentation/tracked_subject_home.dart .github/workflows/patch-reminder-home-wiring.yml
+          git commit -m 'feat(reminder): wire scheduler through tracked home'
+          git push origin HEAD:feat/tracked-reminder-integration
