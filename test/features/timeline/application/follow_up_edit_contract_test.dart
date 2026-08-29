@@ -62,6 +62,7 @@ void main() {
       reminderRecurrence: TimelineReminderRecurrence.daily,
     );
 
+    expect(saved.parentId, root.id);
     expect(saved.reminderAt, followUpReminder);
     expect(saved.reminderRecurrence, TimelineReminderRecurrence.daily);
     expect(repository.items[root.id]?.reminderAt, rootReminder);
