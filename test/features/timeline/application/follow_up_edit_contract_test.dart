@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
+import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_repository.dart';
 
@@ -23,6 +24,30 @@ class _Repository implements TimelineRepository {
 }
 
 void main() {
+  test('root create persists reminder independently from next action', () async {
+    final repository = _Repository();
+    final reminder = DateTime(2026, 8, 31, 9, 30);
+    final nextAction = DateTime(2026, 8, 30, 14);
+
+    final saved = await QuickCapture(
+      repository: repository,
+      clock: () => DateTime(2026, 8, 29, 11),
+      idGenerator: () => 'root',
+    ).capture(
+      text: 'کار جدید',
+      nextActionAt: nextAction,
+      reminderAt: reminder,
+      reminderRecurrence: TimelineReminderRecurrence.weekly,
+      type: TimelineItemType.activity,
+    );
+
+    expect(saved.parentId, isNull);
+    expect(saved.nextActionAt, nextAction);
+    expect(saved.reminderAt, reminder);
+    expect(saved.reminderRecurrence, TimelineReminderRecurrence.weekly);
+    expect(repository.items['root']?.reminderAt, reminder);
+  });
+
   test('blank follow-up becomes پیگیری and uses one injected clock instant', () async {
     final repository = _Repository();
     final root = TimelineItem(id: 'root', type: TimelineItemType.activity, text: 'تماس با علی', createdAt: DateTime(2026, 8, 28, 8));
