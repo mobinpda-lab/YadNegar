@@ -48,7 +48,43 @@ void main() {
     expect(saved.parentId, root.id);
     expect(saved.createdAt, now);
     expect(saved.occurredAt, now);
+    expect(saved.reminderAt, isNull);
+    expect(saved.reminderRecurrence, TimelineReminderRecurrence.none);
     expect(clockCalls, 1);
+  });
+
+  test('new follow-up persists reminder independently from its parent', () async {
+    final repository = _Repository();
+    final root = TimelineItem(
+      id: 'root',
+      type: TimelineItemType.activity,
+      text: 'تماس با علی',
+      createdAt: DateTime(2026, 8, 28, 8),
+      reminderAt: DateTime(2026, 8, 29, 8),
+      reminderRecurrence: TimelineReminderRecurrence.daily,
+    );
+    repository.items[root.id] = root;
+    final reminderAt = DateTime(2026, 8, 30, 14, 15);
+
+    final saved = await AddTimelineFollowUp(
+      repository: repository,
+      clock: () => DateTime(2026, 8, 29, 10),
+      idGenerator: () => 'follow-up',
+    ).add(
+      subject: root,
+      text: 'پیگیری دوم',
+      reminderAt: reminderAt,
+      reminderRecurrence: TimelineReminderRecurrence.weekly,
+    );
+
+    expect(saved.parentId, root.id);
+    expect(saved.reminderAt, reminderAt);
+    expect(saved.reminderRecurrence, TimelineReminderRecurrence.weekly);
+    expect(repository.items[root.id]?.reminderAt, DateTime(2026, 8, 29, 8));
+    expect(
+      repository.items[root.id]?.reminderRecurrence,
+      TimelineReminderRecurrence.daily,
+    );
   });
 
   test('editing one follow-up preserves parent and sibling history', () async {
