@@ -4,6 +4,7 @@
     android:minHeight="180dp"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/yadnegar_widget"
+    android:configure="com.mobinpda.lab.yadnegar.YadNegarWidgetConfigureActivity"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/yadnegar_widget_description" />
