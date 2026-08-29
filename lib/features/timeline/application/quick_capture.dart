@@ -19,6 +19,8 @@ class QuickCapture {
     required String text,
     String? description,
     String? projectId,
+    String? categoryId,
+    List<String> tagIds = const <String>[],
     DateTime? nextActionAt,
     TimelineItemType type = TimelineItemType.note,
     DateTime? occurredAt,
@@ -38,6 +40,15 @@ class QuickCapture {
     final targetProjectId = normalizedProjectId == null || normalizedProjectId.isEmpty
         ? null
         : normalizedProjectId;
+    final normalizedCategoryId = categoryId?.trim();
+    final targetCategoryId = normalizedCategoryId == null || normalizedCategoryId.isEmpty
+        ? null
+        : normalizedCategoryId;
+    final targetTagIds = tagIds
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
 
     final id = idGenerator().trim();
     if (id.isEmpty) {
@@ -50,6 +61,8 @@ class QuickCapture {
       text: normalizedText,
       description: targetDescription,
       projectId: targetProjectId,
+      categoryId: targetCategoryId,
+      tagIds: targetTagIds,
       nextActionAt: nextActionAt,
       createdAt: clock(),
       occurredAt: occurredAt,
