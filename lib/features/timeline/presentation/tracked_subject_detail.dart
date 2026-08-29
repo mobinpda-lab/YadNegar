@@ -4,6 +4,7 @@ import 'package:yadnegar/core/presentation/persian_duration_formatter.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
+import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_edit_screen.dart';
@@ -19,6 +20,7 @@ class TrackedSubjectDetail extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
+    required this.reminderScheduler,
     this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
     this.durationFormatter = const PersianDurationFormatter(),
@@ -28,6 +30,7 @@ class TrackedSubjectDetail extends StatefulWidget {
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
+  final TimelineReminderScheduler reminderScheduler;
   final TrackedSubjectDetailClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
   final PersianDurationFormatter durationFormatter;
@@ -70,6 +73,21 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
     }
   }
 
+  Future<void> _syncReminder(TimelineItem item) async {
+    try {
+      if (item.reminderAt == null) {
+        await widget.reminderScheduler.cancel(item.id);
+      } else {
+        await widget.reminderScheduler.schedule(item);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('اطلاعات ذخیره شد؛ همگام‌سازی یادآور انجام نشد.')),
+      );
+    }
+  }
+
   Future<void> _addFollowUp() async {
     final saved = await Navigator.of(context).push<TimelineItem>(
       MaterialPageRoute<TimelineItem>(
@@ -82,7 +100,10 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
         ),
       ),
     );
-    if (saved != null && mounted) await _reload();
+    if (saved != null && mounted) {
+      await _syncReminder(saved);
+      await _reload();
+    }
   }
 
   Future<void> _editSubject() async {
@@ -95,7 +116,8 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
       ),
     );
     if (updated != null && mounted) {
-      setState(() => _subject = updated);
+      await _syncReminder(updated);
+      if (mounted) setState(() => _subject = updated);
     }
   }
 
@@ -112,8 +134,17 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
         ),
       ),
     );
-    if (updated != null && mounted) await _reload();
+    if (updated != null && mounted) {
+      await _syncReminder(updated);
+      await _reload();
+    }
   }
+
+  String _recurrenceLabel(TimelineReminderRecurrence recurrence) => switch (recurrence) {
+        TimelineReminderRecurrence.none => 'بدون تکرار',
+        TimelineReminderRecurrence.daily => 'هر روز',
+        TimelineReminderRecurrence.weekly => 'هر هفته',
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +152,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
     final hasPdfActions = TrackedSubjectPdfScope.maybeOf(context) != null;
     final description = _subject.description;
     final nextActionAt = _subject.nextActionAt;
+    final reminderAt = _subject.reminderAt;
     return Scaffold(
       appBar: AppBar(
         title: Text(_subject.text, key: const Key('tracked-subject-detail-title')),
@@ -130,10 +162,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
               key: const Key('tracked-subject-pdf-open'),
               tooltip: 'گزارش PDF',
               onPressed: () async {
-                await TrackedSubjectPdfActions.open(
-                  context,
-                  currentSubjectId: _subject.id,
-                );
+                await TrackedSubjectPdfActions.open(context, currentSubjectId: _subject.id);
               },
               icon: const Icon(Icons.picture_as_pdf_outlined),
             ),
@@ -160,9 +189,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                     const Text('شرح کار', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
                     Text(
-                      description == null || description.isEmpty
-                          ? 'شرحی برای این کار ثبت نشده است.'
-                          : description,
+                      description == null || description.isEmpty ? 'شرحی برای این کار ثبت نشده است.' : description,
                       key: const Key('tracked-subject-description'),
                       softWrap: true,
                     ),
@@ -172,28 +199,30 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                     Row(
                       key: const Key('tracked-subject-next-action'),
                       children: [
-                        Icon(
-                          nextActionAt == null ? Icons.event_busy_outlined : Icons.event_available_outlined,
-                          size: 18,
-                        ),
+                        Icon(nextActionAt == null ? Icons.event_busy_outlined : Icons.event_available_outlined, size: 18),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            nextActionAt == null
-                                ? 'اقدام بعدی تعیین نشده است'
-                                : widget.dateTimeFormatter.formatDateTime(nextActionAt),
+                            nextActionAt == null ? 'اقدام بعدی تعیین نشده است' : widget.dateTimeFormatter.formatDateTime(nextActionAt),
                             key: const Key('tracked-subject-next-action-value'),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 14),
+                    const Text('یادآور', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 6),
+                    Text(
+                      reminderAt == null
+                          ? 'یادآوری تعیین نشده است'
+                          : '${widget.dateTimeFormatter.formatDateTime(reminderAt)} • ${_recurrenceLabel(_subject.reminderRecurrence)}',
+                      key: const Key('tracked-subject-reminder-value'),
+                    ),
+                    const SizedBox(height: 14),
                     const Text('آخرین پیگیری', style: TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 6),
                     Text(
-                      latest == null
-                          ? 'هنوز پیگیری ثبت نشده است'
-                          : widget.dateTimeFormatter.formatDateTime(latest.timelineAt),
+                      latest == null ? 'هنوز پیگیری ثبت نشده است' : widget.dateTimeFormatter.formatDateTime(latest.timelineAt),
                       key: const Key('tracked-subject-last-follow-up'),
                     ),
                     if (latest != null) ...[
@@ -231,11 +260,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Text(
-            'هنوز پیگیری ثبت نشده است',
-            key: Key('tracked-subject-follow-up-empty'),
-            textAlign: TextAlign.center,
-          ),
+          child: Text('هنوز پیگیری ثبت نشده است', key: Key('tracked-subject-follow-up-empty'), textAlign: TextAlign.center),
         ),
       );
     }
@@ -248,6 +273,7 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
       itemBuilder: (context, index) {
         final followUp = _followUps[index];
         final previous = index + 1 < _followUps.length ? _followUps[index + 1] : null;
+        final reminderAt = followUp.reminderAt;
         return Card(
           key: Key('follow-up-${followUp.id}'),
           child: ListTile(
@@ -257,17 +283,16 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.dateTimeFormatter.formatDateTime(followUp.timelineAt),
-                  key: Key('follow-up-time-${followUp.id}'),
-                ),
+                Text(widget.dateTimeFormatter.formatDateTime(followUp.timelineAt), key: Key('follow-up-time-${followUp.id}')),
+                if (reminderAt != null)
+                  Text(
+                    'یادآور: ${widget.dateTimeFormatter.formatDateTime(reminderAt)} • ${_recurrenceLabel(followUp.reminderRecurrence)}',
+                    key: Key('follow-up-reminder-${followUp.id}'),
+                  ),
                 if (previous != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    widget.durationFormatter.intervalBetween(
-                      newer: followUp.timelineAt,
-                      older: previous.timelineAt,
-                    ),
+                    widget.durationFormatter.intervalBetween(newer: followUp.timelineAt, older: previous.timelineAt),
                     key: Key('follow-up-interval-${followUp.id}'),
                   ),
                 ],
