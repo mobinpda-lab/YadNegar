@@ -11,6 +11,7 @@ import org.json.JSONObject
 class MainActivity : FlutterActivity() {
     private val channelName = "com.mobinpda.lab.yadnegar/widget"
     private var channel: MethodChannel? = null
+    private var pendingTaskId: String? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -26,6 +27,10 @@ class MainActivity : FlutterActivity() {
                         writeProjection(projection)
                         YadNegarWidgetProvider.updateAll(this@MainActivity)
                         result.success(null)
+                    }
+                    "takePendingTask" -> {
+                        result.success(pendingTaskId)
+                        pendingTaskId = null
                     }
                     else -> result.notImplemented()
                 }
@@ -55,7 +60,10 @@ class MainActivity : FlutterActivity() {
 
     private fun deliverWidgetIntent(intent: Intent?) {
         val taskId = intent?.getStringExtra(EXTRA_WIDGET_TASK_ID)?.trim().orEmpty()
-        if (taskId.isNotEmpty()) channel?.invokeMethod("openTask", taskId)
+        if (taskId.isNotEmpty()) {
+            pendingTaskId = taskId
+            channel?.invokeMethod("openTask", taskId)
+        }
     }
 
     companion object {
