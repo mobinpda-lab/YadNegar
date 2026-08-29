@@ -9,6 +9,7 @@ import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
+import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
 import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
@@ -28,6 +29,7 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
+    required this.reminderScheduler,
     this.legacyTimeline,
     this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
@@ -39,6 +41,7 @@ class TrackedSubjectHome extends StatefulWidget {
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
+  final TimelineReminderScheduler reminderScheduler;
   final Widget? legacyTimeline;
   final TrackedSubjectHomeClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
@@ -487,6 +490,19 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       ),
     );
     if (saved != null && mounted) {
+      try {
+        if (saved.reminderAt == null) {
+          await widget.reminderScheduler.cancel(saved.id);
+        } else {
+          await widget.reminderScheduler.schedule(saved);
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('پیگیری ذخیره شد؛ همگام‌سازی یادآور انجام نشد.')),
+          );
+        }
+      }
       await _reload();
     }
   }
@@ -499,6 +515,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           loadFollowUps: widget.loadFollowUps,
           addFollowUp: widget.addFollowUp,
           editTimelineItem: widget.editTimelineItem,
+          reminderScheduler: widget.reminderScheduler,
           clock: widget.clock,
           dateTimeFormatter: widget.dateTimeFormatter,
           durationFormatter: widget.durationFormatter,
