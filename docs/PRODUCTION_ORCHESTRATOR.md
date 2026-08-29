@@ -1,6 +1,6 @@
 # YadNegar Production Orchestrator
 
-Issue: #169
+Issue: #169 / #172
 
 ## Purpose
 `YadNegar Production Orchestrator` is the repository-native controller that advances eligible pull requests without bypassing YadNegar's existing quality gates.
@@ -22,9 +22,11 @@ The orchestrator:
 - requires `behind=0`
 - evaluates workflow runs for the exact PR head SHA
 - marks a Draft PR Ready only after exact-head `YadNegar CI` succeeds on current main
+- requires current `main` to have successful post-main `YadNegar CI` + `YadNegar Android Build` proof before advancing another PR
 - merges at most one PR per run
 - uses squash merge with the exact head SHA passed to GitHub's merge endpoint
 - re-reads PR head, main SHA, mergeability and behind status immediately before merge
+- explicitly dispatches the existing CI and Android workflows on the new `main` after a token-driven merge
 - fails closed if anything changes during evaluation
 
 ## Required gates
@@ -41,6 +43,7 @@ The orchestrator:
 - merge two PRs in parallel
 - auto-rebase or force-sync a behind branch
 - retry failing product tests by mutating code
+- create a second CI or release foundation
 
 ## Operational labels
 - `orchestrator:hold`: temporarily freeze automatic advancement
@@ -50,4 +53,8 @@ The orchestrator:
 The orchestrator creates its two own governance labels if they do not exist.
 
 ## Post-main proof
-After an orchestrated merge, the repository's existing push-triggered CI and Android workflows provide post-main proof on the new main SHA. The orchestrator does not claim a production release or store publication.
+GitHub may suppress recursive `push` workflow triggers when a merge is performed by a workflow using `GITHUB_TOKEN`. Therefore, after an orchestrated merge the Orchestrator explicitly dispatches the existing `flutter-ci.yml` and `android-build.yml` workflows on `main`.
+
+The next PR is not eligible to advance until the current main SHA has successful CI and Android post-main proof. This preserves serial integration while development on independent branches can continue in Maximum Parallel mode.
+
+The Orchestrator does not create a real release, production signing material, tag, GitHub Release, or Play Store publication.
