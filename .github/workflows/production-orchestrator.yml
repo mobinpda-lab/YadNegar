@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  actions: read
+  actions: write
   contents: write
   issues: write
   pull-requests: write
@@ -79,6 +79,39 @@ jobs:
             }
 
             const currentMain = await mainSha();
+
+            const mainRuns = await github.paginate(
+              github.rest.actions.listWorkflowRunsForRepo,
+              { owner, repo, head_sha: currentMain, per_page: 100 },
+            );
+            function latestMainProof(name) {
+              const matching = mainRuns
+                .filter((run) =>
+                  run.name === name &&
+                  run.head_sha === currentMain &&
+                  (run.event === 'push' || run.event === 'workflow_dispatch')
+                )
+                .sort((a, b) => b.id - a.id);
+              if (!matching.length) return null;
+              const run = matching[0];
+              return {
+                id: run.id,
+                status: run.status,
+                conclusion: run.conclusion,
+                ok: run.status === 'completed' && run.conclusion === 'success',
+              };
+            }
+            const mainCi = latestMainProof(gates.ci);
+            const mainAndroid = latestMainProof(gates.android);
+            if (!mainCi?.ok || !mainAndroid?.ok) {
+              core.info(
+                `main ${currentMain} post-main proof not complete: ` +
+                `CI=${mainCi?.conclusion ?? mainCi?.status ?? 'missing'} ` +
+                `Android=${mainAndroid?.conclusion ?? mainAndroid?.status ?? 'missing'}; queue paused`,
+              );
+              return;
+            }
+
             const pulls = await github.paginate(github.rest.pulls.list, {
               owner,
               repo,
@@ -230,7 +263,27 @@ jobs:
                 continue;
               }
 
-              core.notice(`#${pr.number}: merged exact head ${headSha}; stopping after one merge.`);
+              const mergedMain = await mainSha();
+              if (mergedMain !== result.data.sha) {
+                core.setFailed(
+                  `#${pr.number}: merge succeeded as ${result.data.sha} but main resolved to ${mergedMain}; ` +
+                  'post-main dispatch aborted fail-closed',
+                );
+                return;
+              }
+
+              for (const workflow_id of ['flutter-ci.yml', 'android-build.yml']) {
+                await github.rest.actions.createWorkflowDispatch({
+                  owner,
+                  repo,
+                  workflow_id,
+                  ref: 'main',
+                });
+              }
+              core.notice(
+                `#${pr.number}: merged exact head ${headSha} as ${mergedMain}; ` +
+                'explicit post-main CI + Android proof dispatched; stopping after one merge.',
+              );
               return;
             }
 
