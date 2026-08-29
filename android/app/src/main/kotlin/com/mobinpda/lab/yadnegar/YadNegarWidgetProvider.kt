@@ -9,8 +9,11 @@ import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class YadNegarWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -93,7 +96,7 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
         private fun matchesTime(item: JSONObject, mode: String?): Boolean {
             if (mode == "all") return true
             val raw = item.optString("nextActionAt").ifBlank { item.optString("timelineAt") }
-            val instant = runCatching { Date.from(java.time.Instant.parse(raw)) }.getOrNull() ?: return false
+            val instant = parseIsoDate(raw) ?: return false
             val target = Calendar.getInstance().apply { time = instant }
             val today = Calendar.getInstance()
             if (mode == "today") {
@@ -111,6 +114,29 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
             val lastDay = firstDay.clone() as Calendar
             lastDay.add(Calendar.DAY_OF_YEAR, 7)
             return !target.before(firstDay) && target.before(lastDay)
+        }
+
+        private fun parseIsoDate(raw: String): Date? {
+            if (raw.isBlank()) return null
+            val normalized = raw.replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
+            val patterns = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+                "yyyy-MM-dd'T'HH:mm:ssZ",
+            )
+            for (pattern in patterns) {
+                val parsed = runCatching {
+                    SimpleDateFormat(pattern, Locale.US).apply {
+                        isLenient = false
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }.parse(normalized)
+                }.getOrNull()
+                if (parsed != null) return parsed
+            }
+            return null
         }
     }
 }
