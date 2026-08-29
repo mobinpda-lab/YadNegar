@@ -24,6 +24,15 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".YadNegarWidgetConfigureActivity"
+            android:exported="true"
+            android:theme="@style/NormalTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
         <receiver
             android:name=".YadNegarWidgetProvider"
             android:exported="true">
