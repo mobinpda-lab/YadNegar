@@ -1,0 +1,125 @@
+name: YadNegar Autonomous Recovery
+
+on:
+  workflow_run:
+    workflows:
+      - YadNegar CI
+      - YadNegar UI Evidence
+      - YadNegar Android Build
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: yadnegar-recovery-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' ||
+      github.event.workflow_run.conclusion == 'timed_out'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Retry failed run or escalate
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const run = context.payload.workflow_run;
+            const maxAttempts = 3;
+
+            if (!run || !run.id) {
+              core.setFailed('workflow_run payload is missing');
+              return;
+            }
+
+            if (!['failure', 'timed_out'].includes(run.conclusion)) {
+              core.info(`run ${run.id}: conclusion=${run.conclusion}; no recovery action`);
+              return;
+            }
+
+            const allowedWorkflows = new Set([
+              'YadNegar CI',
+              'YadNegar UI Evidence',
+              'YadNegar Android Build',
+            ]);
+            if (!allowedWorkflows.has(run.name)) {
+              core.warning(`run ${run.id}: workflow ${run.name} is not recoverable here`);
+              return;
+            }
+
+            const attempt = Number(run.run_attempt || 1);
+            const sourceSha = run.head_sha || 'unknown';
+            const runUrl = run.html_url || `${context.serverUrl}/${owner}/${repo}/actions/runs/${run.id}`;
+
+            if (attempt < maxAttempts) {
+              core.notice(
+                `run ${run.id}: ${run.name} failed on ${sourceSha}; retrying failed jobs ` +
+                `attempt ${attempt + 1}/${maxAttempts}`,
+              );
+              await github.request(
+                'POST /repos/{owner}/{repo}/actions/runs/{run_id}/rerun-failed-jobs',
+                { owner, repo, run_id: run.id },
+              );
+              return;
+            }
+
+            const marker = `AUTONOMOUS-RECOVERY:${run.name}:${sourceSha}`;
+            const title = `Recovery escalation: ${run.name} @ ${sourceSha.slice(0, 12)}`;
+            const body = [
+              `<!-- ${marker} -->`,
+              '## Autonomous Recovery Escalation',
+              '',
+              `- Workflow: **${run.name}**`,
+              `- Source SHA: \`${sourceSha}\``,
+              `- Run: ${runUrl}`,
+              `- Attempts exhausted: **${maxAttempts}**`,
+              `- Final conclusion: **${run.conclusion}**`,
+              '',
+              'The recovery controller stopped automatically after the bounded retry limit.',
+              'No merge, release, or gate bypass was performed.',
+              '',
+              'Next action: classify root cause and create a scoped fix task/PR. For security,',
+              'credential, destructive migration, or ambiguous product failures, keep this issue',
+              'in human escalation until an explicit safe decision exists.',
+            ].join('\n');
+
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const issue = existing.find((item) =>
+              !item.pull_request && typeof item.body === 'string' && item.body.includes(marker)
+            );
+
+            if (issue) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: [
+                  `Recovery re-confirmed for ${run.name}.`,
+                  `Run: ${runUrl}`,
+                  `SHA: \`${sourceSha}\``,
+                  `Attempts exhausted: ${maxAttempts}`,
+                ].join('\n'),
+              });
+              core.notice(`#${issue.number}: existing escalation updated`);
+              return;
+            }
+
+            const created = await github.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body,
+              labels: ['orchestrator:manual'],
+            });
+            core.notice(`#${created.data.number}: recovery escalation created`);
