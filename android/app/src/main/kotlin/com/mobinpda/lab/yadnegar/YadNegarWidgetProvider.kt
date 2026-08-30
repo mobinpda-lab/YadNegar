@@ -32,6 +32,9 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.yadnegar_widget)
             val prefs = context.getSharedPreferences(YadNegarWidgetConfigureActivity.PREFS, Context.MODE_PRIVATE)
             val mode = prefs.getString("time_filter_$widgetId", "today")
+            val projectId = prefs.getString("project_filter_$widgetId", "").orEmpty()
+            val categoryId = prefs.getString("category_filter_$widgetId", "").orEmpty()
+            val tagId = prefs.getString("tag_filter_$widgetId", "").orEmpty()
             val count = prefs.getInt("item_count_$widgetId", 6).coerceIn(3, 15)
             val label = when (mode) {
                 "week" -> "هفته جاری"
@@ -42,16 +45,21 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
 
             val projectionRaw = context.getSharedPreferences(MainActivity.PROJECTION_PREFS, Context.MODE_PRIVATE)
                 .getString(MainActivity.PROJECTION_JSON, null)
-            val tasks = mutableListOf<Pair<String, String>>()
+            val tasks = mutableListOf<WidgetTask>()
             if (!projectionRaw.isNullOrBlank()) {
                 runCatching {
                     val items = JSONObject(projectionRaw).optJSONArray("items") ?: return@runCatching
                     for (index in 0 until items.length()) {
                         val item = items.optJSONObject(index) ?: continue
                         if (!matchesTime(item, mode)) continue
+                        if (!matchesTaxonomy(item, projectId, categoryId, tagId)) continue
                         val id = item.optString("id").trim()
                         val text = item.optString("text").trim()
-                        if (id.isNotEmpty() && text.isNotEmpty()) tasks.add(id to text)
+                        val rawDate = item.optString("nextActionAt").ifBlank { item.optString("timelineAt") }
+                        val whenText = parseIsoDate(rawDate)?.let(::formatPersianDateTime).orEmpty()
+                        if (id.isNotEmpty() && text.isNotEmpty()) {
+                            tasks.add(WidgetTask(id, text, whenText))
+                        }
                         if (tasks.size >= count) break
                     }
                 }
@@ -64,9 +72,14 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
             } else {
                 views.setViewVisibility(R.id.widget_tasks, View.VISIBLE)
                 views.setViewVisibility(R.id.widget_empty, View.GONE)
-                views.setTextViewText(R.id.widget_tasks, tasks.joinToString("\n") { "• ${it.second}" })
+                views.setTextViewText(
+                    R.id.widget_tasks,
+                    tasks.joinToString("\n") {
+                        if (it.whenText.isBlank()) "• ${it.text}" else "• ${it.text} — ${it.whenText}"
+                    },
+                )
                 val firstTask = Intent(context, MainActivity::class.java).apply {
-                    putExtra(MainActivity.EXTRA_WIDGET_TASK_ID, tasks.first().first)
+                    putExtra(MainActivity.EXTRA_WIDGET_TASK_ID, tasks.first().id)
                     flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 views.setOnClickPendingIntent(
@@ -91,6 +104,23 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
                 ),
             )
             manager.updateAppWidget(widgetId, views)
+        }
+
+        private fun matchesTaxonomy(item: JSONObject, projectId: String, categoryId: String, tagId: String): Boolean {
+            if (projectId.isNotEmpty() && item.optString("projectId") != projectId) return false
+            if (categoryId.isNotEmpty() && item.optString("categoryId") != categoryId) return false
+            if (tagId.isNotEmpty()) {
+                val tags = item.optJSONArray("tagIds") ?: return false
+                var found = false
+                for (index in 0 until tags.length()) {
+                    if (tags.optString(index) == tagId) {
+                        found = true
+                        break
+                    }
+                }
+                if (!found) return false
+            }
+            return true
         }
 
         private fun matchesTime(item: JSONObject, mode: String?): Boolean {
@@ -138,5 +168,57 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
             }
             return null
         }
+
+        private fun formatPersianDateTime(date: Date): String {
+            val calendar = Calendar.getInstance().apply { time = date }
+            val (jy, jm, jd) = gregorianToJalali(
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH) + 1,
+                calendar.get(Calendar.DAY_OF_MONTH),
+            )
+            val hour = calendar.get(Calendar.HOUR_OF_DAY).toString().padStart(2, '0')
+            val minute = calendar.get(Calendar.MINUTE).toString().padStart(2, '0')
+            val text = "%04d/%02d/%02d %s:%s".format(Locale.US, jy, jm, jd, hour, minute)
+            return toPersianDigits(text)
+        }
+
+        private fun gregorianToJalali(gyInput: Int, gm: Int, gd: Int): Triple<Int, Int, Int> {
+            var gy = gyInput - 1600
+            val gdm = intArrayOf(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334)
+            var days = 365 * gy + (gy + 3) / 4 - (gy + 99) / 100 + (gy + 399) / 400
+            days += gdm[gm - 1] + gd - 1
+            if (gm > 2 && ((gyInput % 4 == 0 && gyInput % 100 != 0) || gyInput % 400 == 0)) days += 1
+
+            var jDays = days - 79
+            val jNp = jDays / 12053
+            jDays %= 12053
+            var jy = 979 + 33 * jNp + 4 * (jDays / 1461)
+            jDays %= 1461
+            if (jDays >= 366) {
+                jy += (jDays - 1) / 365
+                jDays = (jDays - 1) % 365
+            }
+            val jm: Int
+            val jd: Int
+            if (jDays < 186) {
+                jm = 1 + jDays / 31
+                jd = 1 + jDays % 31
+            } else {
+                jm = 7 + (jDays - 186) / 30
+                jd = 1 + (jDays - 186) % 30
+            }
+            return Triple(jy, jm, jd)
+        }
+
+        private fun toPersianDigits(value: String): String {
+            val latin = "0123456789"
+            val persian = "۰۱۲۳۴۵۶۷۸۹"
+            return value.map { digit ->
+                val index = latin.indexOf(digit)
+                if (index >= 0) persian[index] else digit
+            }.joinToString("")
+        }
+
+        private data class WidgetTask(val id: String, val text: String, val whenText: String)
     }
 }
