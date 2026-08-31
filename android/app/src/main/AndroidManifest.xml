@@ -24,6 +24,31 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".YadNegarWidgetConfigureActivity"
+            android:exported="true"
+            android:theme="@style/NormalTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".YadNegarWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/yadnegar_widget_info" />
+        </receiver>
+
+        <service
+            android:name=".YadNegarWidgetRemoteViewsService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
         <receiver
             android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
