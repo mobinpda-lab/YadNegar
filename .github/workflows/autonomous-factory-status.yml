@@ -41,25 +41,42 @@ jobs:
             const workflowNames = new Set(workflows.data.workflows.map((w) => w.name));
             const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 20 });
 
-            // Recovery evidence must come from the source workflows that were actually
-            // re-run plus the deduplicated escalation record produced by the recovery
-            // controller. The recovery controller workflow itself is not re-run, so its
-            // own run_attempt is not valid retry evidence.
-            const recentRuns = await github.rest.actions.listWorkflowRunsForRepo({ owner, repo, per_page: 100 });
+            // Recovery evidence is durable historical evidence, not merely one of the
+            // repository's 100 most recent workflow runs. Validate a deduplicated
+            // AUTONOMOUS-RECOVERY escalation, extract its recorded source run, then
+            // verify that exact CI/UI/Android source run really exhausted retries.
             const recoverySourceNames = new Set(['YadNegar CI', 'YadNegar UI Evidence', 'YadNegar Android Build']);
-            const retriedSourceRun = recentRuns.data.workflow_runs.find((run) =>
-              recoverySourceNames.has(run.name) &&
-              run.status === 'completed' &&
-              run.run_attempt > 1
-            );
             const recoveryEscalations = await github.rest.search.issuesAndPullRequests({
               q: `repo:${owner}/${repo} is:issue \"AUTONOMOUS-RECOVERY:\" in:body`,
               per_page: 20,
             });
-            const escalationEvidence = recoveryEscalations.data.items.find((issue) =>
-              issue.body?.includes('AUTONOMOUS-RECOVERY:') &&
-              issue.body?.includes('Attempts exhausted: **3**')
-            );
+            let retriedSourceRun;
+            let escalationEvidence;
+            for (const issue of recoveryEscalations.data.items) {
+              const body = issue.body || '';
+              if (!body.includes('AUTONOMOUS-RECOVERY:')) continue;
+              const attempts = body.match(/Attempts exhausted:\s*(?:\*\*)?(\d+)(?:\*\*)?/i);
+              const sourceRun = body.match(/Original (?:CI|UI Evidence|Android Build) run:\s*`?(\d+)`?/i);
+              if (!attempts || Number(attempts[1]) !== 3 || !sourceRun) continue;
+              try {
+                const candidate = (await github.rest.actions.getWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: Number(sourceRun[1]),
+                })).data;
+                if (
+                  recoverySourceNames.has(candidate.name) &&
+                  candidate.status === 'completed' &&
+                  candidate.run_attempt >= 3
+                ) {
+                  retriedSourceRun = candidate;
+                  escalationEvidence = issue;
+                  break;
+                }
+              } catch (error) {
+                core.warning(`Unable to validate recovery source run ${sourceRun[1]} from escalation #${issue.number}: ${error.message}`);
+              }
+            }
             const recoveryEvidence = Boolean(retriedSourceRun && escalationEvidence);
 
             const codeWorkerWorkflow = workflowNames.has('YadNegar Autonomous Code Worker');
