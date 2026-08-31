@@ -32,8 +32,28 @@ jobs:
             const workflows = await github.rest.actions.listRepoWorkflows({ owner, repo, per_page: 100 });
             const workflowNames = new Set(workflows.data.workflows.map((w) => w.name));
             const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 20 });
-            const recoveryRuns = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: 'autonomous-recovery.yml', per_page: 20 }).catch(() => ({ data: { workflow_runs: [] } }));
-            const recoveryEvidence = recoveryRuns.data.workflow_runs.some((run) => run.status === 'completed' && run.conclusion === 'success' && run.run_attempt > 1);
+
+            // Recovery evidence must come from the source workflows that were actually
+            // re-run plus the deduplicated escalation record produced by the recovery
+            // controller. The recovery controller workflow itself is not re-run, so its
+            // own run_attempt is not valid retry evidence.
+            const recentRuns = await github.rest.actions.listWorkflowRunsForRepo({ owner, repo, per_page: 100 });
+            const recoverySourceNames = new Set(['YadNegar CI', 'YadNegar UI Evidence', 'YadNegar Android Build']);
+            const retriedSourceRun = recentRuns.data.workflow_runs.find((run) =>
+              recoverySourceNames.has(run.name) &&
+              run.status === 'completed' &&
+              run.run_attempt > 1
+            );
+            const recoveryEscalations = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue \"AUTONOMOUS-RECOVERY:\" in:body`,
+              per_page: 20,
+            });
+            const escalationEvidence = recoveryEscalations.data.items.find((issue) =>
+              issue.body?.includes('AUTONOMOUS-RECOVERY:') &&
+              issue.body?.includes('Attempts exhausted: **3**')
+            );
+            const recoveryEvidence = Boolean(retriedSourceRun && escalationEvidence);
+
             const codeWorkerWorkflow = workflowNames.has('YadNegar Autonomous Code Worker');
             const queueWorkflow = workflowNames.has('YadNegar Autonomous Queue');
             const releaseWorkflow = workflowNames.has('YadNegar Autonomous Release');
@@ -63,7 +83,7 @@ jobs:
               `- Production Orchestrator exact-main success: ${orchestrator ? `✅ run ${orchestrator.id}` : '❌'}`,
               `- Queue workflow installed: ${queueWorkflow ? '✅' : '❌'}`,
               `- Code-worker gateway installed: ${codeWorkerWorkflow ? '✅' : '❌'}`,
-              `- Self-fix retry execution evidence: ${recoveryEvidence ? '✅' : '❌'}`,
+              `- Self-fix retry execution evidence: ${recoveryEvidence ? `✅ source run ${retriedSourceRun.id}, escalation #${escalationEvidence.number}` : '❌'}`,
               `- Auto-release controller installed: ${releaseWorkflow ? '✅' : '❌'}`,
               `- Real GitHub Release exists: ${releases.data.length > 0 ? '✅' : '❌'}`,
               `- Production monitoring workflow installed: ${monitorWorkflow ? '✅' : '❌'}`,
