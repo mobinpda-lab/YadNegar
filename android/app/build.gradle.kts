@@ -5,6 +5,17 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val productionKeystorePath = System.getenv("YADNEGAR_KEYSTORE_PATH")
+val productionStorePassword = System.getenv("YADNEGAR_STORE_PASSWORD")
+val productionKeyAlias = System.getenv("YADNEGAR_KEY_ALIAS")
+val productionKeyPassword = System.getenv("YADNEGAR_KEY_PASSWORD")
+val productionSigningReady = listOf(
+    productionKeystorePath,
+    productionStorePassword,
+    productionKeyAlias,
+    productionKeyPassword,
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.mobinpda.lab.yadnegar"
     compileSdk = flutter.compileSdkVersion
@@ -21,10 +32,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.mobinpda.lab.yadnegar"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -32,11 +40,27 @@ android {
         multiDexEnabled = true
     }
 
+    signingConfigs {
+        if (productionSigningReady) {
+            create("production") {
+                storeFile = file(productionKeystorePath!!)
+                storePassword = productionStorePassword
+                keyAlias = productionKeyAlias
+                keyPassword = productionKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Local/dev release-mode builds keep the existing debug-key fallback.
+            // Production automation must provide every YADNEGAR_* signing variable;
+            // the production release controller never accepts the fallback artifact.
+            signingConfig = if (productionSigningReady) {
+                signingConfigs.getByName("production")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
