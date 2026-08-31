@@ -38,6 +38,7 @@ import 'package:yadnegar/features/timeline/presentation/timeline_snapshot_restor
 import 'package:yadnegar/features/timeline/presentation/timeline_tools_hub.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_home.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_pdf_scope.dart';
+import 'package:yadnegar/features/timeline/presentation/widget_task_router.dart';
 import 'package:yadnegar/theme/app_fonts.dart';
 
 final Random _secureRandom = Random.secure();
@@ -70,13 +71,29 @@ Future<void> main() async {
     projectRepository: repository,
     taxonomyRepository: repository,
   );
+  final widgetTaskRequest = ValueNotifier<String?>(null);
   _widgetChannel.setMethodCallHandler((call) async {
     if (call.method == 'refreshProjection') {
       await widgetProjection.refresh();
+      return;
+    }
+    if (call.method == 'openTask') {
+      final taskId = (call.arguments as String?)?.trim();
+      if (taskId != null && taskId.isNotEmpty) {
+        widgetTaskRequest.value = null;
+        widgetTaskRequest.value = taskId;
+      }
     }
   });
   try {
     await widgetProjection.refresh();
+  } catch (_) {}
+  try {
+    final pendingTask = await _widgetChannel.invokeMethod<String>('takePendingTask');
+    final taskId = pendingTask?.trim();
+    if (taskId != null && taskId.isNotEmpty) {
+      widgetTaskRequest.value = taskId;
+    }
   } catch (_) {}
   final backupService = JsonTimelineBackupService(
     repository: repository,
@@ -230,6 +247,16 @@ Future<void> main() async {
     legacyTimeline: legacyTimelineHome,
   );
 
+  final trackedSubjectHome = TrackedSubjectHome(
+    quickCapture: quickCapture,
+    loadSubjects: loadSubjects,
+    loadFollowUps: loadFollowUps,
+    addFollowUp: addFollowUp,
+    editTimelineItem: editTimelineItem,
+    reminderScheduler: reminderScheduler,
+    legacyTimeline: toolsHub,
+  );
+
   runApp(
     ProjectScope(
       manageProjects: manageProjects,
@@ -253,14 +280,14 @@ Future<void> main() async {
                 text: 'فایل پشتیبان یادنگار',
               );
             },
-            child: TrackedSubjectHome(
-              quickCapture: quickCapture,
+            child: WidgetTaskRouter(
+              taskRequest: widgetTaskRequest,
               loadSubjects: loadSubjects,
               loadFollowUps: loadFollowUps,
               addFollowUp: addFollowUp,
               editTimelineItem: editTimelineItem,
               reminderScheduler: reminderScheduler,
-              legacyTimeline: toolsHub,
+              child: trackedSubjectHome,
             ),
           ),
         ),
