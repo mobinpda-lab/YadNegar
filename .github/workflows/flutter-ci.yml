@@ -22,15 +22,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Credential leakage guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          pattern='(-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16})'
+          if git grep -I -n -E "$pattern" -- ':!*.md' ':!*.lock'; then
+            echo 'Potential credential material found in tracked source.' >&2
+            exit 1
+          fi
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.0'
           channel: stable
           cache: true
+
       - name: Resolve dependencies
         run: flutter pub get
+
+      - name: Emit dependency inventory
+        shell: bash
+        run: |
+          mkdir -p build/quality
+          flutter pub deps --style=compact > build/quality/dependency-inventory.txt
+          test -s build/quality/dependency-inventory.txt
+
       - name: Analyze
         run: flutter analyze
+
       - name: Test
         run: flutter test
+
+      - name: Upload quality evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-quality-evidence
+          path: build/quality/dependency-inventory.txt
+          if-no-files-found: error
+          retention-days: 14
