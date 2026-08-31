@@ -2,7 +2,7 @@ name: YadNegar Autonomous Release
 
 on:
   workflow_run:
-    workflows: [YadNegar Android Build]
+    workflows: [YadNegar Production Signing]
     types: [completed]
   workflow_dispatch:
 
@@ -23,61 +23,59 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Resolve and verify releasable main
+      - name: Resolve and verify releasable current main
         id: guard
         uses: actions/github-script@v8
         with:
           script: |
             const { owner, repo } = context.repo;
-            let run;
+            let signingRun;
             if (context.eventName === 'workflow_run') {
-              run = context.payload.workflow_run;
+              signingRun = context.payload.workflow_run;
             } else {
               const runs = await github.rest.actions.listWorkflowRuns({
-                owner, repo, workflow_id: 'android-build.yml', branch: 'main', status: 'success', per_page: 20,
+                owner, repo, workflow_id: 'production-signing.yml', branch: 'main', status: 'success', per_page: 20,
               });
-              run = runs.data.workflow_runs[0];
+              signingRun = runs.data.workflow_runs[0];
             }
-            if (!run) {
-              core.setFailed('No successful Android Build on main found.');
+            if (!signingRun) {
+              core.setFailed('No successful Production Signing run on main found.');
               return;
             }
             const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
-            if (run.head_sha !== main.data.commit.sha) {
-              core.setFailed(`Release proof is stale: run=${run.head_sha} main=${main.data.commit.sha}`);
+            if (signingRun.head_sha !== main.data.commit.sha) {
+              core.setFailed(`Signing proof is stale: run=${signingRun.head_sha} main=${main.data.commit.sha}`);
               return;
             }
-            const allRuns = await github.rest.actions.listWorkflowRunsForRepo({ owner, repo, head_sha: run.head_sha, per_page: 100 });
+            const allRuns = await github.rest.actions.listWorkflowRunsForRepo({ owner, repo, head_sha: main.data.commit.sha, per_page: 100 });
             const latest = (name) => allRuns.data.workflow_runs
-              .filter((candidate) => candidate.name === name && candidate.head_sha === run.head_sha && (candidate.event === 'push' || candidate.event === 'workflow_dispatch'))
+              .filter((candidate) => candidate.name === name && candidate.head_sha === main.data.commit.sha)
               .sort((a, b) => b.id - a.id)[0];
             const ci = latest('YadNegar CI');
             const android = latest('YadNegar Android Build');
             if (!ci || ci.status !== 'completed' || ci.conclusion !== 'success') {
-              core.setFailed('Current main has no successful post-main CI proof.');
+              core.setFailed('Current main has no successful exact-main CI proof.');
               return;
             }
-            if (!android || android.id !== run.id || android.status !== 'completed' || android.conclusion !== 'success') {
-              core.setFailed('Current main Android proof is not the triggering successful run.');
+            if (!android || android.status !== 'completed' || android.conclusion !== 'success') {
+              core.setFailed('Current main has no successful exact-main Android proof.');
               return;
             }
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
-              owner, repo, run_id: run.id, per_page: 100,
+              owner, repo, run_id: signingRun.id, per_page: 100,
             });
             const signed = artifacts.find((artifact) => artifact.name === 'yadnegar-production-signed');
             if (!signed) {
-              const issueNumber = 185;
               await github.rest.issues.createComment({
-                owner, repo, issue_number: issueNumber,
-                body: `<!-- autonomous-release-blocked:${run.head_sha} -->\nAuto Release checked current main \`${run.head_sha}\` using Android run ${run.id}. No \`yadnegar-production-signed\` artifact exists, so release stopped fail-closed. Configure production signing via GitHub Secrets/OIDC; debug-key candidates are never accepted.`,
+                owner, repo, issue_number: 185,
+                body: `<!-- autonomous-release-blocked:${main.data.commit.sha} -->\nProduction Signing run ${signingRun.id} has no \`yadnegar-production-signed\` artifact. Auto Release stopped fail-closed.`,
               });
-              core.notice('Production signing proof missing; no release created.');
               core.setOutput('ready', 'false');
               return;
             }
             core.setOutput('ready', 'true');
-            core.setOutput('run_id', String(run.id));
-            core.setOutput('sha', run.head_sha);
+            core.setOutput('run_id', String(signingRun.id));
+            core.setOutput('sha', main.data.commit.sha);
 
       - name: Checkout exact main
         if: steps.guard.outputs.ready == 'true'
