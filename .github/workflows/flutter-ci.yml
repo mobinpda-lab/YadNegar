@@ -50,6 +50,17 @@ jobs:
           flutter pub deps --style=compact > build/quality/dependency-inventory.txt
           test -s build/quality/dependency-inventory.txt
 
+      - name: Scan locked dependencies for known vulnerabilities
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/src" \
+            -w /src \
+            ghcr.io/google/osv-scanner:v2.3.6 \
+            scan source --recursive --format=json --output-file=/src/build/quality/osv-results.json .
+          test -s build/quality/osv-results.json
+
       - name: Analyze
         run: flutter analyze
 
@@ -57,9 +68,12 @@ jobs:
         run: flutter test
 
       - name: Upload quality evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: yadnegar-quality-evidence
-          path: build/quality/dependency-inventory.txt
-          if-no-files-found: error
+          path: |
+            build/quality/dependency-inventory.txt
+            build/quality/osv-results.json
+          if-no-files-found: warn
           retention-days: 14
