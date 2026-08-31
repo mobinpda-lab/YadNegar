@@ -6,8 +6,10 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
+import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -65,6 +67,37 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
                 }
             }
 
+            val renderRows = JSONArray()
+            tasks.forEach { task ->
+                renderRows.put(
+                    JSONObject()
+                        .put("id", task.id)
+                        .put("text", task.text)
+                        .put("whenText", task.whenText),
+                )
+            }
+            prefs.edit().putString("render_tasks_$widgetId", renderRows.toString()).apply()
+
+            val serviceIntent = Intent(context, YadNegarWidgetRemoteViewsService::class.java).apply {
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+                data = Uri.parse("yadnegar://widget/$widgetId/tasks")
+            }
+            views.setRemoteAdapter(R.id.widget_tasks, serviceIntent)
+            views.setEmptyView(R.id.widget_tasks, R.id.widget_empty)
+
+            val taskTemplate = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            views.setPendingIntentTemplate(
+                R.id.widget_tasks,
+                PendingIntent.getActivity(
+                    context,
+                    widgetId + 10000,
+                    taskTemplate,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
+                ),
+            )
+
             if (tasks.isEmpty()) {
                 views.setViewVisibility(R.id.widget_tasks, View.GONE)
                 views.setViewVisibility(R.id.widget_empty, View.VISIBLE)
@@ -72,25 +105,6 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
             } else {
                 views.setViewVisibility(R.id.widget_tasks, View.VISIBLE)
                 views.setViewVisibility(R.id.widget_empty, View.GONE)
-                views.setTextViewText(
-                    R.id.widget_tasks,
-                    tasks.joinToString("\n") {
-                        if (it.whenText.isBlank()) "• ${it.text}" else "• ${it.text} — ${it.whenText}"
-                    },
-                )
-                val firstTask = Intent(context, MainActivity::class.java).apply {
-                    putExtra(MainActivity.EXTRA_WIDGET_TASK_ID, tasks.first().id)
-                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                }
-                views.setOnClickPendingIntent(
-                    R.id.widget_tasks,
-                    PendingIntent.getActivity(
-                        context,
-                        widgetId + 10000,
-                        firstTask,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                    ),
-                )
             }
 
             val openApp = Intent(context, MainActivity::class.java)
@@ -104,6 +118,7 @@ class YadNegarWidgetProvider : AppWidgetProvider() {
                 ),
             )
             manager.updateAppWidget(widgetId, views)
+            manager.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_tasks)
         }
 
         private fun matchesTaxonomy(item: JSONObject, projectId: String, categoryId: String, tagId: String): Boolean {
