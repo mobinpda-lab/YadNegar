@@ -26,20 +26,23 @@ Production Monitoring / Recovery
 - Post-main CI and Android proof must be tied to the exact merged `main` SHA.
 - Production release must fail closed unless a production-signed artifact, checksum, source SHA and release manifest are verified.
 - Documentation and traceability are updated from verified GitHub evidence only.
+- The generated Autonomous Factory status is refreshed after completed Android Build runs on `main`, with the hourly schedule retained as a safety sweep. Pull-request Android runs do not update the generated main-state report.
 
-## Verified RC state — 2026-08-31
+## Verified RC baseline — 2026-08-31
 
-Canonical `main`:
+Verified baseline before the event-driven factory-status refresh change:
 
-`ec6c5995d21f63e79ecf0b7e3e83c253c5f89584`
+`1b516c3e9a1eeaa22990039f4f6f8b6a912f0e48`
 
-Latest verified post-main proof on that exact SHA:
+Exact-main proof on that baseline:
 
-- YadNegar CI run `33388964263` / #505: `completed / success`.
-- YadNegar Android Build run `33388965459` / #262: `completed / success`.
+- YadNegar CI run `33399294273` / #507: `completed / success`.
+- YadNegar Android Build run `33399296754` / #263: `completed / success`.
+- YadNegar Production Orchestrator run `33408300504` / #392: `completed / success`.
 - PR #201 merged the factual recovery-evidence detector and Android gate trigger coverage for factory-status workflow changes.
 - Controlled bounded-recovery evidence is recorded in #187 and #193, including exhausted 3-attempt source runs and deduplicated escalation records.
-- No open PR remained immediately after PR #201 promotion.
+- PR #202 synchronized the verified RC/release evidence into canonical documentation.
+- No open PR remained immediately before the event-driven factory-status refresh change.
 
 ## Remaining release blockers
 
@@ -47,7 +50,7 @@ The repository-side release controllers are installed and remain fail closed. A 
 
 1. Production Android signing material is external and must be supplied through GitHub Secrets/OIDC. Tracking: #185.
 2. A persistent autonomous code-worker execution backend is not connected. Tracking: #184. GitHub Actions orchestration alone is not counted as code-worker execution evidence.
-3. Required status checks are not yet platform-enforced in the main ruleset because the connected tooling does not expose a safe ruleset-write operation. Tracking: #186 and legacy pointer #19. Exact-head merge safety continues to be enforced by Production Orchestrator.
+3. Required status checks are not yet platform-enforced in the main ruleset because the connected tooling does not expose a safe ruleset-write operation. Tracking: #19. Exact-head merge safety continues to be enforced by Production Orchestrator.
 4. A real GitHub Release and post-release monitoring/rollback execution evidence remain blocked by production signing. Tracking: #188 and #191.
 
 ## Release evidence policy
