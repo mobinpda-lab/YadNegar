@@ -26,23 +26,24 @@ Production Monitoring / Recovery
 - Post-main CI and Android proof must be tied to the exact merged `main` SHA.
 - Production release must fail closed unless a production-signed artifact, checksum, source SHA and release manifest are verified.
 - Documentation and traceability are updated from verified GitHub evidence only.
-- The generated Autonomous Factory status is refreshed after completed Android Build runs on `main`, with the hourly schedule retained as a safety sweep. Pull-request Android runs do not update the generated main-state report.
+- The generated Autonomous Factory status is refreshed on every `main` update, after completed Android Build runs on `main`, and by the hourly safety sweep. Pull-request Android runs do not update the generated main-state report.
 
 ## Verified RC baseline — 2026-08-31
 
-Verified baseline before the event-driven factory-status refresh change:
+Current verified `main` after PR #203:
 
-`1b516c3e9a1eeaa22990039f4f6f8b6a912f0e48`
+`0191ceed40768e0519010071ac8c21309c471f5e`
 
-Exact-main proof on that baseline:
+Exact-main proof on the current baseline:
 
-- YadNegar CI run `33399294273` / #507: `completed / success`.
-- YadNegar Android Build run `33399296754` / #263: `completed / success`.
-- YadNegar Production Orchestrator run `33408300504` / #392: `completed / success`.
+- YadNegar CI run `33422019524` / #509: `completed / success`.
+- YadNegar Android Build run `33422021648` / #265: `completed / success`.
+- YadNegar Autonomous Queue run `33423147476` / #2: `completed / success`; no eligible autonomous task was present, so no worker lease was created.
 - PR #201 merged the factual recovery-evidence detector and Android gate trigger coverage for factory-status workflow changes.
 - Controlled bounded-recovery evidence is recorded in #187 and #193, including exhausted 3-attempt source runs and deduplicated escalation records.
-- PR #202 synchronized the verified RC/release evidence into canonical documentation.
-- No open PR remained immediately before the event-driven factory-status refresh change.
+- PR #202 synchronized verified RC/release evidence into canonical documentation.
+- PR #203 added Android-completion refresh for the generated factory status, but live audit after the exact-main Android #265 completion found no corresponding Factory Status run and the generated status comment on #194 remained tied to older main. The existing status workflow is therefore also triggered directly on every `main` update so generated evidence cannot remain stale while the Android-completion trigger and hourly sweep remain as additional refresh paths.
+- No open PR existed at the start of this correction.
 
 ## Remaining release blockers
 
