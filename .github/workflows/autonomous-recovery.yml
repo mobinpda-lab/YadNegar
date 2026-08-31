@@ -57,6 +57,101 @@ jobs:
             const sourceSha = run.head_sha || 'unknown';
             const runUrl = run.html_url || `${context.serverUrl}/${owner}/${repo}/actions/runs/${run.id}`;
 
+            async function findOpenEscalation(marker) {
+              const existing = await github.paginate(github.rest.issues.listForRepo, {
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+              });
+              return existing.find((item) =>
+                !item.pull_request && typeof item.body === 'string' && item.body.includes(marker)
+              );
+            }
+
+            async function createOrUpdateEscalation({ marker, title, body, updateBody }) {
+              const issue = await findOpenEscalation(marker);
+              if (issue) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: updateBody,
+                });
+                core.notice(`#${issue.number}: existing escalation updated`);
+                return issue.number;
+              }
+
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: ['orchestrator:manual'],
+              });
+              core.notice(`#${created.data.number}: recovery escalation created`);
+              return created.data.number;
+            }
+
+            // Security, policy, signing/provenance and destructive/migration failures are
+            // intentionally non-retryable. Re-running these gates can never be used as a
+            // way to "heal" a policy violation into a mergeable state.
+            const nonRetryablePattern = /credential|secret|private key|vulnerab|advisory|security|policy|destructive|migration|signing|provenance|integrity|checksum|release approval|candidate readiness/i;
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner,
+              repo,
+              run_id: run.id,
+              filter: 'latest',
+              per_page: 100,
+            });
+            const failedGates = [];
+            for (const job of jobs) {
+              for (const step of job.steps || []) {
+                if (!['failure', 'timed_out'].includes(step.conclusion)) continue;
+                const descriptor = `${job.name} / ${step.name}`;
+                if (nonRetryablePattern.test(descriptor)) failedGates.push(descriptor);
+              }
+            }
+
+            if (failedGates.length > 0) {
+              const marker = `AUTONOMOUS-RECOVERY-NONRETRYABLE:${run.name}:${sourceSha}`;
+              const title = `Policy recovery escalation: ${run.name} @ ${sourceSha.slice(0, 12)}`;
+              const gateList = [...new Set(failedGates)];
+              const body = [
+                `<!-- ${marker} -->`,
+                '## Autonomous Recovery — Non-retryable Failure',
+                '',
+                `- Workflow: **${run.name}**`,
+                `- Source SHA: \`${sourceSha}\``,
+                `- Run: ${runUrl}`,
+                `- Run attempt observed: **${attempt}**`,
+                `- Conclusion: **${run.conclusion}**`,
+                '- Retry decision: **BLOCKED BY POLICY**',
+                '',
+                'Failed policy-sensitive gate(s):',
+                ...gateList.map((gate) => `- \`${gate}\``),
+                '',
+                'Autonomous retry was deliberately skipped. No merge, release, credential',
+                'change, destructive action, or gate bypass was performed.',
+                '',
+                'Human classification is required before any scoped fix proceeds.',
+              ].join('\n');
+              await createOrUpdateEscalation({
+                marker,
+                title,
+                body,
+                updateBody: [
+                  'Non-retryable policy failure re-confirmed.',
+                  `Run: ${runUrl}`,
+                  `SHA: \`${sourceSha}\``,
+                  `Failed gates: ${gateList.map((gate) => `\`${gate}\``).join(', ')}`,
+                  'Retry remained blocked.',
+                ].join('\n'),
+              });
+              core.notice(`run ${run.id}: policy-sensitive failure; autonomous retry skipped`);
+              return;
+            }
+
             if (attempt < maxAttempts) {
               core.notice(
                 `run ${run.id}: ${run.name} failed on ${sourceSha}; retrying failed jobs ` +
@@ -89,37 +184,14 @@ jobs:
               'in human escalation until an explicit safe decision exists.',
             ].join('\n');
 
-            const existing = await github.paginate(github.rest.issues.listForRepo, {
-              owner,
-              repo,
-              state: 'open',
-              per_page: 100,
-            });
-            const issue = existing.find((item) =>
-              !item.pull_request && typeof item.body === 'string' && item.body.includes(marker)
-            );
-
-            if (issue) {
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number: issue.number,
-                body: [
-                  `Recovery re-confirmed for ${run.name}.`,
-                  `Run: ${runUrl}`,
-                  `SHA: \`${sourceSha}\``,
-                  `Attempts exhausted: ${maxAttempts}`,
-                ].join('\n'),
-              });
-              core.notice(`#${issue.number}: existing escalation updated`);
-              return;
-            }
-
-            const created = await github.rest.issues.create({
-              owner,
-              repo,
+            await createOrUpdateEscalation({
+              marker,
               title,
               body,
-              labels: ['orchestrator:manual'],
+              updateBody: [
+                `Recovery re-confirmed for ${run.name}.`,
+                `Run: ${runUrl}`,
+                `SHA: \`${sourceSha}\``,
+                `Attempts exhausted: ${maxAttempts}`,
+              ].join('\n'),
             });
-            core.notice(`#${created.data.number}: recovery escalation created`);
