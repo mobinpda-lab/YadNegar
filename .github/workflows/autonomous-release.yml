@@ -1,0 +1,131 @@
+name: YadNegar Autonomous Release
+
+on:
+  workflow_run:
+    workflows: [YadNegar Android Build]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+
+concurrency:
+  group: yadnegar-autonomous-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Resolve and verify releasable main
+        id: guard
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            let run;
+            if (context.eventName === 'workflow_run') {
+              run = context.payload.workflow_run;
+            } else {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner, repo, workflow_id: 'android-build.yml', branch: 'main', status: 'success', per_page: 20,
+              });
+              run = runs.data.workflow_runs[0];
+            }
+            if (!run) {
+              core.setFailed('No successful Android Build on main found.');
+              return;
+            }
+            const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+            if (run.head_sha !== main.data.commit.sha) {
+              core.setFailed(`Release proof is stale: run=${run.head_sha} main=${main.data.commit.sha}`);
+              return;
+            }
+            const allRuns = await github.rest.actions.listWorkflowRunsForRepo({ owner, repo, head_sha: run.head_sha, per_page: 100 });
+            const latest = (name) => allRuns.data.workflow_runs
+              .filter((candidate) => candidate.name === name && candidate.head_sha === run.head_sha && (candidate.event === 'push' || candidate.event === 'workflow_dispatch'))
+              .sort((a, b) => b.id - a.id)[0];
+            const ci = latest('YadNegar CI');
+            const android = latest('YadNegar Android Build');
+            if (!ci || ci.status !== 'completed' || ci.conclusion !== 'success') {
+              core.setFailed('Current main has no successful post-main CI proof.');
+              return;
+            }
+            if (!android || android.id !== run.id || android.status !== 'completed' || android.conclusion !== 'success') {
+              core.setFailed('Current main Android proof is not the triggering successful run.');
+              return;
+            }
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner, repo, run_id: run.id, per_page: 100,
+            });
+            const signed = artifacts.find((artifact) => artifact.name === 'yadnegar-production-signed');
+            if (!signed) {
+              const issueNumber = 185;
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: `<!-- autonomous-release-blocked:${run.head_sha} -->\nAuto Release checked current main \`${run.head_sha}\` using Android run ${run.id}. No \`yadnegar-production-signed\` artifact exists, so release stopped fail-closed. Configure production signing via GitHub Secrets/OIDC; debug-key candidates are never accepted.`,
+              });
+              core.notice('Production signing proof missing; no release created.');
+              core.setOutput('ready', 'false');
+              return;
+            }
+            core.setOutput('ready', 'true');
+            core.setOutput('run_id', String(run.id));
+            core.setOutput('sha', run.head_sha);
+
+      - name: Checkout exact main
+        if: steps.guard.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.guard.outputs.sha }}
+
+      - name: Download production-signed artifact
+        if: steps.guard.outputs.ready == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: yadnegar-production-signed
+          path: build/production-release
+          run-id: ${{ steps.guard.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify signed release evidence
+        if: steps.guard.outputs.ready == 'true'
+        id: verify
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.guard.outputs.sha }}
+        run: |
+          set -euo pipefail
+          apk=$(find build/production-release -type f -name '*.apk' -print -quit)
+          manifest=$(find build/production-release -type f -name 'PRODUCTION_RELEASE_MANIFEST.txt' -print -quit)
+          test -n "$apk" && test -s "$apk"
+          test -n "$manifest" && test -s "$manifest"
+          grep -Fx "source_sha=$SOURCE_SHA" "$manifest"
+          grep -Fx 'signing=production' "$manifest"
+          grep -Eq '^version=.+$' "$manifest"
+          grep -Eq '^apk_sha256=[0-9a-f]{64}$' "$manifest"
+          expected=$(sed -n 's/^apk_sha256=//p' "$manifest" | head -n1)
+          actual=$(sha256sum "$apk" | awk '{print $1}')
+          test "$expected" = "$actual"
+          version=$(sed -n 's/^version=//p' "$manifest" | head -n1)
+          safe_version=$(printf '%s' "$version" | tr '+' '-')
+          printf 'tag=v%s\n' "$safe_version" >> "$GITHUB_OUTPUT"
+          printf 'apk=%s\n' "$apk" >> "$GITHUB_OUTPUT"
+
+      - name: Create immutable GitHub Release
+        if: steps.guard.outputs.ready == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.verify.outputs.tag }}
+          target_commitish: ${{ steps.guard.outputs.sha }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            ${{ steps.verify.outputs.apk }}
+            build/production-release/PRODUCTION_RELEASE_MANIFEST.txt
