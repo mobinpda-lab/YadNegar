@@ -18,18 +18,14 @@
         android:textSize="18sp"
         android:textColor="#111111" />
 
-    <TextView
+    <ListView
         android:id="@+id/widget_tasks"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:gravity="top|end"
-        android:paddingTop="8dp"
-        android:textDirection="rtl"
-        android:textAlignment="viewEnd"
-        android:textSize="14sp"
-        android:lineSpacingExtra="4dp"
-        android:textColor="#222222" />
+        android:paddingTop="6dp"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="1dp" />
 
     <TextView
         android:id="@+id/widget_empty"
