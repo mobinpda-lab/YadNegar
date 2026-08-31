@@ -287,4 +287,28 @@ jobs:
               return;
             }
 
+            const currentFactoryStatusRun = mainRuns
+              .filter((run) =>
+                run.name === 'YadNegar Autonomous Factory Status' &&
+                run.head_sha === currentMain
+              )
+              .sort((a, b) => b.id - a.id)[0];
+            if (!currentFactoryStatusRun) {
+              await github.rest.actions.createWorkflowDispatch({
+                owner,
+                repo,
+                workflow_id: 'autonomous-factory-status.yml',
+                ref: 'main',
+              });
+              core.notice(
+                `main ${currentMain}: exact-main proof is green and no factory-status run exists; ` +
+                'dispatched the existing status controller once.',
+              );
+            } else {
+              core.info(
+                `main ${currentMain}: factory-status run ${currentFactoryStatusRun.id} already exists ` +
+                `(${currentFactoryStatusRun.status}/${currentFactoryStatusRun.conclusion ?? 'pending'}); no duplicate dispatch.`,
+              );
+            }
+
             core.info('No eligible PR advanced in this cycle.');
