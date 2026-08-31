@@ -1,0 +1,111 @@
+name: YadNegar Autonomous Code Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'GitHub issue number to execute'
+        required: true
+        type: string
+      expected_main_sha:
+        description: 'Main SHA leased by queue'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: yadnegar-code-worker-${{ inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WORKER_ENDPOINT: ${{ secrets.AUTONOMOUS_WORKER_ENDPOINT }}
+      WORKER_TOKEN: ${{ secrets.AUTONOMOUS_WORKER_TOKEN }}
+    steps:
+      - name: Validate lease and dispatch external code worker
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issueNumber = Number('${{ inputs.issue_number }}');
+            const expectedMain = '${{ inputs.expected_main_sha }}';
+            if (!Number.isInteger(issueNumber) || issueNumber <= 0) {
+              core.setFailed('Invalid issue number.');
+              return;
+            }
+            const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+            if (main.data.commit.sha !== expectedMain) {
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:leased' }).catch(() => {});
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:in-progress' }).catch(() => {});
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: `Worker lease invalidated because main moved from \`${expectedMain}\` to \`${main.data.commit.sha}\`. Task will be re-queued.`,
+              });
+              return;
+            }
+            const issue = (await github.rest.issues.get({ owner, repo, issue_number: issueNumber })).data;
+            const labels = new Set((issue.labels || []).map((label) => label.name));
+            if (!labels.has('factory:leased') || !labels.has('factory:ready')) {
+              core.setFailed('Issue does not hold a valid autonomous lease.');
+              return;
+            }
+            if (!process.env.WORKER_ENDPOINT || !process.env.WORKER_TOKEN) {
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:leased' }).catch(() => {});
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:in-progress' }).catch(() => {});
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: issueNumber,
+                labels: ['factory:blocked', 'factory:escalated'],
+              });
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: 'Autonomous Code Worker is fail-closed: `AUTONOMOUS_WORKER_ENDPOINT` and/or `AUTONOMOUS_WORKER_TOKEN` is not configured in GitHub Secrets. No code was generated and no gate was bypassed.',
+              });
+              core.setFailed('Autonomous worker backend credentials are not configured.');
+              return;
+            }
+
+            const branch = `automation/task-${issueNumber}`;
+            const payload = {
+              repository: `${owner}/${repo}`,
+              issue_number: issueNumber,
+              issue_url: issue.html_url,
+              title: issue.title,
+              body: issue.body || '',
+              expected_main_sha: expectedMain,
+              branch,
+              contract: {
+                direct_push_to_main: false,
+                pull_request_required: true,
+                exact_head_required: true,
+                max_fix_attempts: 3,
+              },
+            };
+            const response = await fetch(process.env.WORKER_ENDPOINT, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+                'authorization': `Bearer ${process.env.WORKER_TOKEN}`,
+              },
+              body: JSON.stringify(payload),
+            });
+            if (!response.ok) {
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:leased' }).catch(() => {});
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:in-progress' }).catch(() => {});
+              await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: ['factory:blocked'] });
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: `Autonomous worker backend rejected dispatch with HTTP ${response.status}. Task is blocked fail-closed.`,
+              });
+              core.setFailed(`Worker backend returned HTTP ${response.status}`);
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNumber,
+              body: `Autonomous worker dispatch accepted for branch \`${branch}\` at exact main \`${expectedMain}\`. Merge authority remains with Production Orchestrator.`,
+            });

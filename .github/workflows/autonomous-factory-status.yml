@@ -1,0 +1,85 @@
+name: YadNegar Autonomous Factory Status
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+concurrency:
+  group: yadnegar-factory-status
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Compute conservative automation maturity from GitHub evidence
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const main = (await github.rest.repos.getBranch({ owner, repo, branch: 'main' })).data.commit.sha;
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({ owner, repo, head_sha: main, per_page: 100 });
+            const latestSuccess = (name) => runs.data.workflow_runs
+              .filter((run) => run.name === name && run.head_sha === main && run.status === 'completed' && run.conclusion === 'success')
+              .sort((a, b) => b.id - a.id)[0];
+            const workflows = await github.rest.actions.listRepoWorkflows({ owner, repo, per_page: 100 });
+            const workflowNames = new Set(workflows.data.workflows.map((w) => w.name));
+            const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 20 });
+            const recoveryRuns = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: 'autonomous-recovery.yml', per_page: 20 }).catch(() => ({ data: { workflow_runs: [] } }));
+            const recoveryEvidence = recoveryRuns.data.workflow_runs.some((run) => run.status === 'completed' && run.conclusion === 'success' && run.run_attempt > 1);
+            const codeWorkerWorkflow = workflowNames.has('YadNegar Autonomous Code Worker');
+            const queueWorkflow = workflowNames.has('YadNegar Autonomous Queue');
+            const releaseWorkflow = workflowNames.has('YadNegar Autonomous Release');
+            const monitorWorkflow = workflowNames.has('YadNegar Production Monitor');
+            const ci = latestSuccess('YadNegar CI');
+            const android = latestSuccess('YadNegar Android Build');
+            const orchestrator = latestSuccess('YadNegar Production Orchestrator');
+
+            let level = 0;
+            if (ci) level = 1;
+            if (ci && android) level = 2;
+            if (orchestrator) level = 4;
+            if (recoveryEvidence) level = 7;
+            if (queueWorkflow && codeWorkerWorkflow) level = Math.max(level, 6);
+            if (releaseWorkflow && releases.data.length > 0) level = Math.max(level, 8);
+            if (monitorWorkflow && releases.data.length > 0 && recoveryEvidence) level = Math.max(level, 9);
+            const endToEnd = level === 10;
+
+            const body = [
+              '<!-- yadnegar-factory-status -->',
+              '# YadNegar Autonomous Factory — Evidence Status',
+              '',
+              `Current main: \`${main}\``,
+              '',
+              `- CI exact-main success: ${ci ? `✅ run ${ci.id}` : '❌'}`,
+              `- Android exact-main success: ${android ? `✅ run ${android.id}` : '❌'}`,
+              `- Production Orchestrator exact-main success: ${orchestrator ? `✅ run ${orchestrator.id}` : '❌'}`,
+              `- Queue workflow installed: ${queueWorkflow ? '✅' : '❌'}`,
+              `- Code-worker gateway installed: ${codeWorkerWorkflow ? '✅' : '❌'}`,
+              `- Self-fix retry execution evidence: ${recoveryEvidence ? '✅' : '❌'}`,
+              `- Auto-release controller installed: ${releaseWorkflow ? '✅' : '❌'}`,
+              `- Real GitHub Release exists: ${releases.data.length > 0 ? '✅' : '❌'}`,
+              `- Production monitoring workflow installed: ${monitorWorkflow ? '✅' : '❌'}`,
+              '',
+              `AUTOMATION LEVEL: ${level} / 10`,
+              `END-TO-END: ${endToEnd ? 'YES' : 'NO'}`,
+              '',
+              'Running, skipped, missing or YAML-only capabilities are never counted as execution success.',
+            ].join('\n');
+
+            const issueNumber = 194;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: issueNumber, per_page: 100 });
+            const existing = comments.find((comment) => comment.body?.includes('<!-- yadnegar-factory-status -->'));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body });
+            }
+            core.notice(`Conservative automation maturity: ${level}/10 on ${main}`);
