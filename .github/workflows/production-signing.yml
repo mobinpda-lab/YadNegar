@@ -1,0 +1,124 @@
+name: YadNegar Production Signing
+
+on:
+  workflow_run:
+    workflows: [YadNegar Android Build]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+concurrency:
+  group: yadnegar-production-signing
+  cancel-in-progress: false
+
+jobs:
+  sign:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KEYSTORE_B64: ${{ secrets.YADNEGAR_KEYSTORE_B64 }}
+      YADNEGAR_STORE_PASSWORD: ${{ secrets.YADNEGAR_STORE_PASSWORD }}
+      YADNEGAR_KEY_ALIAS: ${{ secrets.YADNEGAR_KEY_ALIAS }}
+      YADNEGAR_KEY_PASSWORD: ${{ secrets.YADNEGAR_KEY_PASSWORD }}
+    steps:
+      - name: Resolve exact current main and signing availability
+        id: guard
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
+            const sourceSha = context.eventName === 'workflow_run'
+              ? context.payload.workflow_run.head_sha
+              : main.data.commit.sha;
+            if (sourceSha !== main.data.commit.sha) {
+              core.setFailed(`Signing proof is stale: source=${sourceSha} main=${main.data.commit.sha}`);
+              return;
+            }
+            const ready = Boolean(
+              process.env.KEYSTORE_B64 &&
+              process.env.YADNEGAR_STORE_PASSWORD &&
+              process.env.YADNEGAR_KEY_ALIAS &&
+              process.env.YADNEGAR_KEY_PASSWORD
+            );
+            core.setOutput('sha', sourceSha);
+            core.setOutput('ready', ready ? 'true' : 'false');
+            if (!ready) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: 185,
+                body: `<!-- production-signing-blocked:${sourceSha} -->\nProduction Signing checked current main \`${sourceSha}\` and stopped fail-closed because one or more required signing secrets are missing. Required secret names: \`YADNEGAR_KEYSTORE_B64\`, \`YADNEGAR_STORE_PASSWORD\`, \`YADNEGAR_KEY_ALIAS\`, \`YADNEGAR_KEY_PASSWORD\`.`,
+              });
+            }
+
+      - name: Checkout exact main
+        if: steps.guard.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.guard.outputs.sha }}
+
+      - name: Set up Flutter
+        if: steps.guard.outputs.ready == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.0'
+          channel: stable
+          cache: true
+
+      - name: Restore production keystore without logging secrets
+        if: steps.guard.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          keystore="$GITHUB_WORKSPACE/android/app/yadnegar-release.jks"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$keystore"
+          test -s "$keystore"
+          chmod 600 "$keystore"
+          echo "YADNEGAR_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
+
+      - name: Build production-signed APK
+        if: steps.guard.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          flutter build apk --release
+          test -s build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Verify APK signature and emit production manifest
+        if: steps.guard.outputs.ready == 'true'
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ steps.guard.outputs.sha }}
+        run: |
+          set -euo pipefail
+          apk="build/app/outputs/flutter-apk/app-release.apk"
+          apksigner=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner -print | sort -V | tail -n1)
+          test -n "$apksigner" && test -x "$apksigner"
+          "$apksigner" verify --print-certs "$apk" >/dev/null
+          mkdir -p build/production-release
+          sha=$(sha256sum "$apk" | awk '{print $1}')
+          version=$(awk '$1 == "version:" {print $2; exit}' pubspec.yaml)
+          cp "$apk" build/production-release/yadnegar-production.apk
+          {
+            printf 'format=yadnegar-production-release-v1\n'
+            printf 'source_sha=%s\n' "$SOURCE_SHA"
+            printf 'version=%s\n' "$version"
+            printf 'signing=production\n'
+            printf 'apk_sha256=%s\n' "$sha"
+          } > build/production-release/PRODUCTION_RELEASE_MANIFEST.txt
+
+      - name: Upload production-signed artifact
+        if: steps.guard.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yadnegar-production-signed
+          path: build/production-release/
+          if-no-files-found: error
+          retention-days: 30
