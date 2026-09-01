@@ -29,7 +29,8 @@ jobs:
             const definitions = [
               ['factory:ready', '0E8A16', 'Task is eligible for autonomous routing.'],
               ['factory:leased', '1D76DB', 'Task currently has one autonomous worker lease.'],
-              ['factory:in-progress', '5319E7', 'Autonomous worker execution is in progress.'],
+              ['factory:in-progress', '5319E7', 'Autonomous execution is in progress.'],
+              ['factory:manual-execution', 'FBCA04', 'Task is handed off for direct project execution without an external coding backend.'],
               ['factory:blocked', 'B60205', 'Task is blocked and must not be routed.'],
               ['factory:escalated', 'D93F0B', 'Task requires human or infrastructure intervention.'],
               ['priority:release-blocker', 'B60205', 'Highest priority release blocker.'],
@@ -50,8 +51,8 @@ jobs:
               owner, repo, state: 'open', labels: 'factory:ready', per_page: 100,
             });
             const blocked = new Set([
-              'factory:blocked', 'factory:escalated', 'orchestrator:hold',
-              'orchestrator:manual', 'do-not-merge',
+              'factory:blocked', 'factory:escalated', 'factory:manual-execution',
+              'orchestrator:hold', 'orchestrator:manual', 'do-not-merge',
             ]);
             const weight = (labels) => {
               if (labels.has('priority:release-blocker')) return 0;
@@ -82,26 +83,27 @@ jobs:
             });
             await github.rest.issues.createComment({
               owner, repo, issue_number: task.number,
-              body: `<!-- yadnegar-worker-lease -->\nAutonomous Queue leased this task at main \`${main.data.commit.sha}\`. A single worker gateway dispatch follows.`,
+              body: `<!-- yadnegar-worker-lease -->\nAutonomous Queue leased this task at main \`${main.data.commit.sha}\`. Execution handoff follows without an external coding backend.`,
             });
 
             try {
               await github.rest.actions.createWorkflowDispatch({
                 owner, repo,
                 workflow_id: 'autonomous-code-worker.yml',
-                ref: 'main',
+                ref: 'automation/yadnegar-independent-execution',
                 inputs: {
                   issue_number: String(task.number),
                   expected_main_sha: main.data.commit.sha,
                 },
               });
-              core.notice(`Dispatched issue #${task.number} against ${main.data.commit.sha}`);
+              core.notice(`Handed off issue #${task.number} against ${main.data.commit.sha}`);
             } catch (error) {
               await github.rest.issues.removeLabel({ owner, repo, issue_number: task.number, name: 'factory:leased' }).catch(() => {});
+              await github.rest.issues.removeLabel({ owner, repo, issue_number: task.number, name: 'factory:in-progress' }).catch(() => {});
               await github.rest.issues.addLabels({ owner, repo, issue_number: task.number, labels: ['factory:blocked'] });
               await github.rest.issues.createComment({
                 owner, repo, issue_number: task.number,
-                body: `Worker dispatch failed closed: ${error.message}`,
+                body: `Task handoff failed closed: ${error.message}`,
               });
               throw error;
             }
