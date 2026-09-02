@@ -47,18 +47,19 @@ jobs:
             }
             const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', labels: 'factory:ready', per_page: 100 });
             const blocked = new Set(['factory:blocked','factory:escalated','factory:manual-execution','orchestrator:hold','orchestrator:manual','do-not-merge']);
-            const weight = (labels) => labels.has('priority:release-blocker') ? 0 : labels.has('priority:core') ? 1 : labels.has('priority:automation') ? 2 : 3;
+            const weight = (labels) => labels.has('priority:release-blocker') ? 0 : labels.has('priority:core') ? 1 : labels.has('priority:automation') ? 2 : labels.has('priority:feature') ? 3 : 4;
             const eligible = issues.filter(i => !i.pull_request).map(issue => ({ issue, labels: new Set((issue.labels || []).map(l => typeof l === 'string' ? l : l.name)) }))
               .filter(({ labels }) => !labels.has('factory:leased') && ![...blocked].some(x => labels.has(x)))
               .sort((a,b) => weight(a.labels) - weight(b.labels) || a.issue.number - b.issue.number);
             if (!eligible.length) { core.info('No eligible autonomous task found.'); return; }
             const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
             const task = eligible[0].issue;
+            const mainSha = main.data.commit.sha;
             await github.rest.issues.addLabels({ owner, repo, issue_number: task.number, labels: ['factory:leased','factory:in-progress'] });
-            await github.rest.issues.createComment({ owner, repo, issue_number: task.number, body: `<!-- yadnegar-worker-lease -->\nCode Worker lease created at exact main \`${main.data.commit.sha}\`.` });
+            await github.rest.issues.createComment({ owner, repo, issue_number: task.number, body: `<!-- yadnegar-worker-lease -->\nCode Worker lease created at exact main \`${mainSha}\`.` });
             try {
-              await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: 'autonomous-code-worker.yml', ref: 'main', inputs: { issue_number: String(task.number), expected_main_sha: main.data.commit.sha } });
-              core.notice(`Dispatched Code Worker for issue #${task.number} at ${main.data.commit.sha}`);
+              await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: 'autonomous-code-worker.yml', ref: 'main', inputs: { issue_number: String(task.number), expected_main_sha: mainSha } });
+              core.notice(`Dispatched Code Worker for issue #${task.number} at ${mainSha}`);
             } catch (error) {
               await github.rest.issues.removeLabel({ owner, repo, issue_number: task.number, name: 'factory:leased' }).catch(() => {});
               await github.rest.issues.removeLabel({ owner, repo, issue_number: task.number, name: 'factory:in-progress' }).catch(() => {});
