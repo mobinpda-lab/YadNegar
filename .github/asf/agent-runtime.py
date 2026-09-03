@@ -1,4 +1,4 @@
-import json, math, os, re, subprocess, time, urllib.request
+import json, math, os, re, subprocess, time, urllib.error, urllib.request
 from pathlib import Path
 
 API = "https://api.openai.com/v1/responses"
@@ -44,9 +44,16 @@ def openai_response(prompt, timeout_seconds):
     key = os.getenv("OPENAI_API_KEY", "").strip()
     if not key:
         raise RuntimeError("WAITING_AI_PROVIDER: OPENAI_API_KEY is not configured")
-    req = urllib.request.Request(API, data=json.dumps({"model": MODEL, "input": prompt, "temperature": 0}).encode(), headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
-        data = json.load(response)
+    payload = json.dumps({"model": MODEL, "input": prompt}).encode()
+    req = urllib.request.Request(API, data=payload, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
+            data = json.load(response)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 429:
+            retry_after = (exc.headers.get("Retry-After") or "unknown").strip()
+            raise RuntimeError(f"WAITING_AI_PROVIDER: HTTP 429 rate limited; retry_after={retry_after}") from exc
+        raise RuntimeError(f"AI provider HTTP {exc.code}") from exc
     text = data.get("output_text") or "\n".join(c.get("text", "") for item in data.get("output", []) for c in item.get("content", []) if c.get("type") == "output_text")
     return (text or "").strip()
 
