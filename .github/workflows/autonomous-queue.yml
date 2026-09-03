@@ -30,7 +30,7 @@ jobs:
               ['factory:ready', '0E8A16', 'Task is eligible for autonomous routing.'],
               ['factory:leased', '1D76DB', 'Task currently has one autonomous worker lease.'],
               ['factory:in-progress', '5319E7', 'Autonomous execution is in progress.'],
-              ['factory:manual-execution', 'FBCA04', 'Task is handed off for direct project execution without an external coding backend.'],
+              ['factory:manual-execution', 'FBCA04', 'Legacy manual handoff state; autonomous worker must not use it.'],
               ['factory:blocked', 'B60205', 'Task is blocked and must not be routed.'],
               ['factory:escalated', 'D93F0B', 'Task requires human or infrastructure intervention.'],
               ['priority:release-blocker', 'B60205', 'Highest priority release blocker.'],
@@ -39,71 +39,31 @@ jobs:
               ['priority:feature', 'C2E0C6', 'Feature priority.'],
             ];
             for (const [name, color, description] of definitions) {
-              try {
-                await github.rest.issues.getLabel({ owner, repo, name });
-              } catch (error) {
+              try { await github.rest.issues.getLabel({ owner, repo, name }); }
+              catch (error) {
                 if (error.status !== 404) throw error;
                 await github.rest.issues.createLabel({ owner, repo, name, color, description });
               }
             }
-
-            const issues = await github.paginate(github.rest.issues.listForRepo, {
-              owner, repo, state: 'open', labels: 'factory:ready', per_page: 100,
-            });
-            const blocked = new Set([
-              'factory:blocked', 'factory:escalated', 'factory:manual-execution',
-              'orchestrator:hold', 'orchestrator:manual', 'do-not-merge',
-            ]);
-            const weight = (labels) => {
-              if (labels.has('priority:release-blocker')) return 0;
-              if (labels.has('priority:core')) return 1;
-              if (labels.has('priority:automation')) return 2;
-              return 3;
-            };
-            const eligible = issues
-              .filter((issue) => !issue.pull_request)
-              .map((issue) => ({
-                issue,
-                labels: new Set((issue.labels || []).map((label) => typeof label === 'string' ? label : label.name)),
-              }))
-              .filter(({ labels }) => !labels.has('factory:leased'))
-              .filter(({ labels }) => ![...blocked].some((label) => labels.has(label)))
-              .sort((a, b) => weight(a.labels) - weight(b.labels) || a.issue.number - b.issue.number);
-
-            if (!eligible.length) {
-              core.info('No eligible autonomous task found.');
-              return;
-            }
-
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', labels: 'factory:ready', per_page: 100 });
+            const blocked = new Set(['factory:blocked','factory:escalated','factory:manual-execution','orchestrator:hold','orchestrator:manual','do-not-merge']);
+            const weight = (labels) => labels.has('priority:release-blocker') ? 0 : labels.has('priority:core') ? 1 : labels.has('priority:automation') ? 2 : labels.has('priority:feature') ? 3 : 4;
+            const eligible = issues.filter(i => !i.pull_request).map(issue => ({ issue, labels: new Set((issue.labels || []).map(l => typeof l === 'string' ? l : l.name)) }))
+              .filter(({ labels }) => !labels.has('factory:leased') && ![...blocked].some(x => labels.has(x)))
+              .sort((a,b) => weight(a.labels) - weight(b.labels) || a.issue.number - b.issue.number);
+            if (!eligible.length) { core.info('No eligible autonomous task found.'); return; }
             const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
             const task = eligible[0].issue;
-            await github.rest.issues.addLabels({
-              owner, repo, issue_number: task.number,
-              labels: ['factory:leased', 'factory:in-progress'],
-            });
-            await github.rest.issues.createComment({
-              owner, repo, issue_number: task.number,
-              body: `<!-- yadnegar-worker-lease -->\nAutonomous Queue leased this task at main \`${main.data.commit.sha}\`. Execution handoff follows without an external coding backend.`,
-            });
-
+            const mainSha = main.data.commit.sha;
+            await github.rest.issues.addLabels({ owner, repo, issue_number: task.number, labels: ['factory:leased','factory:in-progress'] });
+            await github.rest.issues.createComment({ owner, repo, issue_number: task.number, body: `<!-- yadnegar-worker-lease -->\nCode Worker lease created at exact main \`${mainSha}\`.` });
             try {
-              await github.rest.actions.createWorkflowDispatch({
-                owner, repo,
-                workflow_id: 'autonomous-code-worker.yml',
-                ref: 'automation/yadnegar-independent-execution',
-                inputs: {
-                  issue_number: String(task.number),
-                  expected_main_sha: main.data.commit.sha,
-                },
-              });
-              core.notice(`Handed off issue #${task.number} against ${main.data.commit.sha}`);
+              await github.rest.actions.createWorkflowDispatch({ owner, repo, workflow_id: 'autonomous-code-worker.yml', ref: 'main', inputs: { issue_number: String(task.number), expected_main_sha: mainSha } });
+              core.notice(`Dispatched Code Worker for issue #${task.number} at ${mainSha}`);
             } catch (error) {
               await github.rest.issues.removeLabel({ owner, repo, issue_number: task.number, name: 'factory:leased' }).catch(() => {});
               await github.rest.issues.removeLabel({ owner, repo, issue_number: task.number, name: 'factory:in-progress' }).catch(() => {});
               await github.rest.issues.addLabels({ owner, repo, issue_number: task.number, labels: ['factory:blocked'] });
-              await github.rest.issues.createComment({
-                owner, repo, issue_number: task.number,
-                body: `Task handoff failed closed: ${error.message}`,
-              });
+              await github.rest.issues.createComment({ owner, repo, issue_number: task.number, body: `Code Worker dispatch failed closed: ${error.message}` });
               throw error;
             }
