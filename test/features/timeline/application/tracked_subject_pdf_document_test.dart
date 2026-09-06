@@ -9,12 +9,12 @@ import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('build creates a valid PDF with description and bundled Vazirmatn fonts', () async {
+  test('build creates a valid PDF with description and bundled VazirHarf fonts', () async {
     final regular = await rootBundle.load(
-      'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Regular.ttf',
+      'assets/fonts/vazirharf/fonts/ttf/Vazirharf-Regular.ttf',
     );
     final bold = await rootBundle.load(
-      'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Bold.ttf',
+      'assets/fonts/vazirharf/fonts/ttf/Vazirharf-Bold.ttf',
     );
     final subject = TimelineItem(
       id: 'subject-1',
