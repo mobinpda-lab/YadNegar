@@ -1,0 +1,64 @@
+name: Sync Vazirharf Assets
+
+on:
+  push:
+    branches:
+      - feature/vazirharf-standard
+    paths-ignore:
+      - 'assets/fonts/vazirharf/**'
+      - '.github/workflows/sync-vazirharf.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Vazirharf v34.002
+        run: |
+          set -euo pipefail
+          mkdir -p assets/fonts/vazirharf
+          base='https://raw.githubusercontent.com/nadalaba/vazirharf/v34.002/fonts/ttf'
+          curl -fsSL "$base/Vazirharf-Regular.ttf" -o assets/fonts/vazirharf/Vazirharf-Regular.ttf
+          curl -fsSL "$base/Vazirharf-Medium.ttf" -o assets/fonts/vazirharf/Vazirharf-Medium.ttf
+          curl -fsSL "$base/Vazirharf-Bold.ttf" -o assets/fonts/vazirharf/Vazirharf-Bold.ttf
+      - name: Apply Vazirharf to app and PDF export
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/main.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace(
+              'final hasLicensedIranSansX = await AppFonts.loadLicensedIranSansX();',
+              'await AppFonts.loadVazirharf();',
+          )
+          s = s.replace(
+              "'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Regular.ttf'",
+              "'assets/fonts/vazirharf/Vazirharf-Regular.ttf'",
+          )
+          s = s.replace(
+              "'assets/fonts/vazirmatn/Vazirmatn-UI-FD-Bold.ttf'",
+              "'assets/fonts/vazirharf/Vazirharf-Bold.ttf'",
+          )
+          s = s.replace(
+              'fontFamily: hasLicensedIranSansX\n              ? AppFonts.iranSansXFamily\n              : AppFonts.vazirmatnFamily,',
+              'fontFamily: AppFonts.vazirharfFamily,',
+          )
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify Flutter project
+        run: |
+          flutter --version
+          flutter pub get
+          flutter analyze
+      - name: Commit synchronized font assets and integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/fonts/vazirharf lib/main.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'chore(font): sync Vazirharf v34.002 [skip ci]'
+          git push
