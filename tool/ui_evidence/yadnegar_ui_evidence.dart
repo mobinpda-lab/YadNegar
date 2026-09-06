@@ -53,11 +53,11 @@ void main() {
   final now = DateTime(2026, 8, 28, 14, 30);
 
   setUpAll(() async {
-    final fontLoader = FontLoader('Vazirmatn')
-      ..addFont(rootBundle.load('assets/fonts/vazirmatn/Vazirmatn-UI-FD-Regular.ttf'))
-      ..addFont(rootBundle.load('assets/fonts/vazirmatn/Vazirmatn-UI-FD-Medium.ttf'))
-      ..addFont(rootBundle.load('assets/fonts/vazirmatn/Vazirmatn-UI-FD-SemiBold.ttf'))
-      ..addFont(rootBundle.load('assets/fonts/vazirmatn/Vazirmatn-UI-FD-Bold.ttf'));
+    final fontLoader = FontLoader('Vazirharf')
+      ..addFont(rootBundle.load('assets/fonts/vazirharf/fonts/ttf/Vazirharf-Regular.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/vazirharf/fonts/ttf/Vazirharf-Medium.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/vazirharf/fonts/ttf/Vazirharf-SemiBold.ttf'))
+      ..addFont(rootBundle.load('assets/fonts/vazirharf/fonts/ttf/Vazirharf-Bold.ttf'));
     await fontLoader.load();
   });
 
@@ -128,7 +128,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(useMaterial3: true, fontFamily: 'Vazirmatn'),
+        theme: ThemeData(useMaterial3: true, fontFamily: 'Vazirharf'),
         home: Directionality(
           textDirection: TextDirection.rtl,
           child: TrackedSubjectHome(
@@ -171,7 +171,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(useMaterial3: true, fontFamily: 'Vazirmatn'),
+        theme: ThemeData(useMaterial3: true, fontFamily: 'Vazirharf'),
         home: Builder(
           builder: (context) => Directionality(
             textDirection: TextDirection.rtl,
