@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 
 abstract final class AppFonts {
   static const String vazirharfFamily = 'Vazirharf';
+  // Compatibility alias: existing callers now resolve to the canonical Vazirharf family.
+  static const String vazirmatnFamily = vazirharfFamily;
   static const String iranSansXFamily = 'IRANSansXFaNum';
 
   static const String iranSansXRegularAsset =
