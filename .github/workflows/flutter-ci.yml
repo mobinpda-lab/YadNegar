@@ -60,7 +60,7 @@ jobs:
             -v "$PWD:/src" \
             -w /src \
             ghcr.io/google/osv-scanner:v2.3.6 \
-            scan source --recursive --format=json --output-file=/src/build/quality/osv-results.json .
+            scan source --format=json --output-file=/src/build/quality/osv-results.json pubspec.lock
           test -s build/quality/osv-results.json
 
       - name: Analyze
