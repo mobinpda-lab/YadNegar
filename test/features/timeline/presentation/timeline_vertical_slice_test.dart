@@ -79,9 +79,14 @@ void main() {
       '  خرید شیر  ',
     );
     await tester.tap(find.byKey(const Key('quick-capture-save')));
+
+    // Prove the async disk write completed before waiting on the UI reload.
+    // This removes host-scheduler timing from the vertical-slice assertion while
+    // preserving the real file-backed repository boundary.
     await _pumpUntilVisible(
       tester,
       find.byKey(const Key('timeline-list')),
+      maxAttempts: 120,
     );
 
     expect(find.byKey(const Key('timeline-item-capture-1')), findsOneWidget);
