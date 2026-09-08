@@ -1,3 +1,4 @@
+# ASF: keep autonomous worker changes inside the canonical exact-head quality gate.
 name: YadNegar CI
 
 on:
