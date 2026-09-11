@@ -36,7 +36,8 @@ class JsonFileTimelineRepository
     implements TimelineRepository, ProjectRepository, TaxonomyRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 8;
+  static const int schemaVersion = 9;
+  static const int medicationSchemaVersion = 9;
   static const int nextActionSchemaVersion = 7;
   static const int projectSchemaVersion = 6;
   static const int descriptionSchemaVersion = 5;
@@ -285,14 +286,15 @@ class JsonFileTimelineRepository
       throw const FormatException('Timeline storage root must be a JSON object.');
     }
     final version = decoded['schemaVersion'];
-    if (version != schemaVersion &&
-        version != nextActionSchemaVersion &&
-        version != projectSchemaVersion &&
-        version != descriptionSchemaVersion &&
-        version != followUpSchemaVersion &&
-        version != recurrenceSchemaVersion &&
-        version != reminderSchemaVersion &&
-        version != legacySchemaVersion) {
+    if (version is! int ||
+        (version != schemaVersion &&
+            version != nextActionSchemaVersion &&
+            version != projectSchemaVersion &&
+            version != descriptionSchemaVersion &&
+            version != followUpSchemaVersion &&
+            version != recurrenceSchemaVersion &&
+            version != reminderSchemaVersion &&
+            version != legacySchemaVersion)) {
       throw UnsupportedTimelineStorageSchemaException(version);
     }
 
@@ -301,7 +303,7 @@ class JsonFileTimelineRepository
       throw const FormatException('Timeline storage items must be a JSON list.');
     }
     final items = rawItems
-        .map<TimelineItem>((value) => _itemFromJson(value, sourceSchemaVersion: version as int))
+        .map<TimelineItem>((value) => _itemFromJson(value, sourceSchemaVersion: version))
         .toList(growable: true);
 
     final projects = <YadNegarProject>[];
@@ -315,7 +317,7 @@ class JsonFileTimelineRepository
 
     final categories = <YadNegarCategory>[];
     final tags = <YadNegarTag>[];
-    if (version >= schemaVersion) {
+    if (version >= projectSchemaVersion) {
       final rawCategories = decoded['categories'];
       final rawTags = decoded['tags'];
       if (rawCategories is! List<dynamic>) {
@@ -429,6 +431,15 @@ class JsonFileTimelineRepository
     final reminderRecurrence = sourceSchemaVersion >= recurrenceSchemaVersion
         ? _requiredReminderRecurrence(value, 'reminderRecurrence')
         : TimelineReminderRecurrence.none;
+    final reminderKind = sourceSchemaVersion >= medicationSchemaVersion
+        ? _requiredReminderKind(value, 'reminderKind')
+        : TimelineReminderKind.standard;
+    final medicationName = sourceSchemaVersion >= medicationSchemaVersion ? _optionalString(value, 'medicationName') : null;
+    final medicationAmount = sourceSchemaVersion >= medicationSchemaVersion ? _optionalDouble(value, 'medicationAmount') : null;
+    final medicationUnit = sourceSchemaVersion >= medicationSchemaVersion ? _optionalString(value, 'medicationUnit') : null;
+    final medicationInterval = sourceSchemaVersion >= medicationSchemaVersion ? _optionalDuration(value, 'medicationIntervalMs') : null;
+    final scheduledAt = sourceSchemaVersion >= medicationSchemaVersion ? _optionalDateTime(value, 'scheduledAt') : null;
+    final actualTakenAt = sourceSchemaVersion >= medicationSchemaVersion ? _optionalDateTime(value, 'actualTakenAt') : null;
 
     if (parentId != null && projectId != null) {
       throw const FormatException('FollowUps cannot own projectId.');
@@ -457,6 +468,13 @@ class JsonFileTimelineRepository
       occurredAt: occurredAt,
       reminderAt: reminderAt,
       reminderRecurrence: reminderRecurrence,
+      reminderKind: reminderKind,
+      medicationName: medicationName,
+      medicationAmount: medicationAmount,
+      medicationUnit: medicationUnit,
+      medicationInterval: medicationInterval,
+      scheduledAt: scheduledAt,
+      actualTakenAt: actualTakenAt,
     );
   }
 
@@ -474,6 +492,13 @@ class JsonFileTimelineRepository
         'occurredAt': item.occurredAt?.toIso8601String(),
         'reminderAt': item.reminderAt?.toIso8601String(),
         'reminderRecurrence': item.reminderRecurrence.name,
+        'reminderKind': item.reminderKind.name,
+        'medicationName': item.medicationName,
+        'medicationAmount': item.medicationAmount,
+        'medicationUnit': item.medicationUnit,
+        'medicationIntervalMs': item.medicationInterval?.inMilliseconds,
+        'scheduledAt': item.scheduledAt?.toIso8601String(),
+        'actualTakenAt': item.actualTakenAt?.toIso8601String(),
       };
 
   YadNegarProject _projectFromJson(dynamic value) {
@@ -544,6 +569,20 @@ class JsonFileTimelineRepository
     return value;
   }
 
+  double? _optionalDouble(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) return null;
+    if (value is num && value.isFinite) return value.toDouble();
+    throw FormatException('$key must be a finite number when present.');
+  }
+
+  Duration? _optionalDuration(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) return null;
+    if (value is int && value > 0) return Duration(milliseconds: value);
+    throw FormatException('$key must be a positive integer when present.');
+  }
+
   List<String> _optionalStringList(Map<String, dynamic> json, String key) {
     final value = json[key];
     if (value == null) return const <String>[];
@@ -581,6 +620,14 @@ class JsonFileTimelineRepository
       if (candidate.name == name) return candidate;
     }
     throw FormatException('Unknown Timeline reminder recurrence: $name.');
+  }
+
+  TimelineReminderKind _requiredReminderKind(Map<String, dynamic> json, String key) {
+    final name = _requiredString(json, key);
+    for (final candidate in TimelineReminderKind.values) {
+      if (candidate.name == name) return candidate;
+    }
+    throw FormatException('Unknown Timeline reminder kind: $name.');
   }
 
   void _sortNewestFirst(List<TimelineItem> items) {
