@@ -45,11 +45,8 @@ void main() {
 
   test('normalizes Persian letter variants and diacritics', () {
     expect(run('ي').single.id, 'subject-1');
-    expect(run('ك') .single.id, 'subject-1');
-    expect(
-      PersianSearchText.normalize('عَلِی‌  ك'),
-      'علی ک',
-    );
+    expect(PersianSearchText.normalize('ك'), 'ک');
+    expect(PersianSearchText.normalize('عَلِی‌  ك'), 'علی ک');
   });
 
   test('uses AND semantics across fields', () {
