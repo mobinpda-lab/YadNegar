@@ -39,7 +39,7 @@ The earlier flat Timeline remains only as legacy tooling. No second Task/FollowU
 ## Data / Architecture Foundation
 One repository and one JSON persistence foundation are reused.
 
-Current storage schema: **v6**  
+Current storage schema: **v8**  
 Backward-compatible reads: **v1-v5**
 
 Schema evolution:
@@ -48,6 +48,8 @@ Schema evolution:
 - v4: optional `parentId` for root → FollowUp history
 - v5: optional tracked-task root `description`
 - v6: Projects + optional root `projectId`
+- v7: root `nextActionAt`
+- v8: root `categoryId` + `tagIds` with canonical Category/Tag persistence
 
 Safety:
 - no destructive migration
