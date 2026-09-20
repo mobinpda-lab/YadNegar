@@ -140,6 +140,11 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
     }
   }
 
+  String _followUpStatusLabel(TimelineFollowUpStatus status) => switch (status) {
+        TimelineFollowUpStatus.open => 'پیگیری باز',
+        TimelineFollowUpStatus.waitingForResponse => 'منتظر پاسخ',
+      };
+
   String _recurrenceLabel(TimelineReminderRecurrence recurrence) => switch (recurrence) {
         TimelineReminderRecurrence.none => 'بدون تکرار',
         TimelineReminderRecurrence.daily => 'هر روز',
@@ -284,6 +289,11 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.dateTimeFormatter.formatDateTime(followUp.timelineAt), key: Key('follow-up-time-${followUp.id}')),
+                if (followUp.isWaitingForResponse)
+                  Text(
+                    _followUpStatusLabel(followUp.followUpStatus),
+                    key: Key('follow-up-status-${followUp.id}'),
+                  ),
                 if (reminderAt != null)
                   Text(
                     'یادآور: ${widget.dateTimeFormatter.formatDateTime(reminderAt)} • ${_recurrenceLabel(followUp.reminderRecurrence)}',

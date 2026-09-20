@@ -17,6 +17,11 @@ enum TimelineReminderKind {
   medicationConsumption,
 }
 
+enum TimelineFollowUpStatus {
+  open,
+  waitingForResponse,
+}
+
 class TimelineItem {
   const TimelineItem({
     required this.id,
@@ -33,6 +38,7 @@ class TimelineItem {
     this.reminderAt,
     TimelineReminderRecurrence reminderRecurrence = TimelineReminderRecurrence.none,
     this.reminderKind = TimelineReminderKind.standard,
+    this.followUpStatus = TimelineFollowUpStatus.open,
     this.medicationName,
     this.medicationAmount,
     this.medicationUnit,
@@ -57,6 +63,7 @@ class TimelineItem {
   final DateTime? reminderAt;
   final TimelineReminderRecurrence reminderRecurrence;
   final TimelineReminderKind reminderKind;
+  final TimelineFollowUpStatus followUpStatus;
   final String? medicationName;
   final double? medicationAmount;
   final String? medicationUnit;
@@ -66,6 +73,8 @@ class TimelineItem {
 
   bool get isTrackedSubject => parentId == null;
   bool get isFollowUp => parentId != null;
+  bool get isWaitingForResponse =>
+      isFollowUp && followUpStatus == TimelineFollowUpStatus.waitingForResponse;
   bool get isMedicationConsumptionReminder =>
       reminderKind == TimelineReminderKind.medicationConsumption;
 
