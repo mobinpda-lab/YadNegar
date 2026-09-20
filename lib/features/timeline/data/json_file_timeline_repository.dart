@@ -289,6 +289,7 @@ class JsonFileTimelineRepository
     final version = decoded['schemaVersion'];
     if (version is! int ||
         (version != schemaVersion &&
+            version != taxonomySchemaVersion &&
             version != nextActionSchemaVersion &&
             version != projectSchemaVersion &&
             version != descriptionSchemaVersion &&
