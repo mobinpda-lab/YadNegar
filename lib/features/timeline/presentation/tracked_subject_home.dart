@@ -33,7 +33,7 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
-    this.manageTaxonomy,
+    required this.manageTaxonomy,
     this.reminderScheduler,
     this.legacyTimeline,
     this.clock = DateTime.now,
