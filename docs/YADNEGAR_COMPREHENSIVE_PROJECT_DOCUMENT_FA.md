@@ -102,11 +102,13 @@ Dependency direction:
 
 Persistence:
 - JSON schema-versioned
-- current schema **v6**
+- current schema **v8**
 - backward-compatible reads **v1-v5**
 - v4: optional `parentId`
 - v5: optional root `description`
 - v6: Projects + optional root `projectId`
+- v7: root `nextActionAt`
+- v8: root `categoryId` + `tagIds` with canonical Category/Tag persistence
 - safe-write upgrade
 - no read-time rewrite
 - tmp/bak crash recovery
@@ -156,6 +158,11 @@ Completed؛ title + description + FollowUp text با reuse Home memory.
 Completed؛ one-day/range reports با reuse PDF/Print/Share.
 
 ### Projects — schema v6
+
+### Current storage — schema v8
+- v6: Projects + optional root `projectId`
+- v7: root `nextActionAt`
+- v8: root `categoryId` + `tagIds` with canonical Category/Tag persistence
 Completed؛ Project collection و root membership در همان JSON foundation.
 
 ### Home Performance — #149 / PR #157
