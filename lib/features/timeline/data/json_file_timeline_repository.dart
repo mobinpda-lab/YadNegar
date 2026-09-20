@@ -424,8 +424,8 @@ class JsonFileTimelineRepository
 
     final description = sourceSchemaVersion >= descriptionSchemaVersion ? _optionalString(value, 'description') : null;
     final projectId = sourceSchemaVersion >= projectSchemaVersion ? _optionalString(value, 'projectId') : null;
-    final categoryId = sourceSchemaVersion >= schemaVersion ? _optionalString(value, 'categoryId') : null;
-    final tagIds = sourceSchemaVersion >= schemaVersion ? _optionalStringList(value, 'tagIds') : const <String>[];
+    final categoryId = sourceSchemaVersion >= taxonomySchemaVersion ? _optionalString(value, 'categoryId') : null;
+    final tagIds = sourceSchemaVersion >= taxonomySchemaVersion ? _optionalStringList(value, 'tagIds') : const <String>[];
     final nextActionAt = sourceSchemaVersion >= nextActionSchemaVersion ? _optionalDateTime(value, 'nextActionAt') : null;
     final parentId = sourceSchemaVersion >= followUpSchemaVersion ? _optionalString(value, 'parentId') : null;
     final occurredAt = _optionalDateTime(value, 'occurredAt');
