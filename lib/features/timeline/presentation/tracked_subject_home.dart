@@ -33,6 +33,7 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
+    this.manageTaxonomy,
     this.reminderScheduler,
     this.legacyTimeline,
     this.clock = DateTime.now,
@@ -45,6 +46,7 @@ class TrackedSubjectHome extends StatefulWidget {
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
+  final ManageTaxonomy manageTaxonomy;
   final TimelineReminderScheduler? reminderScheduler;
   final Widget? legacyTimeline;
   final TrackedSubjectHomeClock clock;
@@ -61,6 +63,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
   static const _background = Color(0xFFF8F8FC);
   static const _muted = Color(0xFF77788A);
   static const _classifyNextAction = ClassifyTrackedSubjectNextAction();
+  static const _searchTrackedSubjects = SearchTrackedSubjects();
 
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -68,6 +71,8 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
   List<TimelineItem> _subjects = const <TimelineItem>[];
   Map<String, List<TimelineItem>> _followUps = const <String, List<TimelineItem>>{};
   List<YadNegarProject> _projects = const <YadNegarProject>[];
+  List<YadNegarCategory> _categories = const <YadNegarCategory>[];
+  List<YadNegarTag> _tags = const <YadNegarTag>[];
   bool _projectsLoaded = false;
   bool _isLoading = true;
   String? _errorMessage;
@@ -87,6 +92,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       _projectsLoaded = true;
       _reloadProjects();
     }
+    _reloadTaxonomy();
   }
 
   @override
@@ -97,33 +103,26 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
   }
 
   List<TimelineItem> get _visibleSubjects {
-    final query = _query.trim().toLowerCase();
-    return _subjects.where((subject) {
-      if (_selectedNextActionBucket != null &&
-          _classifyNextAction(subject: subject, now: widget.clock()) !=
-              _selectedNextActionBucket) {
-        return false;
-      }
-      if (query.isEmpty) {
-        return true;
-      }
-      if (subject.text.toLowerCase().contains(query)) {
-        return true;
-      }
-      if (subject.description?.toLowerCase().contains(query) ?? false) {
-        return true;
-      }
-      final project = _projectFor(subject.projectId);
-      if (project?.title.toLowerCase().contains(query) ?? false) {
-        return true;
-      }
-      final followUps = _followUps[subject.id] ?? const <TimelineItem>[];
-      return followUps.any(
-        (followUp) => followUp.text.toLowerCase().contains(query),
-      );
-    }).toList(growable: false);
+    var visible = _subjects;
+    if (_selectedNextActionBucket != null) {
+      visible = visible
+          .where((subject) =>
+              _classifyNextAction(subject: subject, now: widget.clock()) ==
+              _selectedNextActionBucket)
+          .toList(growable: false);
+    }
+    if (_query.trim().isEmpty) {
+      return visible;
+    }
+    return _searchTrackedSubjects.search(
+      subjects: visible,
+      followUpsBySubject: _followUps,
+      projects: _projects,
+      categories: _categories,
+      tags: _tags,
+      query: _query,
+    );
   }
-
   int get _withFollowUpCount => _subjects
       .where((subject) => (_followUps[subject.id] ?? const <TimelineItem>[]).isNotEmpty)
       .length;
@@ -161,6 +160,21 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       }
     }
     return null;
+  }
+
+  Future<void> _reloadTaxonomy() async {
+    try {
+      final categories = await widget.manageTaxonomy.listCategories();
+      final tags = await widget.manageTaxonomy.listTags();
+      if (mounted) {
+        setState(() {
+          _categories = List<YadNegarCategory>.unmodifiable(categories);
+          _tags = List<YadNegarTag>.unmodifiable(tags);
+        });
+      }
+    } catch (_) {
+      // Taxonomy failure must not block the task timeline.
+    }
   }
 
   Future<void> _reloadProjects() async {
