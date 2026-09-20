@@ -33,7 +33,7 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.loadFollowUps,
     required this.addFollowUp,
     required this.editTimelineItem,
-    required this.manageTaxonomy,
+    this.manageTaxonomy,
     this.reminderScheduler,
     this.legacyTimeline,
     this.clock = DateTime.now,
@@ -46,7 +46,7 @@ class TrackedSubjectHome extends StatefulWidget {
   final LoadTimelineFollowUps loadFollowUps;
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
-  final ManageTaxonomy manageTaxonomy;
+  final ManageTaxonomy? manageTaxonomy;
   final TimelineReminderScheduler? reminderScheduler;
   final Widget? legacyTimeline;
   final TrackedSubjectHomeClock clock;
@@ -92,7 +92,9 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       _projectsLoaded = true;
       _reloadProjects();
     }
-    _reloadTaxonomy();
+    if (widget.manageTaxonomy != null) {
+      _reloadTaxonomy();
+    }
   }
 
   @override
@@ -164,8 +166,12 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
 
   Future<void> _reloadTaxonomy() async {
     try {
-      final categories = await widget.manageTaxonomy.listCategories();
-      final tags = await widget.manageTaxonomy.listTags();
+      final manageTaxonomy = widget.manageTaxonomy;
+      if (manageTaxonomy == null) {
+        return;
+      }
+      final categories = await manageTaxonomy.listCategories();
+      final tags = await manageTaxonomy.listTags();
       if (mounted) {
         setState(() {
           _categories = List<YadNegarCategory>.unmodifiable(categories);
