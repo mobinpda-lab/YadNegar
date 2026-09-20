@@ -40,6 +40,7 @@ class JsonFileTimelineRepository
   static const int medicationSchemaVersion = 9;
   static const int nextActionSchemaVersion = 7;
   static const int projectSchemaVersion = 6;
+  static const int taxonomySchemaVersion = 8;
   static const int descriptionSchemaVersion = 5;
   static const int followUpSchemaVersion = 4;
   static const int recurrenceSchemaVersion = 3;
@@ -317,7 +318,7 @@ class JsonFileTimelineRepository
 
     final categories = <YadNegarCategory>[];
     final tags = <YadNegarTag>[];
-    if (version >= projectSchemaVersion) {
+    if (version >= taxonomySchemaVersion) {
       final rawCategories = decoded['categories'];
       final rawTags = decoded['tags'];
       if (rawCategories is! List<dynamic>) {
