@@ -253,6 +253,7 @@ Future<void> main() async {
     loadFollowUps: loadFollowUps,
     addFollowUp: addFollowUp,
     editTimelineItem: editTimelineItem,
+    manageTaxonomy: manageTaxonomy,
     reminderScheduler: reminderScheduler,
     legacyTimeline: toolsHub,
   );
