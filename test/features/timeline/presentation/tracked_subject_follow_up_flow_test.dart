@@ -118,7 +118,9 @@ void main() {
     expect(find.text('۱۴۰۵/۰۶/۰۶'), findsOneWidget);
     expect(find.text('۱۱:۳۰'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('follow-up-editor-confirm')));
+    final confirmButton = find.byKey(const Key('follow-up-editor-confirm'));
+    await tester.scrollUntilVisible(confirmButton, 240, scrollable: find.byType(Scrollable).last);
+    await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
     expect(find.text('پیگیری'), findsOneWidget);
