@@ -138,7 +138,9 @@ void main() {
       find.byKey(const Key('follow-up-title-input')),
       'تماس با تعمیرگاه',
     );
-    await tester.tap(find.byKey(const Key('follow-up-editor-confirm')));
+    final editConfirmButton = find.byKey(const Key('follow-up-editor-confirm'));
+    await tester.scrollUntilVisible(editConfirmButton, 240, scrollable: find.byType(Scrollable).last);
+    await tester.tap(editConfirmButton);
     await tester.pumpAndSettle();
 
     final editedFollowUp = repository.items.singleWhere((item) => item.id == 'follow-0');
