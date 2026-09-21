@@ -51,6 +51,8 @@ class _MemoryTimelineRepository implements TimelineRepository {
 
 void main() {
   testWidgets('tracked task supports blank-default capture and safe editing', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final root = TimelineItem(
       id: 'car',
       type: TimelineItemType.activity,
@@ -121,8 +123,6 @@ void main() {
     final confirmButton = find.byKey(const Key('follow-up-editor-confirm'));
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(ListView).last, const Offset(0, -600));
-    await tester.pumpAndSettle();
     await tester.ensureVisible(confirmButton);
     await tester.pumpAndSettle();
     await tester.tap(confirmButton);
@@ -146,8 +146,6 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     final editConfirmButton = find.byKey(const Key('follow-up-editor-confirm'));
-    await tester.drag(find.byType(ListView).last, const Offset(0, -600));
-    await tester.pumpAndSettle();
     await tester.ensureVisible(editConfirmButton);
     await tester.pumpAndSettle();
     await tester.tap(editConfirmButton);
