@@ -325,6 +325,35 @@ Force Merge تاریخچه قدیمی ممنوع است.
 
 **One blocker pauses one lane, not YadNegar.**
 
+## 35. کنترل ضد دوباره‌کاری و نقطه تصمیم
+
+برای جلوگیری از زنجیره اصلاحات حدسی، از این پس هر تغییر روی یک Failure تکراری باید از یک نقطه تصمیم کوتاه و قابل ثبت عبور کند. این قانون سرعت توسعه موازی را کم نمی‌کند؛ فقط تغییرات همان مسیر را تا دریافت Evidence متوقف می‌کند.
+
+### چرخه اجباری
+
+Fresh Audit → Last-Failure Classification → Reuse/Compare → Single Hypothesis → Small Change → Exact-Head Validation → Decision → Continue/Change Path
+
+قبل از هر تغییر در همان مسیر:
+1. current main SHA و PR head SHA دوباره خوانده شوند.
+2. آخرین اجرای exact-head همان Workflow مرجع باشد؛ Evidence قدیمی برای Head جدید معتبر نیست.
+3. Failure دقیق، فایل، خط و نتیجه آخرین اجرا ثبت شود.
+4. Commit/Diff اصلاحات اخیر همان فایل یا خط با وضعیت فعلی مقایسه شود.
+5. فقط یک فرضیه مشخص و قابل آزمون انتخاب شود.
+6. یک تغییر کوچک انجام شود و تا نتیجه exact-head نیامده، تغییر حدسی بعدی روی همان Failure انجام نشود.
+7. اگر دو اصلاح مستقل برای همان Failure نتیجه نداد، تغییر بیشتر متوقف و Root Cause Audit عمیق انجام شود.
+8. Product، Test Harness و CI/Automation تا حد ممکن در Laneهای جدا نگه داشته شوند.
+9. رکورد تصمیم کوتاه شامل base SHA / head SHA / failure / hypothesis / change / validation در Issue یا PR ثبت شود.
+10. Merge فقط پس از گیت‌های exact-head، گیت‌های مرتبط Android/UI، mergeability و expected-head و سپس Post-main proof مجاز است.
+
+### قانون عدم دوباره‌کاری
+
+هیچ اصلاح قبلی صرفاً با تغییر نام، جابه‌جایی جزئی یا تکرار همان فرضیه دوباره اجرا نشود. ابتدا نتیجه آخرین اجرا و تفاوت واقعی اصلاح جدید با اصلاح قبلی مشخص شود.
+
+Issue حاکمیتی مرتبط: #271 — enforce anti-rework change control and exact-head decision checkpoints.
+
+این کنترل یک لایه Governance است و نباید Workflow، Store، Scheduler، Search foundation یا کنترل‌گر موازی ایجاد کند.
+
+
 ## 35. دستور دائمی نهایی
 از آخرین وضعیت واقعی GitHub یادنگار ادامه بده.
 
