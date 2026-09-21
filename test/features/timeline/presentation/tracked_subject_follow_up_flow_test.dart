@@ -120,7 +120,7 @@ void main() {
 
     final confirmButton = find.byKey(const Key('follow-up-editor-confirm'));
     FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(confirmButton);
     await tester.pumpAndSettle();
     await tester.tap(confirmButton);
@@ -141,6 +141,8 @@ void main() {
       find.byKey(const Key('follow-up-title-input')),
       'تماس با تعمیرگاه',
     );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
     final editConfirmButton = find.byKey(const Key('follow-up-editor-confirm'));
     await tester.ensureVisible(editConfirmButton);
     await tester.pumpAndSettle();
