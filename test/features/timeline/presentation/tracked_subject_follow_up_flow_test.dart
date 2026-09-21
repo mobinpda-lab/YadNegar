@@ -123,7 +123,7 @@ void main() {
     await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('پیگیری'), findsOneWidget);
+    expect(find.text('پیگیری باز'), findsOneWidget);
     expect(find.text('فاصله از پیگیری قبلی: ۲ ساعت و ۱۵ دقیقه'), findsOneWidget);
     expect(find.text('● ۰ دقیقه از آخرین پیگیری گذشته'), findsOneWidget);
 
