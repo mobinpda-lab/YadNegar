@@ -121,6 +121,8 @@ void main() {
     final confirmButton = find.byKey(const Key('follow-up-editor-confirm'));
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView).last, const Offset(0, -600));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(confirmButton);
     await tester.pumpAndSettle();
     await tester.tap(confirmButton);
@@ -144,6 +146,8 @@ void main() {
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     final editConfirmButton = find.byKey(const Key('follow-up-editor-confirm'));
+    await tester.drag(find.byType(ListView).last, const Offset(0, -600));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(editConfirmButton);
     await tester.pumpAndSettle();
     await tester.tap(editConfirmButton);
