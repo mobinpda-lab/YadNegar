@@ -119,7 +119,8 @@ void main() {
     expect(find.text('۱۱:۳۰'), findsOneWidget);
 
     final confirmButton = find.byKey(const Key('follow-up-editor-confirm'));
-    await tester.hideKeyboard();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump();
     await tester.scrollUntilVisible(confirmButton, 240, scrollable: find.byType(Scrollable).last);
     await tester.tap(confirmButton);
     await tester.pumpAndSettle();
