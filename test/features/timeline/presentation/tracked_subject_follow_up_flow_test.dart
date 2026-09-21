@@ -121,7 +121,8 @@ void main() {
     final confirmButton = find.byKey(const Key('follow-up-editor-confirm'));
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump();
-    await tester.scrollUntilVisible(confirmButton, 240, scrollable: find.byType(Scrollable).last);
+    await tester.ensureVisible(confirmButton);
+    await tester.pumpAndSettle();
     await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
@@ -141,7 +142,8 @@ void main() {
       'تماس با تعمیرگاه',
     );
     final editConfirmButton = find.byKey(const Key('follow-up-editor-confirm'));
-    await tester.scrollUntilVisible(editConfirmButton, 240, scrollable: find.byType(Scrollable).last);
+    await tester.ensureVisible(editConfirmButton);
+    await tester.pumpAndSettle();
     await tester.tap(editConfirmButton);
     await tester.pumpAndSettle();
 
