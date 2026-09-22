@@ -21,6 +21,7 @@ class AddTimelineFollowUp {
     DateTime? occurredAt,
     DateTime? reminderAt,
     TimelineReminderRecurrence reminderRecurrence = TimelineReminderRecurrence.none,
+    TimelineFollowUpStatus followUpStatus = TimelineFollowUpStatus.open,
   }) async {
     if (!subject.isTrackedSubject) {
       throw ArgumentError.value(subject.id, 'subject', 'must be a root subject');
@@ -37,6 +38,7 @@ class AddTimelineFollowUp {
       occurredAt: occurredAt ?? now,
       reminderAt: reminderAt,
       reminderRecurrence: reminderRecurrence,
+      followUpStatus: followUpStatus,
     );
     await repository.upsert(followUp);
     return followUp;

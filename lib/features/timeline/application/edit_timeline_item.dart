@@ -27,6 +27,8 @@ class EditTimelineItem {
     DateTime? reminderAt,
     bool replaceReminderRecurrence = false,
     TimelineReminderRecurrence? reminderRecurrence,
+    bool replaceFollowUpStatus = false,
+    TimelineFollowUpStatus? followUpStatus,
   }) async {
     final normalizedId = id.trim();
     if (normalizedId.isEmpty) throw ArgumentError.value(id, 'id', 'Timeline item id cannot be empty.');
@@ -60,6 +62,9 @@ class EditTimelineItem {
     final targetType = type ?? existing.type;
     final changedToTypeWithoutOccurredAt = type != null && !_supportsOccurredAt(targetType) && !existing.isFollowUp;
     final targetReminderAt = replaceReminderAt ? reminderAt : existing.reminderAt;
+    final targetFollowUpStatus = existing.isFollowUp && replaceFollowUpStatus
+        ? (followUpStatus ?? TimelineFollowUpStatus.open)
+        : existing.followUpStatus;
     final targetReminderRecurrence = targetReminderAt == null
         ? TimelineReminderRecurrence.none
         : replaceReminderRecurrence
@@ -80,6 +85,7 @@ class EditTimelineItem {
       occurredAt: changedToTypeWithoutOccurredAt ? null : replaceOccurredAt ? occurredAt : existing.occurredAt,
       reminderAt: targetReminderAt,
       reminderRecurrence: targetReminderRecurrence,
+      followUpStatus: targetFollowUpStatus,
     );
     await repository.upsert(updated);
     return updated;

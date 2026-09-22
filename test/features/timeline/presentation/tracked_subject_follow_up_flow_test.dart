@@ -51,6 +51,8 @@ class _MemoryTimelineRepository implements TimelineRepository {
 
 void main() {
   testWidgets('tracked task supports blank-default capture and safe editing', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final root = TimelineItem(
       id: 'car',
       type: TimelineItemType.activity,
@@ -118,7 +120,16 @@ void main() {
     expect(find.text('۱۴۰۵/۰۶/۰۶'), findsOneWidget);
     expect(find.text('۱۱:۳۰'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('follow-up-editor-confirm')));
+    final confirmButton = find.byKey(const Key('follow-up-editor-confirm'));
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await tester.dragUntilVisible(
+      confirmButton,
+      find.byType(ListView).last,
+      const Offset(0, -400),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(confirmButton);
     await tester.pumpAndSettle();
 
     expect(find.text('پیگیری'), findsOneWidget);
@@ -136,7 +147,16 @@ void main() {
       find.byKey(const Key('follow-up-title-input')),
       'تماس با تعمیرگاه',
     );
-    await tester.tap(find.byKey(const Key('follow-up-editor-confirm')));
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    final editConfirmButton = find.byKey(const Key('follow-up-editor-confirm'));
+    await tester.dragUntilVisible(
+      editConfirmButton,
+      find.byType(ListView).last,
+      const Offset(0, -400),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(editConfirmButton);
     await tester.pumpAndSettle();
 
     final editedFollowUp = repository.items.singleWhere((item) => item.id == 'follow-0');

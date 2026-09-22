@@ -55,7 +55,7 @@ void main() {
     expect(reloaded.medicationNextDueAt, DateTime.utc(2026, 9, 7, 15, 15));
   });
 
-  test('legacy schema 8 remains readable and upgrades to schema 9 on the next write', () async {
+  test('legacy schema 8 remains readable and upgrades to the current schema on the next write', () async {
     await storageFile.writeAsString(
       jsonEncode({
         'schemaVersion': 8,
@@ -90,6 +90,6 @@ void main() {
     await repository.upsert(legacy);
 
     final encoded = jsonDecode(await storageFile.readAsString()) as Map<String, dynamic>;
-    expect(encoded['schemaVersion'], 9);
+    expect(encoded['schemaVersion'], JsonFileTimelineRepository.schemaVersion);
   });
 }

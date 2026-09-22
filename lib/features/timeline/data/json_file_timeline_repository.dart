@@ -36,8 +36,9 @@ class JsonFileTimelineRepository
     implements TimelineRepository, ProjectRepository, TaxonomyRepository {
   JsonFileTimelineRepository(this.file);
 
-  static const int schemaVersion = 9;
+  static const int schemaVersion = 10;
   static const int medicationSchemaVersion = 9;
+  static const int followUpStatusSchemaVersion = 10;
   static const int nextActionSchemaVersion = 7;
   static const int projectSchemaVersion = 6;
   static const int taxonomySchemaVersion = 8;
@@ -289,6 +290,8 @@ class JsonFileTimelineRepository
     final version = decoded['schemaVersion'];
     if (version is! int ||
         (version != schemaVersion &&
+            version != medicationSchemaVersion &&
+            version != followUpStatusSchemaVersion &&
             version != taxonomySchemaVersion &&
             version != nextActionSchemaVersion &&
             version != projectSchemaVersion &&
@@ -442,6 +445,9 @@ class JsonFileTimelineRepository
     final medicationInterval = sourceSchemaVersion >= medicationSchemaVersion ? _optionalDuration(value, 'medicationIntervalMs') : null;
     final scheduledAt = sourceSchemaVersion >= medicationSchemaVersion ? _optionalDateTime(value, 'scheduledAt') : null;
     final actualTakenAt = sourceSchemaVersion >= medicationSchemaVersion ? _optionalDateTime(value, 'actualTakenAt') : null;
+    final followUpStatus = sourceSchemaVersion >= followUpStatusSchemaVersion
+        ? _requiredFollowUpStatus(value, 'followUpStatus')
+        : TimelineFollowUpStatus.open;
 
     if (parentId != null && projectId != null) {
       throw const FormatException('FollowUps cannot own projectId.');
@@ -454,6 +460,9 @@ class JsonFileTimelineRepository
     }
     if (parentId != null && tagIds.isNotEmpty) {
       throw const FormatException('FollowUps cannot own tagIds.');
+    }
+    if (parentId == null && followUpStatus != TimelineFollowUpStatus.open) {
+      throw const FormatException('Tracked subjects cannot own a follow-up status.');
     }
 
     return TimelineItem(
@@ -477,6 +486,7 @@ class JsonFileTimelineRepository
       medicationInterval: medicationInterval,
       scheduledAt: scheduledAt,
       actualTakenAt: actualTakenAt,
+      followUpStatus: followUpStatus,
     );
   }
 
@@ -501,6 +511,7 @@ class JsonFileTimelineRepository
         'medicationIntervalMs': item.medicationInterval?.inMilliseconds,
         'scheduledAt': item.scheduledAt?.toIso8601String(),
         'actualTakenAt': item.actualTakenAt?.toIso8601String(),
+        'followUpStatus': item.isFollowUp ? item.followUpStatus.name : TimelineFollowUpStatus.open.name,
       };
 
   YadNegarProject _projectFromJson(dynamic value) {
@@ -622,6 +633,14 @@ class JsonFileTimelineRepository
       if (candidate.name == name) return candidate;
     }
     throw FormatException('Unknown Timeline reminder recurrence: $name.');
+  }
+
+  TimelineFollowUpStatus _requiredFollowUpStatus(Map<String, dynamic> json, String key) {
+    final name = _requiredString(json, key);
+    for (final candidate in TimelineFollowUpStatus.values) {
+      if (candidate.name == name) return candidate;
+    }
+    throw FormatException('Unknown Timeline follow-up status: $name.');
   }
 
   TimelineReminderKind _requiredReminderKind(Map<String, dynamic> json, String key) {

@@ -36,6 +36,7 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
   late DateTime _selectedDateTime;
   late DateTime? _reminderAt;
   late TimelineReminderRecurrence _reminderRecurrence;
+  late TimelineFollowUpStatus _followUpStatus;
   bool _saving = false;
 
   bool get _isEditing => widget.existing != null;
@@ -48,6 +49,8 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
     _reminderAt = widget.existing?.reminderAt;
     _reminderRecurrence =
         widget.existing?.reminderRecurrence ?? TimelineReminderRecurrence.none;
+    _followUpStatus =
+        widget.existing?.followUpStatus ?? TimelineFollowUpStatus.open;
   }
 
   @override
@@ -132,6 +135,8 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
           reminderAt: _reminderAt,
           replaceReminderRecurrence: true,
           reminderRecurrence: _reminderRecurrence,
+          replaceFollowUpStatus: true,
+          followUpStatus: _followUpStatus,
         );
       } else {
         saved = await widget.addFollowUp.add(
@@ -222,6 +227,35 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
               ],
             ),
             const SizedBox(height: 20),
+            Card(
+              key: const Key('follow-up-status'),
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: DropdownButtonFormField<TimelineFollowUpStatus>(
+                  key: const Key('follow-up-status-field'),
+                  initialValue: _followUpStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'وضعیت پیگیری',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem<TimelineFollowUpStatus>(
+                      value: TimelineFollowUpStatus.open,
+                      child: Text('پیگیری باز'),
+                    ),
+                    DropdownMenuItem<TimelineFollowUpStatus>(
+                      value: TimelineFollowUpStatus.waitingForResponse,
+                      child: Text('منتظر پاسخ'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _followUpStatus = value);
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             Card(
               key: const Key('follow-up-reminder'),
               margin: EdgeInsets.zero,
