@@ -15,7 +15,7 @@ void main() {
     tempDirectory =
         await Directory.systemTemp.createTemp('yadnegar_encrypted_backup_test_');
     repository = JsonFileTimelineRepository(
-      File(tempDirectory.path + '/timeline.json'),
+      File('${tempDirectory.path}/timeline.json'),
     );
     service = EncryptedTimelineBackupService(repository: repository);
   });
@@ -120,7 +120,7 @@ void main() {
     );
 
     final otherRepository = JsonFileTimelineRepository(
-      File(tempDirectory.path + '/restored.json'),
+      File('${tempDirectory.path}/restored.json'),
     );
     final otherService = EncryptedTimelineBackupService(
       repository: otherRepository,
