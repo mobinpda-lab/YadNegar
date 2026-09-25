@@ -662,6 +662,46 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
     }
   }
 
+  Future<void> _runEncryptedBackup() async {
+    final scope = TimelineBackupScope.maybeOf(context);
+    final action = scope?.encryptedBackupAction;
+    if (action == null) {
+      return;
+    }
+    try {
+      await action(context);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('پشتیبان رمزگذاری‌شده ایجاد نشد.')),
+      );
+    }
+  }
+
+  Future<void> _runEncryptedRestore() async {
+    final scope = TimelineBackupScope.maybeOf(context);
+    final action = scope?.encryptedRestoreAction;
+    if (action == null) {
+      return;
+    }
+    try {
+      await action(context);
+      if (mounted) {
+        await _reload();
+        await _reloadProjects();
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('بازیابی پشتیبان رمزگذاری‌شده انجام نشد.')),
+      );
+    }
+  }
+
   Future<void> _openProjects() async {
     final scope = ProjectScope.maybeOf(context);
     if (scope == null) {
@@ -721,11 +761,34 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
                 ),
               if (TimelineBackupScope.maybeOf(this.context) != null)
                 ListTile(
+                  key: const Key('tracked-subject-backup'),
                   leading: const Icon(Icons.backup_outlined, color: _primary),
                   title: const Text('پشتیبان‌گیری'),
                   onTap: () {
                     Navigator.of(context).pop();
                     _runBackup();
+                  },
+                ),
+              if (TimelineBackupScope.maybeOf(this.context)?.encryptedBackupAction != null)
+                ListTile(
+                  key: const Key('tracked-subject-encrypted-backup'),
+                  leading: const Icon(Icons.lock_outline, color: _primary),
+                  title: const Text('پشتیبان رمزگذاری‌شده'),
+                  subtitle: const Text('ساخت فایل پشتیبان با رمز عبور'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _runEncryptedBackup();
+                  },
+                ),
+              if (TimelineBackupScope.maybeOf(this.context)?.encryptedRestoreAction != null)
+                ListTile(
+                  key: const Key('tracked-subject-encrypted-restore'),
+                  leading: const Icon(Icons.lock_open_outlined, color: _primary),
+                  title: const Text('بازیابی پشتیبان رمزگذاری‌شده'),
+                  subtitle: const Text('بازیابی فایل .ydb با رمز عبور'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _runEncryptedRestore();
                   },
                 ),
               if (widget.legacyTimeline != null)
