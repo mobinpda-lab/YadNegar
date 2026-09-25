@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:cryptography/helpers.dart';
 import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.dart';
 
 class EncryptedTimelineBackupService {
@@ -34,7 +35,7 @@ class EncryptedTimelineBackupService {
     final timestamp = (clock ?? DateTime.now)().toUtc();
     final name =
         'yadnegar-backup-${timestamp.toIso8601String().replaceAll(':', '-')}.ydb';
-    final file = File(destinationDirectory.path + '/' + name);
+    final file = File('${destinationDirectory.path}/$name');
     await file.writeAsBytes(encrypted, flush: true);
     return file;
   }
@@ -45,7 +46,7 @@ class EncryptedTimelineBackupService {
   }) async {
     _validatePassword(password);
 
-    final salt = _cryptography.randomBytes(saltLength);
+    final salt = randomBytes(saltLength);
     final algorithm = Argon2id(
       memory: argon2MemoryKiB,
       parallelism: argon2Parallelism,
@@ -187,7 +188,7 @@ class EncryptedTimelineBackupService {
   Map<String, dynamic> _map(Map<String, dynamic> value, String key) {
     final nested = value[key];
     if (nested is! Map<String, dynamic>) {
-      throw FormatException('${key} must be a JSON object.');
+      throw FormatException('$key must be a JSON object.');
     }
     return nested;
   }
@@ -195,17 +196,17 @@ class EncryptedTimelineBackupService {
   List<int> _decodeBase64(Map<String, dynamic> value, String key) {
     final raw = value[key];
     if (raw is! String || raw.isEmpty) {
-      throw FormatException('${key} must be a non-empty base64 string.');
+      throw FormatException('$key must be a non-empty base64 string.');
     }
     try {
       return base64Decode(raw);
     } on FormatException {
-      throw FormatException('Invalid base64 in ${key}.');
+      throw FormatException('Invalid base64 in $key.');
     }
   }
 
   String _associatedData() =>
-      'yadnegar-encrypted-backup:v${envelopeVersion}:argon2id:aes-256-gcm';
+      'yadnegar-encrypted-backup:v$envelopeVersion:argon2id:aes-256-gcm';
 
   void _validatePassword(String password) {
     if (password.trim().length < 8) {
