@@ -28,6 +28,7 @@ import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/application/tracked_subject_pdf_document.dart';
 import 'package:yadnegar/features/timeline/data/android_local_timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/data/android_widget_projection.dart';
+import 'package:yadnegar/features/timeline/data/encrypted_timeline_backup_service.dart';
 import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.dart';
 import 'package:yadnegar/features/timeline/data/json_timeline_backup_service.dart';
 import 'package:yadnegar/features/timeline/presentation/project_scope.dart';
@@ -96,10 +97,69 @@ Future<void> main() async {
       widgetTaskRequest.value = taskId;
     }
   } catch (_) {}
+  final encryptedBackupService = EncryptedTimelineBackupService(
+    repository: repository,
+  );
   final backupService = JsonTimelineBackupService(
     repository: repository,
     clock: DateTime.now,
   );
+  Future<String?> requestBackupPassword(
+    BuildContext context, {
+    required bool confirmation,
+  }) async {
+    final passwordController = TextEditingController();
+    final confirmationController = TextEditingController();
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(confirmation ? 'پشتیبان رمزگذاری‌شده' : 'بازیابی پشتیبان رمزگذاری‌شده'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: passwordController,
+                autofocus: true,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'رمز عبور',
+                  helperText: 'حداقل ۸ نویسه',
+                ),
+              ),
+              if (confirmation) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: confirmationController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'تکرار رمز عبور'),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('لغو'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final password = passwordController.text;
+                if (password.trim().length < 8) return;
+                if (confirmation && confirmationController.text != password) return;
+                Navigator.of(dialogContext).pop(password);
+              },
+              child: const Text('ادامه'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      passwordController.dispose();
+      confirmationController.dispose();
+    }
+  }
+
   final reminderScheduler = AndroidLocalTimelineReminderScheduler(
     notifications: notifications,
     clock: DateTime.now,
@@ -283,6 +343,44 @@ Future<void> main() async {
                 subject: 'پشتیبان یادنگار',
                 text: 'فایل پشتیبان یادنگار',
               );
+            },
+            encryptedBackupAction: (context) async {
+              final password = await requestBackupPassword(context, confirmation: true);
+              if (password == null) return;
+              final temporaryDirectory = await getTemporaryDirectory();
+              final snapshot = await encryptedBackupService.createEncryptedSnapshot(
+                temporaryDirectory,
+                password: password,
+              );
+              await Share.shareXFiles(
+                <XFile>[XFile(snapshot.path)],
+                subject: 'پشتیبان رمزگذاری‌شده یادنگار',
+                text: 'فایل پشتیبان رمزگذاری‌شده یادنگار',
+              );
+            },
+            encryptedRestoreAction: (context) async {
+              final password = await requestBackupPassword(context, confirmation: false);
+              if (password == null) return;
+              final result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: <String>['ydb'],
+                withData: true,
+              );
+              if (result == null || result.files.isEmpty) return;
+              final selected = result.files.single;
+              final bytes = selected.bytes ??
+                  (selected.path == null ? null : await File(selected.path!).readAsBytes());
+              if (bytes == null) return;
+              await encryptedBackupService.restoreEncryptedSnapshot(
+                bytes,
+                password: password,
+              );
+              try {
+                await reminderScheduler.reconcile(await repository.listNewestFirst());
+              } catch (_) {}
+              try {
+                await widgetProjection.refresh();
+              } catch (_) {}
             },
             child: WidgetTaskRouter(
               taskRequest: widgetTaskRequest,
