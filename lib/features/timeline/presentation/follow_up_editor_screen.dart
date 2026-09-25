@@ -166,6 +166,14 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
               : _reminderRecurrence,
           replaceFollowUpStatus: true,
           followUpStatus: _followUpStatus,
+          replaceMedication: true,
+          reminderKind: _reminderKind,
+          medicationName: _medicationNameController.text,
+          medicationAmount: medicationAmount,
+          medicationUnit: _medicationUnitController.text,
+          medicationInterval: _medicationInterval,
+          scheduledAt: _reminderAt,
+          actualTakenAt: widget.existing?.actualTakenAt,
         );
       } else {
         final medicationAmount =
