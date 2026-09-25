@@ -1,6 +1,6 @@
 # YadNegar AI Continuation State
 
-Last verified: 2026-09-25
+Last verified: 2026-09-26
 
 ## Source of Truth
 `GitHub Reality > owner-approved product contract > canonical governance > current-state docs > conversation memory`
@@ -10,55 +10,70 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Current Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current verified main SHA: `ee19041c63bd95aaa88bede925009ba6ab202274`
+Current verified main SHA: `146ffab08da161baecce00fe99bcdb19fe76bc59`
 
-Latest merged product slice:
-- PR #274 — medication consumption reminder UI slice
-- merged with exact expected head `2634adc2af0469f6c2059b3e2f2779a784ab8ad2`
-- merge commit: `8af3bff4470f0041945ed797c8af8ad94d7d15ed`
+## Latest Product Work
+### Encrypted Backup foundation — PR #280
+- merged: 2026-09-25
+- exact PR head: `5e8021ec1a8473bab4880efef457a6d4d6035ffc`
+- merge commit: `d26eb12126d35b971d381a2164eb8a417015b80c`
+- exact-head CI #610: success
+- exact-head Android Build #327: success
+- exact-head UI Evidence #153: success
+- implementation reuses the existing JSON snapshot/restore path
+- AES-256-GCM + Argon2id, versioned envelope, fresh salt/nonce, wrong-password/tamper rejection
+- no second storage/repository
 
-## #274 Exact-Head Evidence
-PR head `2634adc2af0469f6c2059b3e2f2779a784ab8ad2`:
-- YadNegar CI #599 / run `36141428254`: success
-- YadNegar UI Evidence #149 / run `36141428122`: success
-- YadNegar Android Build #322 / run `36141428204`: success
-  - Debug APK: success
-  - Release Candidate: success
-  - Emulator startup/storage recovery: success
-  - Release Readiness: success
-  - Release Draft: success
-  - Release Approval/Rollback evidence: success
+### Encrypted Backup UI — PR #284
+- merged: 2026-09-25
+- exact PR head: `252a1a00a6e7dfc3d7c0b0e645d38d968817dd11`
+- merge commit / current main: `146ffab08da161baecce00fe99bcdb19fe76bc59`
+- adds encrypted backup and encrypted restore actions to the real product UI
+- password entry/confirmation is in the UI
+- restore reuses the existing repository and triggers reminder/widget reconciliation
+- source-level UI test coverage exists
+- post-merge workflow evidence for current main is **نامشخص**
 
-No gate bypass was used.
+## Backup Acceptance — Current Truth
+Implemented:
+- encrypted snapshot creation
+- AES-256-GCM
+- Argon2id
+- fresh salt/nonce
+- version/algorithm validation
+- wrong-password/tamper fail-closed
+- encrypted backup UI entry
+- encrypted restore UI entry
+- existing repository reuse
+- reminder/widget reconciliation after successful restore
 
-## Product Slice Now in Main
-Medication consumption reminder uses the existing Timeline aggregate and single reminder engine:
-- reminder type: `یادآور مصرف`
-- fields: medication name, amount, unit, interval, first scheduled time
-- `مصرف کردم` records actual consumption
-- `scheduledAt` and `actualTakenAt` remain separate
-- next reminder is anchored to actual consumption + interval
-- existing repository and scheduler are reused
-- no parallel medication store or reminder engine was added
-- unit coverage exists for creation
+Still **نامشخص / not fully proven**:
+- real Android restart → encrypted restore acceptance
+- real product-data identity after encrypted restore
+- medication reminder preservation through encrypted backup/restore
+- end-to-end UI interaction beyond source-level assertions
+- explicit user-facing success/error detail for every restore failure class
+- legacy unencrypted backup compatibility after encrypted feature integration
+- current-main post-merge CI/Android/UI evidence for `146ffab...`
 
-Issue #224 remains the canonical product specification/acceptance record until its full acceptance evidence is explicitly reconciled.
+Issue #278 remains open until these acceptance gaps are reconciled with evidence.
 
-## Core Product Foundation
+## Product Foundation
 Canonical model:
 `Tracked Task Root → Persistent FollowUps → Jalali/Persian History → Search → PDF/Share/Print`
 
-Existing product foundations include:
-- persistent tracked-task root and FollowUp history
-- Waiting-for-response status
+Existing foundations include:
+- persistent tracked-task root and FollowUps
+- Waiting-for-response
 - Persian Search v2
 - Projects / Categories / Tags
 - Today / Next Action foundation
 - Jalali/Persian UI
-- Reminder + recurrence foundation
+- Reminder + recurrence
 - Android widget / notifications
 - PDF / Print / Share
 - JSON Backup/Restore
+- encrypted Backup/Restore slice
 - schema migrations and crash-safe persistence
 
 Architecture law:
@@ -68,45 +83,28 @@ Architecture law:
 - no duplicate Reminder scheduler
 - no duplicate Search/PDF/Backup foundation
 
-## Backup / Restore — Current Gap
-Current backup is a validated JSON snapshot and restore path.
+## Next Product Lane
+1. Fresh-audit current main `146ffab...` and impacted Backup/Restore paths.
+2. Add real behavioral tests for encrypted UI actions instead of source-only assertions where practical.
+3. Add explicit restore confirmation and useful Persian error/success feedback without exposing passwords.
+4. Prove restart + encrypted restore + medication/reminder preservation on Android.
+5. Re-run exact-head CI, UI Evidence and Android Build on the resulting PR.
+6. Only then reconcile/close Issue #278.
+7. Keep factory blockers separate from Product First.
 
-Not yet implemented/verified:
-- password-protected encrypted backup envelope
-- AES-256-GCM encryption
-- Argon2id password derivation
-- encrypted backup/restore acceptance and regression evidence
+## Open Governance / Factory Work
+Open documentation/factory PRs based on stale main must not be merged blindly:
+- PR #283 is based on old main SHA `594ce8a4...`
+- PR #242 is an old draft based on an older main
+They require fresh rebase/audit before any promotion.
 
-This is a real product/security lane, not a claim of completion.
-
-## Release Status
-Operational Android chain is verified for exact tested heads:
-`Fast CI → Android Build → Candidate → Smoke/Recovery → Readiness → Release Draft → Approval/Rollback`
-
-Current product-release status:
-- Android candidate chain: operationally verified on the merged medication slice
-- production signing: blocked until valid external signing credentials are intentionally provided
-- real GitHub Release / Play Store publication: not claimed
-
-## Platform / Factory Gaps
-Issue #19 remains an independent Platform-limited ruleset-write gap.
-
-Factory automation is a means, not the product. No Level-10/100% factory claim is made merely from workflow health.
-
-Known factory blockers remain separate from Product First completion:
+Known factory blockers remain independent:
 - production signing credentials
-- persistent autonomous code-worker backend / real E2E worker evidence
+- persistent autonomous code-worker E2E evidence
 - platform Ruleset write capability
-- release publication/monitoring evidence
+- real release publication/monitoring evidence
 
-These must not stop independent product work.
-
-## Next Execution Lanes
-1. Freshly verify post-merge main CI/Android evidence for `ee19041...` (no post-main workflow run was visible at the last audit).
-2. Reconcile/close #224 only after its remaining acceptance evidence is explicitly covered.
-3. Start the encrypted Backup/Restore product slice on a fresh main branch, reusing the existing JSON snapshot/restore path.
-4. In parallel, continue independent Release/Regression audits without creating duplicate foundations.
-5. After each merge: fresh main SHA → open PR audit → impacted-lane rebuild → post-main proof → state update.
+No Level-10/100% factory claim is made from workflow health alone.
 
 ## Anti-Rework / Continuation Rule
 Required cycle:
