@@ -37,6 +37,11 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
   late DateTime? _reminderAt;
   late TimelineReminderRecurrence _reminderRecurrence;
   late TimelineFollowUpStatus _followUpStatus;
+  late TimelineReminderKind _reminderKind;
+  late final TextEditingController _medicationNameController;
+  late final TextEditingController _medicationAmountController;
+  late final TextEditingController _medicationUnitController;
+  late Duration? _medicationInterval;
   bool _saving = false;
 
   bool get _isEditing => widget.existing != null;
@@ -51,6 +56,16 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
         widget.existing?.reminderRecurrence ?? TimelineReminderRecurrence.none;
     _followUpStatus =
         widget.existing?.followUpStatus ?? TimelineFollowUpStatus.open;
+    _reminderKind =
+        widget.existing?.reminderKind ?? TimelineReminderKind.standard;
+    _medicationNameController =
+        TextEditingController(text: widget.existing?.medicationName ?? '');
+    _medicationAmountController = TextEditingController(
+      text: widget.existing?.medicationAmount?.toString() ?? '',
+    );
+    _medicationUnitController =
+        TextEditingController(text: widget.existing?.medicationUnit ?? '');
+    _medicationInterval = widget.existing?.medicationInterval;
   }
 
   @override
@@ -126,6 +141,18 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
       final rawTitle = _titleController.text;
       final TimelineItem saved;
       if (_isEditing) {
+        final medicationAmount =
+            double.tryParse(_medicationAmountController.text.trim());
+        if (_reminderKind == TimelineReminderKind.medicationConsumption) {
+          if (_medicationNameController.text.trim().isEmpty ||
+              medicationAmount == null ||
+              medicationAmount <= 0 ||
+              _medicationUnitController.text.trim().isEmpty ||
+              _medicationInterval == null ||
+              _reminderAt == null) {
+            throw const FormatException('Medication reminder fields are incomplete.');
+          }
+        }
         saved = await widget.editTimelineItem.update(
           id: widget.existing!.id,
           text: rawTitle,
@@ -134,17 +161,27 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
           replaceReminderAt: true,
           reminderAt: _reminderAt,
           replaceReminderRecurrence: true,
-          reminderRecurrence: _reminderRecurrence,
+          reminderRecurrence: _reminderKind == TimelineReminderKind.medicationConsumption
+              ? TimelineReminderRecurrence.none
+              : _reminderRecurrence,
           replaceFollowUpStatus: true,
           followUpStatus: _followUpStatus,
         );
       } else {
+        final medicationAmount =
+            double.tryParse(_medicationAmountController.text.trim());
         saved = await widget.addFollowUp.add(
           subject: widget.subject,
           text: rawTitle,
           occurredAt: _selectedDateTime,
           reminderAt: _reminderAt,
           reminderRecurrence: _reminderRecurrence,
+          reminderKind: _reminderKind,
+          medicationName: _medicationNameController.text,
+          medicationAmount: medicationAmount,
+          medicationUnit: _medicationUnitController.text,
+          medicationInterval: _medicationInterval,
+          scheduledAt: _reminderAt,
         );
       }
       if (mounted) Navigator.of(context).pop(saved);
@@ -227,6 +264,96 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
               ],
             ),
             const SizedBox(height: 20),
+            Card(
+              key: const Key('follow-up-reminder-kind'),
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: DropdownButtonFormField<TimelineReminderKind>(
+                  key: const Key('follow-up-reminder-kind-field'),
+                  initialValue: _reminderKind,
+                  decoration: const InputDecoration(
+                    labelText: 'نوع یادآور',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem<TimelineReminderKind>(
+                      value: TimelineReminderKind.standard,
+                      child: Text('یادآور پیگیری'),
+                    ),
+                    DropdownMenuItem<TimelineReminderKind>(
+                      value: TimelineReminderKind.medicationConsumption,
+                      child: Text('یادآور مصرف'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _reminderKind = value);
+                  },
+                ),
+              ),
+            ),
+            if (_reminderKind == TimelineReminderKind.medicationConsumption) ...[
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('medication-name'),
+                controller: _medicationNameController,
+                decoration: const InputDecoration(
+                  labelText: 'نام دارو',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const Key('medication-amount'),
+                      controller: _medicationAmountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'میزان مصرف',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      key: const Key('medication-unit'),
+                      controller: _medicationUnitController,
+                      decoration: const InputDecoration(
+                        labelText: 'واحد',
+                        hintText: 'قرص، میلی‌لیتر…',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                key: const Key('medication-interval'),
+                initialValue: _medicationInterval == null
+                    ? null
+                    : _medicationInterval!.inHours,
+                decoration: const InputDecoration(
+                  labelText: 'فاصله مصرف',
+                  border: OutlineInputBorder(),
+                ),
+                items: List<int>.generate(24, (index) => index + 1)
+                    .map((hours) => DropdownMenuItem<int>(
+                          value: hours,
+                          child: Text('$hours ساعت'),
+                        ))
+                    .toList(growable: false),
+                onChanged: (hours) {
+                  if (hours != null) {
+                    setState(() => _medicationInterval = Duration(hours: hours));
+                  }
+                },
+              ),
+            ],
+            const SizedBox(height: 12),
             Card(
               key: const Key('follow-up-status'),
               margin: EdgeInsets.zero,
