@@ -341,9 +341,7 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 key: const Key('medication-interval'),
-                initialValue: _medicationInterval == null
-                    ? null
-                    : _medicationInterval!.inHours,
+                initialValue: _medicationInterval?.inHours,
                 decoration: const InputDecoration(
                   labelText: 'فاصله مصرف',
                   border: OutlineInputBorder(),
