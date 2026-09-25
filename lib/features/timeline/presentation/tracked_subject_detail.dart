@@ -317,6 +317,23 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                     _followUpStatusLabel(followUp.followUpStatus),
                     key: Key('follow-up-status-${followUp.id}'),
                   ),
+                if (followUp.isMedicationConsumptionReminder) ...[
+                  Text(
+                    'دارو: ${followUp.medicationName ?? followUp.text} • ${followUp.medicationAmount ?? ''} ${followUp.medicationUnit ?? ''}',
+                    key: Key('follow-up-medication-${followUp.id}'),
+                  ),
+                  if (followUp.actualTakenAt != null)
+                    Text(
+                      'آخرین مصرف: ${widget.dateTimeFormatter.formatDateTime(followUp.actualTakenAt!)}',
+                      key: Key('follow-up-medication-taken-${followUp.id}'),
+                    ),
+                  const SizedBox(height: 6),
+                  OutlinedButton(
+                    key: Key('follow-up-medication-take-${followUp.id}'),
+                    onPressed: () => _recordMedicationConsumption(followUp),
+                    child: const Text('مصرف کردم'),
+                  ),
+                ],
                 if (reminderAt != null)
                   Text(
                     'یادآور: ${widget.dateTimeFormatter.formatDateTime(reminderAt)} • ${_recurrenceLabel(followUp.reminderRecurrence)}',
