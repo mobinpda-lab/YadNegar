@@ -8,8 +8,7 @@ import 'package:yadnegar/features/timeline/data/json_file_timeline_repository.da
 class EncryptedTimelineBackupService {
   EncryptedTimelineBackupService({
     required this.repository,
-    Cryptography? cryptography,
-  }) : _cryptography = cryptography ?? Cryptography.instance;
+  });
 
   static const int envelopeVersion = 1;
   static const int saltLength = 16;
@@ -20,7 +19,6 @@ class EncryptedTimelineBackupService {
   static const int argon2Iterations = 2;
 
   final JsonFileTimelineRepository repository;
-  final Cryptography _cryptography;
 
   Future<File> createEncryptedSnapshot(
     Directory destinationDirectory, {
@@ -175,7 +173,7 @@ class EncryptedTimelineBackupService {
       'yadnegar_encrypted_backup_validation_',
     );
     try {
-      final file = File(temporaryDirectory.path + '/snapshot.json');
+      final file = File('${temporaryDirectory.path}/snapshot.json');
       await file.writeAsBytes(bytes, flush: true);
       await JsonFileTimelineRepository(file).listNewestFirst();
     } finally {
