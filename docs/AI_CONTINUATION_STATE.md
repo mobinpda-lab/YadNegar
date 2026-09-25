@@ -10,7 +10,7 @@ Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim
 ## Current Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current verified main SHA: `74ec579a490785e366a6552a5a38b747ab07bec6`
+Current verified main SHA: `ee19041c63bd95aaa88bede925009ba6ab202274`
 
 Latest merged product slice:
 - PR #274 — medication consumption reminder UI slice
@@ -102,7 +102,7 @@ Known factory blockers remain separate from Product First completion:
 These must not stop independent product work.
 
 ## Next Execution Lanes
-1. Freshly verify post-merge main CI/Android evidence for `74ec579...` (no post-main workflow run was visible at the last audit).
+1. Freshly verify post-merge main CI/Android evidence for `ee19041...` (no post-main workflow run was visible at the last audit).
 2. Reconcile/close #224 only after its remaining acceptance evidence is explicitly covered.
 3. Start the encrypted Backup/Restore product slice on a fresh main branch, reusing the existing JSON snapshot/restore path.
 4. In parallel, continue independent Release/Regression audits without creating duplicate foundations.
