@@ -29,6 +29,14 @@ class EditTimelineItem {
     TimelineReminderRecurrence? reminderRecurrence,
     bool replaceFollowUpStatus = false,
     TimelineFollowUpStatus? followUpStatus,
+    bool replaceMedication = false,
+    TimelineReminderKind? reminderKind,
+    String? medicationName,
+    double? medicationAmount,
+    String? medicationUnit,
+    Duration? medicationInterval,
+    DateTime? scheduledAt,
+    DateTime? actualTakenAt,
   }) async {
     final normalizedId = id.trim();
     if (normalizedId.isEmpty) throw ArgumentError.value(id, 'id', 'Timeline item id cannot be empty.');
@@ -70,6 +78,31 @@ class EditTimelineItem {
         : replaceReminderRecurrence
             ? (reminderRecurrence ?? TimelineReminderRecurrence.none)
             : existing.reminderRecurrence;
+    final targetReminderKind =
+        replaceMedication ? (reminderKind ?? TimelineReminderKind.standard) : existing.reminderKind;
+    final targetMedicationName =
+        replaceMedication ? medicationName?.trim() : existing.medicationName;
+    final targetMedicationAmount =
+        replaceMedication ? medicationAmount : existing.medicationAmount;
+    final targetMedicationUnit =
+        replaceMedication ? medicationUnit?.trim() : existing.medicationUnit;
+    final targetMedicationInterval =
+        replaceMedication ? medicationInterval : existing.medicationInterval;
+    final targetScheduledAt =
+        replaceMedication ? scheduledAt : existing.scheduledAt;
+    final targetActualTakenAt =
+        replaceMedication ? actualTakenAt : existing.actualTakenAt;
+    if (targetReminderKind == TimelineReminderKind.medicationConsumption) {
+      if (targetMedicationName == null || targetMedicationName.isEmpty ||
+          targetMedicationAmount == null || !targetMedicationAmount.isFinite ||
+          targetMedicationAmount <= 0 ||
+          targetMedicationUnit == null || targetMedicationUnit.isEmpty ||
+          targetMedicationInterval == null ||
+          targetMedicationInterval <= Duration.zero ||
+          targetReminderAt == null) {
+        throw const FormatException('Medication reminder fields are incomplete.');
+      }
+    }
 
     final updated = TimelineItem(
       id: existing.id,
@@ -84,7 +117,16 @@ class EditTimelineItem {
       createdAt: existing.createdAt,
       occurredAt: changedToTypeWithoutOccurredAt ? null : replaceOccurredAt ? occurredAt : existing.occurredAt,
       reminderAt: targetReminderAt,
-      reminderRecurrence: targetReminderRecurrence,
+      reminderRecurrence: targetReminderKind == TimelineReminderKind.medicationConsumption
+          ? TimelineReminderRecurrence.none
+          : targetReminderRecurrence,
+      reminderKind: targetReminderKind,
+      medicationName: targetMedicationName,
+      medicationAmount: targetMedicationAmount,
+      medicationUnit: targetMedicationUnit,
+      medicationInterval: targetMedicationInterval,
+      scheduledAt: targetScheduledAt,
+      actualTakenAt: targetActualTakenAt,
       followUpStatus: targetFollowUpStatus,
     );
     await repository.upsert(updated);
