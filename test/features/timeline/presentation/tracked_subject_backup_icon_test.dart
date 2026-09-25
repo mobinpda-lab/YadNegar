@@ -11,6 +11,9 @@ void main() {
     expect(source, contains("key: const Key('tracked-subject-backup')"));
     expect(source, contains("tooltip: 'پشتیبان‌گیری'"));
     expect(source, contains('onPressed: _runBackup'));
+    expect(source, contains("key: const Key('tracked-subject-encrypted-backup')"));
+    expect(source, contains("key: const Key('tracked-subject-encrypted-restore')"));
+    expect(source, contains('onTap: _runEncryptedBackup'));
     expect(
       source,
       contains('icon: const Icon(Icons.backup_outlined, color: _primary)'),
