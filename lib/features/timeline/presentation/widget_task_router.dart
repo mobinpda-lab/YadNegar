@@ -4,6 +4,7 @@ import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.da
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
 import 'package:yadnegar/features/timeline/application/load_tracked_subjects.dart';
+import 'package:yadnegar/features/timeline/application/record_medication_consumption.dart';
 import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/tracked_subject_detail.dart';
@@ -18,6 +19,7 @@ class WidgetTaskRouter extends StatefulWidget {
     required this.addFollowUp,
     required this.editTimelineItem,
     this.reminderScheduler,
+    this.recordMedicationConsumption,
   });
 
   final Widget child;
@@ -27,6 +29,7 @@ class WidgetTaskRouter extends StatefulWidget {
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
   final TimelineReminderScheduler? reminderScheduler;
+  final RecordMedicationConsumption? recordMedicationConsumption;
 
   @override
   State<WidgetTaskRouter> createState() => _WidgetTaskRouterState();
@@ -92,6 +95,7 @@ class _WidgetTaskRouterState extends State<WidgetTaskRouter> {
             addFollowUp: widget.addFollowUp,
             editTimelineItem: widget.editTimelineItem,
             reminderScheduler: widget.reminderScheduler,
+            recordMedicationConsumption: widget.recordMedicationConsumption,
           ),
         ),
       );

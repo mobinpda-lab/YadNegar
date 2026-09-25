@@ -4,6 +4,7 @@ import 'package:yadnegar/core/presentation/persian_duration_formatter.dart';
 import 'package:yadnegar/features/timeline/application/add_timeline_follow_up.dart';
 import 'package:yadnegar/features/timeline/application/edit_timeline_item.dart';
 import 'package:yadnegar/features/timeline/application/load_timeline_follow_ups.dart';
+import 'package:yadnegar/features/timeline/application/record_medication_consumption.dart';
 import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/presentation/follow_up_editor_screen.dart';
@@ -21,6 +22,7 @@ class TrackedSubjectDetail extends StatefulWidget {
     required this.addFollowUp,
     required this.editTimelineItem,
     this.reminderScheduler,
+    this.recordMedicationConsumption,
     this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
     this.durationFormatter = const PersianDurationFormatter(),
@@ -31,6 +33,7 @@ class TrackedSubjectDetail extends StatefulWidget {
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
   final TimelineReminderScheduler? reminderScheduler;
+  final RecordMedicationConsumption? recordMedicationConsumption;
   final TrackedSubjectDetailClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
   final PersianDurationFormatter durationFormatter;
@@ -118,6 +121,26 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
     if (updated != null && mounted) {
       await _syncReminder(updated);
       if (mounted) setState(() => _subject = updated);
+    }
+  }
+
+  Future<void> _recordMedicationConsumption(TimelineItem followUp) async {
+    final recorder = widget.recordMedicationConsumption;
+    if (recorder == null) return;
+    try {
+      final updated = await recorder.call(reminder: followUp);
+      if (!mounted) return;
+      await _syncReminder(updated);
+      await _reload();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('مصرف ثبت شد و نوبت بعدی زمان‌بندی شد.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ثبت مصرف انجام نشد.')),
+      );
     }
   }
 
@@ -294,6 +317,23 @@ class _TrackedSubjectDetailState extends State<TrackedSubjectDetail> {
                     _followUpStatusLabel(followUp.followUpStatus),
                     key: Key('follow-up-status-${followUp.id}'),
                   ),
+                if (followUp.isMedicationConsumptionReminder) ...[
+                  Text(
+                    'دارو: ${followUp.medicationName ?? followUp.text} • ${followUp.medicationAmount ?? ''} ${followUp.medicationUnit ?? ''}',
+                    key: Key('follow-up-medication-${followUp.id}'),
+                  ),
+                  if (followUp.actualTakenAt != null)
+                    Text(
+                      'آخرین مصرف: ${widget.dateTimeFormatter.formatDateTime(followUp.actualTakenAt!)}',
+                      key: Key('follow-up-medication-taken-${followUp.id}'),
+                    ),
+                  const SizedBox(height: 6),
+                  OutlinedButton(
+                    key: Key('follow-up-medication-take-${followUp.id}'),
+                    onPressed: () => _recordMedicationConsumption(followUp),
+                    child: const Text('مصرف کردم'),
+                  ),
+                ],
                 if (reminderAt != null)
                   Text(
                     'یادآور: ${widget.dateTimeFormatter.formatDateTime(reminderAt)} • ${_recurrenceLabel(followUp.reminderRecurrence)}',
