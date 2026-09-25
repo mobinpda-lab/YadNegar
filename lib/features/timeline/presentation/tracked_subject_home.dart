@@ -12,6 +12,7 @@ import 'package:yadnegar/features/timeline/application/manage_taxonomy.dart';
 import 'package:yadnegar/features/timeline/application/search_tracked_subjects.dart';
 import 'package:yadnegar/features/timeline/domain/yadnegar_taxonomy.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
+import 'package:yadnegar/features/timeline/application/record_medication_consumption.dart';
 import 'package:yadnegar/features/timeline/application/timeline_reminder_scheduler.dart';
 import 'package:yadnegar/features/timeline/domain/timeline_item.dart';
 import 'package:yadnegar/features/timeline/domain/yadnegar_project.dart';
@@ -35,6 +36,7 @@ class TrackedSubjectHome extends StatefulWidget {
     required this.editTimelineItem,
     this.manageTaxonomy,
     this.reminderScheduler,
+    this.recordMedicationConsumption,
     this.legacyTimeline,
     this.clock = DateTime.now,
     this.dateTimeFormatter = const PersianDateTimeFormatter(),
@@ -48,6 +50,7 @@ class TrackedSubjectHome extends StatefulWidget {
   final EditTimelineItem editTimelineItem;
   final ManageTaxonomy? manageTaxonomy;
   final TimelineReminderScheduler? reminderScheduler;
+  final RecordMedicationConsumption? recordMedicationConsumption;
   final Widget? legacyTimeline;
   final TrackedSubjectHomeClock clock;
   final PersianDateTimeFormatter dateTimeFormatter;
@@ -629,6 +632,7 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
           addFollowUp: widget.addFollowUp,
           editTimelineItem: widget.editTimelineItem,
           reminderScheduler: widget.reminderScheduler,
+          recordMedicationConsumption: widget.recordMedicationConsumption,
           clock: widget.clock,
           dateTimeFormatter: widget.dateTimeFormatter,
           durationFormatter: widget.durationFormatter,
