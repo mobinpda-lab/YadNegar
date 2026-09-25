@@ -172,7 +172,7 @@ class _FollowUpEditorScreenState extends State<FollowUpEditorScreen> {
           medicationAmount: medicationAmount,
           medicationUnit: _medicationUnitController.text,
           medicationInterval: _medicationInterval,
-          scheduledAt: _reminderAt,
+          scheduledAt: widget.existing?.scheduledAt ?? _reminderAt,
           actualTakenAt: widget.existing?.actualTakenAt,
         );
       } else {
