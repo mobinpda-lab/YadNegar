@@ -1,178 +1,126 @@
 # YadNegar AI Continuation State
 
-Last updated: 2026-08-29
+Last verified: 2026-09-25
 
 ## Source of Truth
 `GitHub Reality > owner-approved product contract > canonical governance > current-state docs > conversation memory`
 
 Fresh-audit GitHub before every write, merge, SHA/status claim or progress claim. Historical Green never transfers to a new head.
 
-## Verified Product Main
+## Current Main
 Repository: `mobinpda-lab/YadNegar`  
 Branch: `main`  
-Current verified product main SHA: `64460c5cb0cf1e70f6361a32acf9e77a6bfdfdfe`
+Current verified main SHA: `8af3bff4470f0041945ed797c8af8ad94d7d15ed`
 
+Latest merged product slice:
+- PR #274 — medication consumption reminder UI slice
+- merged with exact expected head `2634adc2af0469f6c2059b3e2f2779a784ab8ad2`
+- merge commit: `8af3bff4470f0041945ed797c8af8ad94d7d15ed`
+
+## #274 Exact-Head Evidence
+PR head `2634adc2af0469f6c2059b3e2f2779a784ab8ad2`:
+- YadNegar CI #599 / run `36141428254`: success
+- YadNegar UI Evidence #149 / run `36141428122`: success
+- YadNegar Android Build #322 / run `36141428204`: success
+  - Debug APK: success
+  - Release Candidate: success
+  - Emulator startup/storage recovery: success
+  - Release Readiness: success
+  - Release Draft: success
+  - Release Approval/Rollback evidence: success
+
+No gate bypass was used.
+
+## Product Slice Now in Main
+Medication consumption reminder uses the existing Timeline aggregate and single reminder engine:
+- reminder type: `یادآور مصرف`
+- fields: medication name, amount, unit, interval, first scheduled time
+- `مصرف کردم` records actual consumption
+- `scheduledAt` and `actualTakenAt` remain separate
+- next reminder is anchored to actual consumption + interval
+- existing repository and scheduler are reused
+- no parallel medication store or reminder engine was added
+- unit coverage exists for creation
+
+Issue #224 remains the canonical product specification/acceptance record until its full acceptance evidence is explicitly reconciled.
+
+## Core Product Foundation
 Canonical model:
 `Tracked Task Root → Persistent FollowUps → Jalali/Persian History → Search → PDF/Share/Print`
 
-The earlier flat Timeline remains only as legacy tooling. No second Task/FollowUp store exists.
+Existing product foundations include:
+- persistent tracked-task root and FollowUp history
+- Waiting-for-response status
+- Persian Search v2
+- Projects / Categories / Tags
+- Today / Next Action foundation
+- Jalali/Persian UI
+- Reminder + recurrence foundation
+- Android widget / notifications
+- PDF / Print / Share
+- JSON Backup/Restore
+- schema migrations and crash-safe persistence
 
-## Current Product Contract
-- one persistent root per tracked task
-- persistent child FollowUps with parent/sibling history preservation
-- optional root description
-- optional root Project membership; FollowUps inherit Project context from parent
-- Projects stored in the same JSON foundation, not a second database
-- root-only Home with one repository snapshot per reload
-- latest real FollowUp drives exact date/time and relative status; root creation time never masquerades as a FollowUp
-- Home search across task title + description + child FollowUp text
-- subtle `بسم الله الرحمن الرحیم` at top of Home
-- swipe left or right on a task opens FollowUp capture for the same root and never dismisses/deletes the root
-- Jalali monthly grid date picker
-- 24-hour dial time picker
-- Persian RTL PDF for all / selected / single-task scopes
-- date-based one-day/range reports over matching FollowUps only
-- PDF / Print / Share reuse the same report/document foundation
-- validated JSON Backup/Restore
-- reminder foundation with none/daily/weekly recurrence and local-time semantics
+Architecture law:
+- one canonical repository/storage foundation
+- reuse before add
+- no duplicate Task/FollowUp store
+- no duplicate Reminder scheduler
+- no duplicate Search/PDF/Backup foundation
 
-## Data / Architecture Foundation
-One repository and one JSON persistence foundation are reused.
+## Backup / Restore — Current Gap
+Current backup is a validated JSON snapshot and restore path.
 
-Current storage schema: **v8**  
-Backward-compatible reads: **v1-v5**
+Not yet implemented/verified:
+- password-protected encrypted backup envelope
+- AES-256-GCM encryption
+- Argon2id password derivation
+- encrypted backup/restore acceptance and regression evidence
 
-Schema evolution:
-- v2: optional reminder time
-- v3: reminder recurrence
-- v4: optional `parentId` for root → FollowUp history
-- v5: optional tracked-task root `description`
-- v6: Projects + optional root `projectId`
-- v7: root `nextActionAt`
-- v8: root `categoryId` + `tagIds` with canonical Category/Tag persistence
+This is a real product/security lane, not a claim of completion.
 
-Safety:
-- no destructive migration
-- no read-time rewrite
-- safe-write upgrade
-- tmp/bak crash recovery
-- validated Backup/Restore
-- unsupported newer schema fails closed
-- FollowUps cannot own Project membership
-
-## Recent Completed Slices
-### #153 — Date-based Reports
-Completed and merged.
-- one Jalali day or inclusive Jalali range
-- root appears once
-- only matching FollowUps are included
-- root creation date alone does not count
-- existing PDF/Print/Share path reused
-
-### #149 / PR #157 — Home Single Snapshot
-Completed.
-- Home calls the repository once per reload and groups roots/children in memory
-- Projects, description, search and FollowUp ordering preserved
-- no cache, store, schema or dependency added
-
-Merged main after PR #157:
-`2f360ca952ffdd706461c6fb428d67853f8e27b9`
-
-Post-main CI and Android full chain were Green; #149 is Closed / Completed.
-
-### #151 / PR #159 — Home/FollowUp UX
-Completed.
-
-Final PR head:
-`0e27cfd8083ca5428b1fb7a321982cc6d4b7f936`
-
-Final scope: exactly two files, `behind=0`.
-
-Exact-head evidence:
-- YadNegar CI #396 `33209126088`: success
-- YadNegar UI Evidence #39 `33209126046`: success
-- YadNegar Android Build #169 `33209126028`: full chain success
-  - Debug APK
-  - Release Candidate
-  - Emulator Smoke/Recovery
-  - Release Readiness
-  - Release Draft
-  - Release Approval/Rollback
-
-Merged with exact expected-head lock to:
-`64460c5cb0cf1e70f6361a32acf9e77a6bfdfdfe`
-
-Post-main exact SHA:
-- CI #397 `33209875036`: success
-- Android #170 `33209875095`: full chain success
-  - debug APK
-  - release candidate
-  - emulator smoke/storage recovery
-  - release readiness
-  - deterministic release draft
-  - release approval/rollback
-
-Issue #151 is Closed / Completed.
-
-## Release Baseline
-Verified release automation:
+## Release Status
+Operational Android chain is verified for exact tested heads:
 `Fast CI → Android Build → Candidate → Smoke/Recovery → Readiness → Release Draft → Approval/Rollback`
 
-Release status:
-`candidate verified / governance verified / production signing blocked / not Play-Store-ready`
+Current product-release status:
+- Android candidate chain: operationally verified on the merged medication slice
+- production signing: blocked until valid external signing credentials are intentionally provided
+- real GitHub Release / Play Store publication: not claimed
 
-No production keystore/secret, real release tag, GitHub Release or Play Store publish is created without an explicit Owner/Security decision.
+## Platform / Factory Gaps
+Issue #19 remains an independent Platform-limited ruleset-write gap.
 
-## Platform Gap — Issue #19
-#19 remains open and Platform-limited. `main-protection` requires PRs and blocks deletion/non-fast-forward updates, but connected tooling still does not expose Ruleset Write for enforcing required check contexts.
+Factory automation is a means, not the product. No Level-10/100% factory claim is made merely from workflow health.
 
-Until then:
-`exact head + exact-head relevant gates + fresh scope + live mergeability + expected_head_sha + post-main proof`
+Known factory blockers remain separate from Product First completion:
+- production signing credentials
+- persistent autonomous code-worker backend / real E2E worker evidence
+- platform Ruleset write capability
+- release publication/monitoring evidence
 
-## Next Product Slice — Issue #160
-`Today Center: اقدام بعدی، امروز، عقب‌افتاده و آینده بدون تداخل با Reminder`
+These must not stop independent product work.
 
-Fresh audit decisions:
-- optional root-only `nextActionAt`
-- Next Action is distinct from Notification/Reminder
-- derived buckets are not persisted
-- local calendar-day semantics:
-  - Today = anywhere on the current local day
-  - Overdue = before start of today
-  - Upcoming = after end of today
-  - No Next Action = null
-- reuse `TimelineItem`, `QuickCapture`, `EditTimelineItem`, JSON repository, Jalali grid, 24h dial and Home single-snapshot projection
-- no second store/calendar/search/reminder foundation
+## Next Execution Lanes
+1. Freshly verify post-merge main CI/Android evidence for `8af3bff...`.
+2. Reconcile/close #224 only after its remaining acceptance evidence is explicitly covered.
+3. Start the encrypted Backup/Restore product slice on a fresh main branch, reusing the existing JSON snapshot/restore path.
+4. In parallel, continue independent Release/Regression audits without creating duplicate foundations.
+5. After each merge: fresh main SHA → open PR audit → impacted-lane rebuild → post-main proof → state update.
 
-Implementation decomposition:
-1. Slice A — schema v7 + domain/application + derived buckets + tests
-2. Slice B — create/edit/detail/Home Today Center UI
+## Anti-Rework / Continuation Rule
+Required cycle:
+`Fresh Audit → Last-Failure Classification → Reuse/Compare → Single Hypothesis → Small Change → Exact-Head Validation → Decision → Continue/Change Path`
 
-## Documentation Lane
-Active branch:
-`docs/current-state-after-151`
+Never reuse historical CI as proof for a new head.
 
-Final intended scope is exactly four canonical documents:
-- `docs/AI_CONTINUATION_STATE.md`
-- `docs/AI_HANDOFF_CURRENT_FA.md`
-- `docs/YADNEGAR_OPERATION_PLAN.md`
-- `docs/YADNEGAR_COMPREHENSIVE_PROJECT_DOCUMENT_FA.md`
+## PRODUCT FIRST
+**کارخانه وسیله است؛ یادنگار محصول نهایی است.**
 
-Before merge: exact-head Fast CI + fresh four-doc scope + live mergeability + expected-head lock + post-main Fast CI.
+Every factory, automation, workflow, governance or documentation change must directly serve production, completion, testing or delivery of YadNegar.
 
-## Maximum Parallel Rules
-- independent Product / Release / Automation / Docs lanes move concurrently
-- reuse before rebuild
-- small reversible slices
-- one source of truth for data
-- no stale/fake evidence
-- no duplicate storage/workflow/foundation
-- stacked work must be fresh-compared after base moves
-- documentation records only verified reality
-
-## Current Queue
-- #160: active next product lane
-- #19: independent Platform-limited governance gap
+Success means:
+**YadNegar usable and Release-Ready — not merely a healthy factory.**
 
 ## Trigger
 `ادامه یادنگار`
