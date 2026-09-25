@@ -29,6 +29,7 @@ class WidgetTaskRouter extends StatefulWidget {
   final AddTimelineFollowUp addFollowUp;
   final EditTimelineItem editTimelineItem;
   final TimelineReminderScheduler? reminderScheduler;
+  final RecordMedicationConsumption? recordMedicationConsumption;
 
   @override
   State<WidgetTaskRouter> createState() => _WidgetTaskRouterState();
