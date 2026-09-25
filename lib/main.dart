@@ -23,6 +23,7 @@ import 'package:yadnegar/features/timeline/application/manage_projects.dart';
 import 'package:yadnegar/features/timeline/application/manage_taxonomy.dart';
 import 'package:yadnegar/features/timeline/application/quick_capture.dart';
 import 'package:yadnegar/features/timeline/application/restore_timeline_item.dart';
+import 'package:yadnegar/features/timeline/application/record_medication_consumption.dart';
 import 'package:yadnegar/features/timeline/application/search_timeline.dart';
 import 'package:yadnegar/features/timeline/application/tracked_subject_pdf_document.dart';
 import 'package:yadnegar/features/timeline/data/android_local_timeline_reminder_scheduler.dart';
@@ -127,6 +128,7 @@ Future<void> main() async {
     clock: DateTime.now,
     idGenerator: _generateTimelineId,
   );
+  final recordMedicationConsumption = RecordMedicationConsumption(repository);
   final manageProjects = ManageProjects(
     projectRepository: repository,
     timelineRepository: repository,
@@ -255,6 +257,7 @@ Future<void> main() async {
     editTimelineItem: editTimelineItem,
     manageTaxonomy: manageTaxonomy,
     reminderScheduler: reminderScheduler,
+    recordMedicationConsumption: recordMedicationConsumption,
     legacyTimeline: toolsHub,
   );
 
@@ -288,6 +291,7 @@ Future<void> main() async {
               addFollowUp: addFollowUp,
               editTimelineItem: editTimelineItem,
               reminderScheduler: reminderScheduler,
+              recordMedicationConsumption: recordMedicationConsumption,
               child: trackedSubjectHome,
             ),
           ),
