@@ -1,66 +1,102 @@
-name: YadNegar Autonomous Task Handoff
+name: YadNegar Autonomous Code Worker
 
 on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'GitHub issue number to execute'
+        description: GitHub Issue number to implement
         required: true
         type: string
       expected_main_sha:
-        description: 'Main SHA leased by queue'
+        description: Exact main SHA leased by the queue
         required: true
         type: string
 
 permissions:
-  contents: read
+  contents: write
   issues: write
+  pull-requests: write
+  actions: write
 
 concurrency:
-  group: yadnegar-task-handoff-${{ inputs.issue_number }}
+  group: yadnegAR-code-worker-${{ inputs.issue_number }}
   cancel-in-progress: false
 
 jobs:
-  handoff:
+  code-worker:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 45
+    env:
+      ISSUE_NUMBER: ${{ inputs.issue_number }}
+      EXPECTED_MAIN_SHA: ${{ inputs.expected_main_sha }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5.6' }}
+      ASF_MAX_FIX_ATTEMPTS: '3'
+      ASF_PROVIDER_TIMEOUT_SECONDS: '180'
+      ASF_PROVIDER_BUDGET_SECONDS: '540'
+      ASF_LEASE_SECONDS: '1800'
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
-      - name: Validate lease and hand off for direct project execution
-        uses: actions/github-script@v8
+      - name: Checkout current main
+        uses: actions/checkout@v4
         with:
-          script: |
-            const { owner, repo } = context.repo;
-            const issueNumber = Number('${{ inputs.issue_number }}');
-            const expectedMain = '${{ inputs.expected_main_sha }}';
+          ref: main
+          fetch-depth: 0
 
-            if (!Number.isInteger(issueNumber) || issueNumber <= 0) {
-              core.setFailed('Invalid issue number.');
-              return;
+      - name: Validate exact main lease
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$EXPECTED_MAIN_SHA"
+
+      - name: Select issue-scoped worker branch
+        run: |
+          set -euo pipefail
+          branch="ai/issue-${ISSUE_NUMBER}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git fetch origin "$branch"
+            git switch -C "$branch" "origin/$branch"
+            git merge-base --is-ancestor "origin/main" HEAD || {
+              echo "Worker branch does not contain current main; fail closed."
+              exit 8
             }
+          else
+            git switch -c "$branch"
+          fi
+          echo "WORKER_BRANCH=$branch" >> "$GITHUB_ENV"
 
-            const main = await github.rest.repos.getBranch({ owner, repo, branch: 'main' });
-            if (main.data.commit.sha !== expectedMain) {
-              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:leased' }).catch(() => {});
-              await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:in-progress' }).catch(() => {});
-              await github.rest.issues.createComment({
-                owner, repo, issue_number: issueNumber,
-                body: `Task handoff invalidated because main moved from \`${expectedMain}\` to \`${main.data.commit.sha}\`. Task will be re-queued.`,
-              });
-              return;
-            }
+      - name: Generate, test and self-fix
+        env:
+          YADNEGAR_ISSUE_NUMBER: ${{ inputs.issue_number }}
+          YADNEGAR_EXPECTED_MAIN_SHA: ${{ inputs.expected_main_sha }}
+        run: python3 .github/asf/agent-runtime.py
 
-            const issue = (await github.rest.issues.get({ owner, repo, issue_number: issueNumber })).data;
-            const labels = new Set((issue.labels || []).map((label) => label.name));
-            if (!labels.has('factory:leased') || !labels.has('factory:ready')) {
-              core.setFailed('Issue does not hold a valid autonomous lease.');
-              return;
-            }
+      - name: Commit worker result
+        run: |
+          set -euo pipefail
+          git diff --quiet && { echo 'Worker produced no change.'; exit 1; }
+          git add -A
+          git commit -m "feat(ai-worker): implement issue #${ISSUE_NUMBER}"
 
-            await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:leased' }).catch(() => {});
-            await github.rest.issues.removeLabel({ owner, repo, issue_number: issueNumber, name: 'factory:in-progress' }).catch(() => {});
-            await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: ['factory:manual-execution'] });
-            await github.rest.issues.createComment({
-              owner, repo, issue_number: issueNumber,
-              body: `Task accepted by the YadNegar factory at exact main \`${expectedMain}\`. External Codex/worker execution is intentionally not required. Code changes must proceed through the normal issue-scoped branch → commit → PR → CI → gate → Production Orchestrator path. No merge or gate was bypassed.`,
-            });
-            core.notice(`Issue #${issueNumber} handed off for direct project execution.`);
+      - name: Push issue branch
+        run: git push origin "HEAD:${WORKER_BRANCH}"
+
+      - name: Create or reuse guarded draft PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$WORKER_BRANCH" --base main --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            pr="$existing"
+          else
+            pr_url="$(gh pr create --repo "$GITHUB_REPOSITORY" --draft --head "$WORKER_BRANCH" --base main --title "AI Worker: issue #${ISSUE_NUMBER}" --body "Bounded autonomous Code Worker result for #${ISSUE_NUMBER}. Exact-head CI and the canonical Production Orchestrator remain the only promotion path.")"
+            pr="${pr_url##*/}"
+          fi
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "<!-- yadnegAR-worker-output -->\nCode Worker produced/updated PR #${pr} from exact leased main ${EXPECTED_MAIN_SHA}."
+          echo "PR_NUMBER=$pr" >> "$GITHUB_ENV"
+
+      - name: Wake canonical promotion gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run production-orchestrator.yml --repo "$GITHUB_REPOSITORY" --ref main -f pr_number="$PR_NUMBER"
