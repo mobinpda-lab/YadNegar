@@ -346,41 +346,78 @@ Future<void> main() async {
             },
             encryptedBackupAction: (context) async {
               final password = await requestBackupPassword(context, confirmation: true);
-              if (password == null) return;
-              final temporaryDirectory = await getTemporaryDirectory();
-              final snapshot = await encryptedBackupService.createEncryptedSnapshot(
-                temporaryDirectory,
-                password: password,
-              );
-              await Share.shareXFiles(
-                <XFile>[XFile(snapshot.path)],
-                subject: 'پشتیبان رمزگذاری‌شده یادنگار',
-                text: 'فایل پشتیبان رمزگذاری‌شده یادنگار',
-              );
+              if (password == null) return false;
+              try {
+                final temporaryDirectory = await getTemporaryDirectory();
+                final snapshot = await encryptedBackupService.createEncryptedSnapshot(
+                  temporaryDirectory,
+                  password: password,
+                );
+                await Share.shareXFiles(
+                  <XFile>[XFile(snapshot.path)],
+                  subject: 'پشتیبان رمزگذاری‌شده یادنگار',
+                  text: 'فایل پشتیبان رمزگذاری‌شده یادنگار',
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('پشتیبان رمزگذاری‌شده آماده شد.')),
+                  );
+                }
+                return true;
+              } catch (_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('ساخت پشتیبان رمزگذاری‌شده انجام نشد.')),
+                  );
+                }
+                return false;
+              }
             },
             encryptedRestoreAction: (context) async {
               final password = await requestBackupPassword(context, confirmation: false);
-              if (password == null) return;
+              if (password == null) return false;
               final result = await FilePicker.platform.pickFiles(
                 type: FileType.custom,
                 allowedExtensions: <String>['ydb'],
                 withData: true,
               );
-              if (result == null || result.files.isEmpty) return;
+              if (result == null || result.files.isEmpty) return false;
               final selected = result.files.single;
               final bytes = selected.bytes ??
                   (selected.path == null ? null : await File(selected.path!).readAsBytes());
-              if (bytes == null) return;
-              await encryptedBackupService.restoreEncryptedSnapshot(
-                bytes,
-                password: password,
-              );
+              if (bytes == null) return false;
               try {
-                await reminderScheduler.reconcile(await repository.listNewestFirst());
-              } catch (_) {}
-              try {
-                await widgetProjection.refresh();
-              } catch (_) {}
+                await encryptedBackupService.restoreEncryptedSnapshot(
+                  bytes,
+                  password: password,
+                );
+                try {
+                  await reminderScheduler.reconcile(await repository.listNewestFirst());
+                } catch (_) {}
+                try {
+                  await widgetProjection.refresh();
+                } catch (_) {}
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('بازیابی پشتیبان رمزگذاری‌شده با موفقیت انجام شد.')),
+                  );
+                }
+                return true;
+              } on FormatException {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('رمز نادرست است یا فایل پشتیبان معتبر نیست.')),
+                  );
+                }
+                return false;
+              } catch (_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('بازیابی پشتیبان رمزگذاری‌شده انجام نشد.')),
+                  );
+                }
+                return false;
+              }
             },
             child: WidgetTaskRouter(
               taskRequest: widgetTaskRequest,
