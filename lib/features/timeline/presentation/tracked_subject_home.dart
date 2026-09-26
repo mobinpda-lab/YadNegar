@@ -687,8 +687,8 @@ class _TrackedSubjectHomeState extends State<TrackedSubjectHome> {
       return;
     }
     try {
-      await action(context);
-      if (mounted) {
+      final restored = await action(context);
+      if (restored && mounted) {
         await _reload();
         await _reloadProjects();
       }
