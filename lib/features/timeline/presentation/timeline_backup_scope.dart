@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 typedef TimelineBackupAction = Future<void> Function();
-typedef TimelineEncryptedBackupAction = Future<void> Function(BuildContext context);
+typedef TimelineEncryptedBackupAction = Future<bool> Function(BuildContext context);
 
 class TimelineBackupScope extends InheritedWidget {
   const TimelineBackupScope({
