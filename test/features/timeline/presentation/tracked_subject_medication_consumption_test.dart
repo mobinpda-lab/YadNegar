@@ -79,6 +79,7 @@ class _FakeMedicationRecorder extends RecordMedicationConsumption {
     DateTime? actualTakenAt,
   }) async {
     receivedReminder = reminder;
+    await repository.upsert(result);
     return result;
   }
 }
