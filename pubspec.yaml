@@ -21,6 +21,8 @@ dependencies:
   timezone: 0.10.1
   pdf: ^3.12.0
   printing: ^5.14.3
+  # Keep the PDF/printing PNG decoder compatible with archive's ZLibDecoder API.
+  image: ^4.11.1
 
 dev_dependencies:
   flutter_test:
