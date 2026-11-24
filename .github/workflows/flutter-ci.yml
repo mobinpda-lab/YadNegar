@@ -43,7 +43,7 @@ jobs:
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Emit dependency inventory
         shell: bash
@@ -77,5 +77,6 @@ jobs:
           path: |
             build/quality/dependency-inventory.txt
             build/quality/osv-results.json
+            pubspec.lock
           if-no-files-found: warn
           retention-days: 14
