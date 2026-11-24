@@ -43,7 +43,7 @@ jobs:
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub upgrade --unlock-transitive pdf printing
+        run: flutter pub get
 
       - name: Emit dependency inventory
         shell: bash
